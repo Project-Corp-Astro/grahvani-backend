@@ -33,19 +33,16 @@ npm install
 2.  Open `.env` and fill in the required keys (Supabase, Database, Redis).
 3.  **Security Note**: Never push your `.env` to GitHub. It is already in `.gitignore`.
 
-### Step 4: Initialize the Database
-Generate the Prisma clients for all services that use a database:
+### Step 4: Initialize the Database (AUTOMATED)
+When you run `npm install` in Step 2, the system automatically runs:
 ```bash
 npx turbo run generate
 ```
 
-> [!NOTE]
-> **Why is this needed?** Unlike raw SQL, Prisma generates a **Type-Safe Client** specific to our database schema. This client is stored in `node_modules` (which is ignored by Git).
+> [!TIP]
+> **Why is this automated?** Prisma generates a **Type-Safe Client** (the "bridge" between our code and the DB) that is specific to your computer's Operating System. By automating it, we ensure every developer has a correct, ready-to-use client immediately after installing dependencies.
 > 
-> **When to run this?**
-> 1. **First time**: When you first clone the project.
-> 2. **After Pulling**: Whenever you `git pull` and see changes in any `schema.prisma` file.
-> 3. **After Modifying**: If you change the database structure yourself.
+> **Note**: You only need to run this manually if you change the database structure yourself in the future.
 
 ---
 
