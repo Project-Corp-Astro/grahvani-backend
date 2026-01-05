@@ -19,6 +19,7 @@ router.post('/refresh', authController.refreshToken);
 router.post('/forgot-password', passwordResetRateLimiter, authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
 router.post('/verify-email', authController.verifyEmail);
+router.post('/activate', authController.activateAccount);
 
 // Protected routes (auth required)
 router.use(authMiddleware);

@@ -72,4 +72,7 @@ export const config = {
     internal: {
         serviceKey: env.INTERNAL_SERVICE_KEY,
     },
+
+    // Direct access for internal API routes
+    internalApiKey: env.INTERNAL_SERVICE_KEY,
 };

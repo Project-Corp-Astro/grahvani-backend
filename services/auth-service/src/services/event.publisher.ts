@@ -7,6 +7,8 @@ export type AuthEventType =
     | 'user.registered'
     | 'user.login'
     | 'user.logout'
+    | 'user.provisioned'  // SAP-initiated account creation
+    | 'user.activated'    // User completed account activation
     | 'auth.password_reset_requested'
     | 'auth.password_reset'
     | 'auth.password_changed'
@@ -21,6 +23,7 @@ export interface AuthEventPayload {
     sessionId?: string;
     expiresAt?: string;
     isSocial?: boolean;
+    tenantId?: string;  // Added for provisioning events
     metadata?: Record<string, unknown>;
 }
 

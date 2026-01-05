@@ -316,4 +316,47 @@ export class AuthController {
             next(error);
         }
     }
+
+    /**
+     * POST /activate
+     * Account activation for SAP-provisioned users
+     * User sets their password here after clicking the invitation link
+     */
+    async activateAccount(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { token, password } = req.body;
+
+            if (!token) {
+                return res.status(400).json({
+                    error: { code: 'VALIDATION_ERROR', message: 'Activation token is required' }
+                });
+            }
+
+            if (!password || password.length < 8) {
+                return res.status(400).json({
+                    error: { code: 'VALIDATION_ERROR', message: 'Password must be at least 8 characters' }
+                });
+            }
+
+            // Import ProvisioningService dynamically to avoid circular deps
+            const { ProvisioningService } = await import('../../../services/provision.service');
+            const provisioningService = new ProvisioningService();
+
+            const result = await provisioningService.activate({ token, password });
+
+            logger.info({ userId: result.userId }, 'Account activated successfully');
+
+            res.status(200).json({
+                success: true,
+                message: 'Account activated successfully. You can now log in.',
+                userId: result.userId,
+                email: result.email,
+            });
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Activation failed';
+            res.status(400).json({
+                error: { code: 'ACTIVATION_FAILED', message }
+            });
+        }
+    }
 }

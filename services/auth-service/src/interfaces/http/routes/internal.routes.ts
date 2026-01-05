@@ -151,4 +151,89 @@ router.get('/health', (req: Request, res: Response) => {
     });
 });
 
+// ============ PROVISIONING ROUTES (Managed Onboarding) ============
+
+import { ProvisioningService, ProvisionInput } from '../../../services/provision.service';
+
+const provisioningService = new ProvisioningService();
+
+/**
+ * POST /internal/provision
+ * Create a new user account (SAP-initiated)
+ * Implements the Invitation Pattern for secure onboarding
+ */
+router.post('/provision', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        // Verify service key for security
+        const serviceKey = req.headers['x-service-key'];
+        if (!serviceKey || serviceKey !== process.env.INTERNAL_SERVICE_KEY) {
+            return res.status(403).json({
+                error: { code: 'FORBIDDEN', message: 'Invalid service key' }
+            });
+        }
+
+        const { email, name, tenantId, role, features } = req.body as ProvisionInput;
+
+        // Validate required fields
+        if (!email || !name || !tenantId) {
+            return res.status(400).json({
+                error: 'Missing required fields',
+                required: ['email', 'name', 'tenantId'],
+            });
+        }
+
+        const result = await provisioningService.provision({
+            email,
+            name,
+            tenantId,
+            role,
+            features,
+        });
+
+        logger.info({ userId: result.userId, tenantId }, 'User provisioned via internal API');
+
+        res.status(201).json({
+            success: true,
+            data: result,
+        });
+    } catch (error: unknown) {
+        logger.error({ error }, 'Provisioning failed');
+        const message = error instanceof Error ? error.message : 'Internal server error';
+        res.status(500).json({ error: message });
+    }
+});
+
+/**
+ * POST /internal/resend-invitation
+ * Resend invitation email for a pending user
+ */
+router.post('/resend-invitation', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const serviceKey = req.headers['x-service-key'];
+        if (!serviceKey || serviceKey !== process.env.INTERNAL_SERVICE_KEY) {
+            return res.status(403).json({
+                error: { code: 'FORBIDDEN', message: 'Invalid service key' }
+            });
+        }
+
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+
+        const result = await provisioningService.resendInvitation(email);
+
+        res.status(200).json({
+            success: true,
+            message: 'Invitation resent successfully',
+            expiresAt: result.expiresAt,
+        });
+    } catch (error: unknown) {
+        logger.error({ error }, 'Resend invitation failed');
+        const message = error instanceof Error ? error.message : 'Internal server error';
+        res.status(400).json({ error: message });
+    }
+});
+
 export { router as internalRoutes };
