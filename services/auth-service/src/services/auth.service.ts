@@ -197,6 +197,12 @@ export class AuthService {
             throw new AccountSuspendedError();
         }
 
+        // Enforce Strict Device Policy (Single Login)
+        if (config.security.strictDevicePolicy) {
+            await this.sessionService.revokeAllSessions(user.id);
+            logger.info({ userId: user.id }, 'Strict Device Policy: Revoked all existing sessions');
+        }
+
         // Optional: Check email verification
         // if (!user.emailVerified) {
         //   throw new EmailNotVerifiedError();
@@ -433,6 +439,12 @@ export class AuthService {
                 where: { id: user.id },
                 data: updateData
             });
+        }
+
+        // Enforce Strict Device Policy (Single Login)
+        if (config.security.strictDevicePolicy) {
+            await this.sessionService.revokeAllSessions(user.id);
+            logger.info({ userId: user.id }, 'Strict Device Policy: Revoked all existing sessions (Social Login)');
         }
 
         // 3. Create session
