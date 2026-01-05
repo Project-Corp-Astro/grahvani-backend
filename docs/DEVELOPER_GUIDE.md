@@ -33,14 +33,18 @@ npm install
 2.  Open `.env` and fill in the required keys (Supabase, Database, Redis).
 3.  **Security Note**: Never push your `.env` to GitHub. It is already in `.gitignore`.
 
-### Step 4: Initialize the Database (AUTOMATED)
+### Step 4: Initialize the Database (AUTOMATED & SAFE)
 When you run `npm install` in Step 2, the system automatically runs:
 ```bash
 npx turbo run generate
 ```
 
-> [!TIP]
-> **Why is this automated?** Prisma generates a **Type-Safe Client** (the "bridge" between our code and the DB) that is specific to your computer's Operating System. By automating it, we ensure every developer has a correct, ready-to-use client immediately after installing dependencies.
+> [!IMPORTANT]
+> **Is this safe?** 
+> Yes, 100%. `prisma generate` is a **read-only code generation tool**. It only creates TypeScript files in `node_modules`. It **never** touches your database data, deletes records, or modifies your SQL tables. It is simply building the "Intellisense Bridge" for your editor.
+>
+> **Where does it run?**
+> Even though you run it from the **root** folder, our build system (**Turborepo**) is smart. It detects every service inside `/services` that has a database, jumps into that folder, and runs the generation there automatically. You don't have to go into each folder manually.
 > 
 > **Note**: You only need to run this manually if you change the database structure yourself in the future.
 

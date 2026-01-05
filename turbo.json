@@ -22,6 +22,12 @@
             "dependsOn": [
                 "^lint"
             ]
+        },
+        "generate": {
+            "cache": true,
+            "outputs": [
+                "node_modules/.prisma/client/**"
+            ]
         }
     }
 }
