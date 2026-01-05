@@ -418,10 +418,20 @@ export class AuthService {
                 isSocial: true,
             });
         } else {
-            // Update last login
-            await this.prisma.user.update({
+            // Update last login and activate if pending
+            const updateData: any = { lastLoginAt: new Date() };
+
+            // If user was provisioned (pending) and matches social email, activate them!
+            if (user.status === 'pending_verification') {
+                updateData.status = 'active';
+                updateData.emailVerified = true;
+                updateData.emailVerifiedAt = new Date();
+                logger.info({ userId: user.id }, 'User activated automatically via social login');
+            }
+
+            user = await this.prisma.user.update({
                 where: { id: user.id },
-                data: { lastLoginAt: new Date() }
+                data: updateData
             });
         }
 
