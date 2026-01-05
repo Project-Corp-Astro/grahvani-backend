@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  user
+  admin
+  moderator
+}
+
+enum UserStatus {
+  active
+  suspended
+  pending_verification
+  deleted
+}
+
+enum Gender {
+  male
+  female
+  other
+  prefer_not_to_say
+}
+
+// Models
+model User {
+  id              String    @id @default(uuid()) @db.Uuid
+  tenantId        String    @map("tenant_id") @db.Uuid
+  email           String    @unique @db.VarChar(255)
+  passwordHash    String?   @map("password_hash") @db.VarChar(255)
+  name            String    @db.VarChar(100)
+  displayName     String?   @map("display_name") @db.VarChar(50)
+  avatarUrl       String?   @map("avatar_url") @db.VarChar(500)
+  coverUrl        String?   @map("cover_url") @db.VarChar(500)
+  bio             String?   @db.Text
+  location        String?   @db.VarChar(100)
+  website         String?   @db.VarChar(255)
+  phone           String?   @db.VarChar(20)
+  birthDate       DateTime? @map("birth_date") @db.Date
+  gender          Gender?
+  role            UserRole  @default(user)
+  status          UserStatus @default(pending_verification)
+  isVerified      Boolean   @default(false) @map("is_verified")
+  isPublic        Boolean   @default(true) @map("is_public")
+  socialLinks     Json?     @default("{}") @map("social_links")
+  metadata        Json?     @default("{}")
+  followersCount  Int       @default(0) @map("followers_count")
+  followingCount  Int       @default(0) @map("following_count")
+  lastActiveAt    DateTime? @map("last_active_at")
+  emailVerified   Boolean   @default(false) @map("email_verified")
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+  
+  // Relations
+  preferences     UserPreference[]
+  addresses       UserAddress[]
+  activityLogs    UserActivityLog[]
+  followers       UserFollower[] @relation("Following")
+  following       UserFollower[] @relation("Follower")
+  
+  @@map("users")
+  @@index([tenantId])
+  @@index([email])
+  @@index([status])
+  @@index([displayName])
+  @@index([createdAt])
+}
+
+model UserPreference {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  category  String   @db.VarChar(50)
+  key       String   @db.VarChar(100)
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, category, key])
+  @@map("user_preferences")
+  @@index([userId])
+  @@index([category])
+}
+
+model UserAddress {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  label       String   @db.VarChar(50)
+  streetLine1 String   @map("street_line1") @db.VarChar(255)
+  streetLine2 String?  @map("street_line2") @db.VarChar(255)
+  city        String   @db.VarChar(100)
+  state       String?  @db.VarChar(100)
+  postalCode  String   @map("postal_code") @db.VarChar(20)
+  country     String   @db.VarChar(2)
+  isDefault   Boolean  @default(false) @map("is_default")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_addresses")
+  @@index([userId])
+}
+
+model UserActivityLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  action      String   @db.VarChar(50)
+  entityType  String?  @map("entity_type") @db.VarChar(50)
+  entityId    String?  @map("entity_id") @db.Uuid
+  oldValues   Json?    @map("old_values")
+  newValues   Json?    @map("new_values")
+  ipAddress   String?  @map("ip_address") @db.VarChar(45)
+  userAgent   String?  @map("user_agent") @db.VarChar(500)
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_activity_logs")
+  @@index([userId, createdAt])
+  @@index([action])
+  @@index([entityType, entityId])
+}
+
+model UserFollower {
+  id          String   @id @default(uuid()) @db.Uuid
+  followerId  String   @map("follower_id") @db.Uuid
+  followingId String   @map("following_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  
+  @@unique([followerId, followingId])
+  @@map("user_followers")
+  @@index([followerId])
+  @@index([followingId])
+}

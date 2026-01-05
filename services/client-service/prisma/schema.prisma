@@ -1,0 +1,333 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum Gender {
+  male
+  female
+  other
+}
+
+enum MaritalStatus {
+  single
+  married
+  divorced
+  widowed
+}
+
+enum ClientSource {
+  manual
+  website
+  import
+  ocr
+}
+
+enum BirthTimeAccuracy {
+  exact
+  approximate
+  rectified
+  unknown
+}
+
+enum RelationshipType {
+  spouse
+  child
+  parent
+  sibling
+  grandparent
+  grandchild
+  in_law
+  uncle_aunt
+  nephew_niece
+  cousin
+  other
+}
+
+enum ConsultationType {
+  general
+  career
+  marriage
+  health
+  business
+  muhurta
+  compatibility
+  annual
+  transit
+  other
+}
+
+enum ConsultationStatus {
+  completed
+  pending_follow_up
+  closed
+}
+
+enum ChartType {
+  D1
+  D2
+  D3
+  D4
+  D7
+  D9
+  D10
+  D12
+  D16
+  D20
+  D24
+  D27
+  D30
+  D40
+  D45
+  D60
+  transit
+  dasha
+  ashtakavarga
+  sudarshana
+  kp_chart
+}
+
+enum RemedyType {
+  gemstone
+  mantra
+  puja
+  charity
+  lifestyle
+  yantra
+  fasting
+  other
+}
+
+enum RemedyStatus {
+  prescribed
+  in_progress
+  completed
+  discontinued
+}
+
+enum ImportStatus {
+  pending
+  processing
+  completed
+  failed
+  partially_completed
+}
+
+enum ImportType {
+  excel
+  csv
+  ocr
+}
+
+// Models
+model Client {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  clientCode    String    @map("client_code") @db.VarChar(20)
+  
+  // Basic Information
+  fullName      String    @map("full_name") @db.VarChar(200)
+  phonePrimary  String?   @map("phone_primary") @db.VarChar(20)
+  phoneSecondary String?  @map("phone_secondary") @db.VarChar(20)
+  email         String?   @db.VarChar(255)
+  photoUrl      String?   @map("photo_url") @db.VarChar(500)
+  
+  // Birth Details
+  birthDate     DateTime? @map("birth_date") @db.Date
+  birthTime     DateTime? @map("birth_time") @db.Time
+  birthPlace    String?   @map("birth_place") @db.VarChar(300)
+  birthLatitude Decimal?  @map("birth_latitude") @db.Decimal(10, 7)
+  birthLongitude Decimal? @map("birth_longitude") @db.Decimal(10, 7)
+  birthTimezone String?   @map("birth_timezone") @db.VarChar(50)
+  birthTimeKnown Boolean  @default(true) @map("birth_time_known")
+  birthTimeAccuracy BirthTimeAccuracy @default(exact) @map("birth_time_accuracy")
+  
+  // Personal Details
+  gender        Gender?
+  maritalStatus MaritalStatus? @map("marital_status")
+  occupation    String?   @db.VarChar(200)
+  businessDetails String? @map("business_details") @db.Text
+  currentSituation String? @map("current_situation") @db.Text
+  specialConsiderations String? @map("special_considerations") @db.Text
+  
+  // Address
+  addressLine1  String?   @map("address_line1") @db.VarChar(300)
+  addressLine2  String?   @map("address_line2") @db.VarChar(300)
+  city          String?   @db.VarChar(100)
+  state         String?   @db.VarChar(100)
+  postalCode    String?   @map("postal_code") @db.VarChar(20)
+  country       String?   @db.VarChar(100)
+  
+  // Organization
+  tags          Json?     @default("[]") @db.JsonB
+  metadata      Json?     @default("{}") @db.JsonB
+  
+  // Source & Audit
+  source        ClientSource @default(manual)
+  createdBy     String?   @map("created_by") @db.Uuid
+  
+  // Timestamps
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+  
+  // Relations
+  familyLinksFrom   ClientFamilyLink[] @relation("FamilyLinkFrom")
+  familyLinksTo     ClientFamilyLink[] @relation("FamilyLinkTo")
+  consultations     ClientConsultation[]
+  savedCharts       ClientSavedChart[]
+  notes             ClientNote[]
+  remedies          ClientRemedy[]
+  
+  // Indexes
+  @@unique([tenantId, clientCode])
+  @@unique([tenantId, phonePrimary], name: "unique_tenant_phone")
+  @@index([tenantId])
+  @@index([tenantId, fullName])
+  @@index([tenantId, email])
+  @@index([tenantId, birthDate])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, deletedAt])
+  
+  @@map("clients")
+}
+
+model ClientFamilyLink {
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @map("tenant_id") @db.Uuid
+  clientId          String   @map("client_id") @db.Uuid
+  relatedClientId   String   @map("related_client_id") @db.Uuid
+  relationshipType  RelationshipType @map("relationship_type")
+  relationshipLabel String?  @map("relationship_label") @db.VarChar(100)
+  notes             String?  @db.Text
+  createdAt         DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  client        Client @relation("FamilyLinkFrom", fields: [clientId], references: [id])
+  relatedClient Client @relation("FamilyLinkTo", fields: [relatedClientId], references: [id])
+  
+  // Constraints
+  @@unique([clientId, relatedClientId])
+  @@index([tenantId])
+  @@index([clientId])
+  @@index([relatedClientId])
+  
+  @@map("client_family_links")
+}
+
+model ClientConsultation {
+  id               String    @id @default(uuid()) @db.Uuid
+  tenantId         String    @map("tenant_id") @db.Uuid
+  clientId         String    @map("client_id") @db.Uuid
+  bookingId        String?   @map("booking_id") @db.Uuid
+  reportId         String?   @map("report_id") @db.Uuid
+  consultationType ConsultationType @map("consultation_type")
+  sessionNotes     String?   @map("session_notes") @db.Text
+  keyObservations  String?   @map("key_observations") @db.Text
+  followUpDate     DateTime? @map("follow_up_date") @db.Date
+  status           ConsultationStatus @default(completed)
+  consultationDate DateTime  @map("consultation_date")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  
+  // Relations
+  client   Client @relation(fields: [clientId], references: [id])
+  remedies ClientRemedy[]
+  
+  @@index([tenantId])
+  @@index([clientId])
+  @@index([bookingId])
+  @@index([tenantId, consultationDate])
+  
+  @@map("client_consultations")
+}
+
+model ClientSavedChart {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  clientId      String    @map("client_id") @db.Uuid
+  chartType     ChartType @map("chart_type")
+  chartName     String?   @map("chart_name") @db.VarChar(200)
+  chartData     Json      @map("chart_data") @db.JsonB
+  chartConfig   Json?     @map("chart_config") @db.JsonB
+  chartImageUrl String?   @map("chart_image_url") @db.VarChar(500)
+  calculatedAt  DateTime  @map("calculated_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  
+  // Relations
+  client Client @relation(fields: [clientId], references: [id])
+  
+  @@index([tenantId])
+  @@index([clientId])
+  @@index([clientId, chartType])
+  
+  @@map("client_saved_charts")
+}
+
+model ClientNote {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  clientId    String   @map("client_id") @db.Uuid
+  noteContent String   @map("note_content") @db.Text
+  isPinned    Boolean  @default(false) @map("is_pinned")
+  createdBy   String?  @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  client      Client   @relation(fields: [clientId], references: [id])
+
+  @@index([tenantId])
+  @@index([clientId])
+  @@map("client_notes")
+}
+
+model ClientRemedy {
+  id               String   @id @default(uuid()) @db.Uuid
+  tenantId         String   @map("tenant_id") @db.Uuid
+  clientId         String   @map("client_id") @db.Uuid
+  consultationId   String?  @map("consultation_id") @db.Uuid
+  remedyType       RemedyType @map("remedy_type")
+  remedyTitle      String   @map("remedy_title")
+  remedyDescription String? @map("remedy_description") @db.Text
+  instructions     String?  @db.Text
+  startDate        DateTime? @map("start_date") @db.Date
+  endDate          DateTime? @map("end_date") @db.Date
+  status           RemedyStatus @default(prescribed)
+  followUpNotes    String?  @map("follow_up_notes") @db.Text
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  client         Client             @relation(fields: [clientId], references: [id])
+  consultation   ClientConsultation? @relation(fields: [consultationId], references: [id])
+
+  @@index([tenantId])
+  @@index([clientId])
+  @@map("client_remedies")
+}
+
+model ClientImport {
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @map("tenant_id") @db.Uuid
+  fileName          String   @map("file_name")
+  fileUrl           String   @map("file_url")
+  importType        ImportType @map("import_type")
+  status            ImportStatus @default(pending)
+  totalRecords      Int      @default(0) @map("total_records")
+  successfulRecords Int      @default(0) @map("successful_records")
+  failedRecords     Int      @default(0) @map("failed_records")
+  duplicateRecords  Int      @default(0) @map("duplicate_records")
+  columnMapping     Json?    @map("column_mapping")
+  errors            Json?
+  createdBy         String?  @map("created_by") @db.Uuid
+  startedAt         DateTime? @map("started_at")
+  completedAt       DateTime? @map("completed_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@index([tenantId])
+  @@map("client_imports")
+}
