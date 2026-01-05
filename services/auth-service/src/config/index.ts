@@ -36,6 +36,9 @@ const envSchema = z.object({
 
     // Internal communication
     INTERNAL_SERVICE_KEY: z.string().optional(),
+
+    // Security Policies
+    AUTH_STRICT_DEVICE_POLICY: z.string().transform((val) => val === 'true').default('true'),
 });
 
 const env = envSchema.parse(process.env);
@@ -71,6 +74,10 @@ export const config = {
 
     internal: {
         serviceKey: env.INTERNAL_SERVICE_KEY,
+    },
+
+    security: {
+        strictDevicePolicy: env.AUTH_STRICT_DEVICE_POLICY,
     },
 
     // Direct access for internal API routes
