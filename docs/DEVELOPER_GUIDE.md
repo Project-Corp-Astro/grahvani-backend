@@ -39,6 +39,14 @@ Generate the Prisma clients for all services that use a database:
 npx turbo run generate
 ```
 
+> [!NOTE]
+> **Why is this needed?** Unlike raw SQL, Prisma generates a **Type-Safe Client** specific to our database schema. This client is stored in `node_modules` (which is ignored by Git).
+> 
+> **When to run this?**
+> 1. **First time**: When you first clone the project.
+> 2. **After Pulling**: Whenever you `git pull` and see changes in any `schema.prisma` file.
+> 3. **After Modifying**: If you change the database structure yourself.
+
 ---
 
 ## 3. Running the Backend
