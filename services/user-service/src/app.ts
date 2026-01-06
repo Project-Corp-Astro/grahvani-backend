@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import pino from 'pino-http';
 
 import routes from './routes';
+import { errorMiddleware } from './middleware/error.middleware';
 
 const app: Express = express();
 
@@ -25,5 +26,8 @@ app.get('/', (req: Request, res: Response) => {
 app.get('/health', (req: Request, res: Response) => {
     res.status(200).json({ status: 'ok', service: 'user-service' });
 });
+
+// Global Error Handler (must be last)
+app.use(errorMiddleware);
 
 export default app;

@@ -1,10 +1,28 @@
 import app from './app';
 import dotenv from 'dotenv';
+import { eventSubscriber } from './events/subscriber';
 
 dotenv.config();
 
 const PORT = process.env.PORT || 3002;
 
-app.listen(PORT, () => {
+// Start the HTTP server
+app.listen(PORT, async () => {
     console.log(`[User Service] Listening on port ${PORT}`);
+
+    // Start event subscriber for Auth Service events
+    try {
+        await eventSubscriber.start();
+        console.log('[User Service] Event subscriber started');
+    } catch (error) {
+        console.error('[User Service] Failed to start event subscriber:', error);
+        // Service continues without event sync (degraded mode)
+    }
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+    console.log('[User Service] Shutting down...');
+    await eventSubscriber.stop();
+    process.exit(0);
 });
