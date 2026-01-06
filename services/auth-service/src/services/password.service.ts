@@ -1,7 +1,7 @@
 // Password Service - Complete Implementation per LLD
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import { getPrismaClient } from '../config/database';
+import { PrismaClient } from '../generated/prisma';
 import { getRedisClient } from '../config/redis';
 import { SessionService } from './session.service';
 import { TokenService } from './token.service';
@@ -20,7 +20,7 @@ import {
 } from '../errors/auth.errors';
 
 export class PasswordService {
-    private prisma = getPrismaClient();
+    private prisma = new PrismaClient();
     private redis = getRedisClient();
     private sessionService = new SessionService();
     private tokenService = new TokenService();

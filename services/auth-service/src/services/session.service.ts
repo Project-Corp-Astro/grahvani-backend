@@ -1,7 +1,7 @@
 // Session Service - Complete Implementation per LLD
-import { getPrismaClient } from '../config/database';
 import { getRedisClient } from '../config/redis';
 import { TokenService } from './token.service';
+import { PrismaClient, Session } from '../generated/prisma';
 import { logger } from '../config/logger';
 
 export interface SessionInfo {
@@ -26,7 +26,7 @@ export interface CreateSessionData {
 }
 
 export class SessionService {
-    private prisma = getPrismaClient();
+    private prisma = new PrismaClient();
     private redis = getRedisClient();
     private tokenService = new TokenService();
 

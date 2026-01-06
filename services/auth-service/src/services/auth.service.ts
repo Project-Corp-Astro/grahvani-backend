@@ -1,10 +1,11 @@
 // Auth Service - Complete Implementation per LLD
 import bcrypt from 'bcrypt';
 import { getSupabaseClient, getSupabaseAdmin } from '../config/supabase';
-import { getPrismaClient } from '../config/database';
+import { PrismaClient, User } from '../generated/prisma';
 import { getRedisClient } from '../config/redis';
 import { TokenService } from '@/services/token.service';
 import { SessionService } from '@/services/session.service';
+import { VerificationService } from '@/services/verification.service';
 import { EventPublisher } from '@/services/event.publisher';
 import { logger } from '@/config/logger';
 import { config } from '@/config';
@@ -65,8 +66,9 @@ export interface RequestMetadata {
 export class AuthService {
     private tokenService = new TokenService();
     private sessionService = new SessionService();
+    private verificationService = new VerificationService();
     private eventPublisher = new EventPublisher();
-    private prisma = getPrismaClient();
+    private prisma = new PrismaClient();
     private redis = getRedisClient();
     private supabase = getSupabaseClient();
 
@@ -112,7 +114,7 @@ export class AuthService {
                 passwordHash,
                 name: data.name,
                 role: 'user',
-                status: 'active',
+                status: 'pending_verification', // Per LLD, new users are pending
                 emailVerified: false,
             }
         });
@@ -133,14 +135,10 @@ export class AuthService {
             false
         );
 
-        // Publish event for notification service (send verification email)
-        await this.eventPublisher.publish('user.registered', {
-            userId: user.id,
-            email: user.email,
-            name: user.name,
-        });
+        // Send verification email via service
+        await this.verificationService.sendVerificationEmail(user.id, user.email, user.name);
 
-        logger.info({ userId: user.id }, 'User registered successfully');
+        logger.info({ userId: user.id }, 'User registered successfully and verification sent');
 
         return {
             user: {
@@ -203,11 +201,6 @@ export class AuthService {
             logger.info({ userId: user.id }, 'Strict Device Policy: Revoked all existing sessions');
         }
 
-        // Optional: Check email verification
-        // if (!user.emailVerified) {
-        //   throw new EmailNotVerifiedError();
-        // }
-
         // Create session
         const { session, sessionId } = await this.sessionService.createSession({
             userId: user.id,
@@ -235,7 +228,7 @@ export class AuthService {
         await this.recordLoginAttempt(data.email, metadata, true);
 
         // Clear rate limit on successful login
-        const rateKey = `login_attempts:${data.email}:${metadata.ipAddress}`;
+        const rateKey = `login_attempts:${data.email}:${metadata.ipAddress} `;
         await this.redis.del(rateKey);
 
         // Publish event
@@ -386,6 +379,28 @@ export class AuthService {
     }
 
     /**
+     * Verify email with token
+     */
+    async verifyEmail(token: string): Promise<void> {
+        await this.verificationService.verifyEmail(token);
+    }
+
+    /**
+     * Resend verification email
+     */
+    async resendVerification(email: string): Promise<void> {
+        const user = await this.prisma.user.findUnique({
+            where: { email }
+        });
+
+        if (!user) return; // Silent return for security
+
+        if (user.emailVerified) return;
+
+        await this.verificationService.sendVerificationEmail(user.id, user.email, user.name);
+    }
+
+    /**
      * Authenticate or register via Social Provider (Supabase OAuth Sync)
      */
     async socialLogin(supabaseAccessToken: string, metadata: RequestMetadata): Promise<AuthResult> {
@@ -500,10 +515,79 @@ export class AuthService {
         };
     }
 
+    /**
+     * Link an OAuth account to the current user
+     */
+    async linkOAuth(userId: string, supabaseAccessToken: string): Promise<void> {
+        // 1. Verify token with Supabase
+        const { data: { user: sbUser }, error } = await this.supabase.auth.getUser(supabaseAccessToken);
+
+        if (error || !sbUser || !sbUser.email) {
+            throw new InvalidCredentialsError('OAuth verification failed');
+        }
+
+        const provider = sbUser.app_metadata.provider as any;
+
+        // 2. Check if this OAuth account is already linked to another user
+        const existingLink = await this.prisma.oAuthAccount.findUnique({
+            where: {
+                provider_providerUserId: {
+                    provider,
+                    providerUserId: sbUser.id
+                }
+            }
+        });
+
+        if (existingLink) {
+            if (existingLink.userId === userId) {
+                return; // Already linked to this user
+            }
+            throw new Error('This account is already linked to another user');
+        }
+
+        // 3. Create the link
+        await this.prisma.oAuthAccount.create({
+            data: {
+                userId,
+                provider,
+                providerUserId: sbUser.id,
+                profileData: sbUser.user_metadata as any,
+            }
+        });
+
+        logger.info({ userId, provider }, 'OAuth account linked');
+    }
+
+    /**
+     * Unlink an OAuth account
+     */
+    async unlinkOAuth(userId: string, provider: string): Promise<void> {
+        // Enforce at least one authentication method
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            include: { oauthAccounts: true }
+        });
+
+        if (!user) throw new NotFoundError('User');
+
+        if (!user.passwordHash && user.oauthAccounts.length <= 1) {
+            throw new Error('Cannot unlink the only authentication method. Please set a password first.');
+        }
+
+        await this.prisma.oAuthAccount.deleteMany({
+            where: {
+                userId,
+                provider: provider as any
+            }
+        });
+
+        logger.info({ userId, provider }, 'OAuth account unlinked');
+    }
+
     // ============ PRIVATE METHODS ============
 
     private async checkRateLimit(email: string, ipAddress: string): Promise<void> {
-        const key = `login_attempts:${email}:${ipAddress}`;
+        const key = `login_attempts:${email}:${ipAddress} `;
         const attempts = await this.redis.get(key);
 
         if (attempts && parseInt(attempts, 10) >= 5) {
@@ -519,7 +603,7 @@ export class AuthService {
     ): Promise<void> {
         // Increment rate limit counter on failure
         if (!success) {
-            const key = `login_attempts:${email}:${metadata.ipAddress}`;
+            const key = `login_attempts:${email}:${metadata.ipAddress} `;
             await this.redis.incr(key);
             await this.redis.expire(key, 900); // 15 minutes
         }

@@ -1,8 +1,6 @@
-// Auth Controller - Complete Implementation
+// Auth Controller - Complete Implementation per LLD
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../../../services/auth.service';
-import { TokenService } from '../../../services/token.service';
-import { SessionService } from '../../../services/session.service';
 import { PasswordService } from '../../../services/password.service';
 import {
     RegisterSchema,
@@ -16,8 +14,6 @@ import { logger } from '../../../config/logger';
 import { ZodError } from 'zod';
 
 const authService = new AuthService();
-const tokenService = new TokenService();
-const sessionService = new SessionService();
 const passwordService = new PasswordService();
 
 /**
@@ -32,19 +28,30 @@ function getRequestMetadata(req: Request) {
 }
 
 /**
+ * Format structured error response per LLD
+ */
+function formatError(code: string, message: string, details?: any) {
+    return {
+        error: {
+            code,
+            message,
+            details,
+            requestId: `req_${Math.random().toString(36).substring(2, 11)}`,
+            timestamp: new Date().toISOString()
+        }
+    };
+}
+
+/**
  * Format Zod validation errors
  */
 function formatValidationError(error: ZodError) {
-    return {
-        error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Validation failed',
-            details: error.errors.map(e => ({
-                field: e.path.join('.'),
-                message: e.message,
-            })),
-        }
-    };
+    const details: Record<string, string> = {};
+    error.errors.forEach(e => {
+        details[e.path.join('.')] = e.message;
+    });
+
+    return formatError('VALIDATION_ERROR', 'Validation failed', details);
 }
 
 export class AuthController {
@@ -95,9 +102,7 @@ export class AuthController {
             const allDevices = req.body.allDevices === true;
 
             if (!user?.sub || !user?.sessionId) {
-                return res.status(401).json({
-                    error: { code: 'UNAUTHORIZED', message: 'Not authenticated' }
-                });
+                return res.status(401).json(formatError('UNAUTHORIZED', 'Not authenticated'));
             }
 
             await authService.logout(user.sub, user.sessionId, allDevices);
@@ -137,9 +142,7 @@ export class AuthController {
             const user = (req as any).user;
 
             if (!user?.sub) {
-                return res.status(401).json({
-                    error: { code: 'UNAUTHORIZED', message: 'Not authenticated' }
-                });
+                return res.status(401).json(formatError('UNAUTHORIZED', 'Not authenticated'));
             }
 
             const userData = await authService.getCurrentUser(user.sub);
@@ -158,9 +161,7 @@ export class AuthController {
             const user = (req as any).user;
 
             if (!user?.sub) {
-                return res.status(401).json({
-                    error: { code: 'UNAUTHORIZED', message: 'Not authenticated' }
-                });
+                return res.status(401).json(formatError('UNAUTHORIZED', 'Not authenticated'));
             }
 
             const result = await authService.getUserSessions(user.sub, user.sessionId);
@@ -180,9 +181,7 @@ export class AuthController {
             const { id: sessionId } = req.params;
 
             if (!user?.sub) {
-                return res.status(401).json({
-                    error: { code: 'UNAUTHORIZED', message: 'Not authenticated' }
-                });
+                return res.status(401).json(formatError('UNAUTHORIZED', 'Not authenticated'));
             }
 
             await authService.revokeSession(user.sub, sessionId);
@@ -205,14 +204,13 @@ export class AuthController {
 
             await passwordService.forgotPassword(parseResult.data);
 
-            // Always return success to prevent email enumeration
             res.status(200).json({
                 success: true,
                 message: 'If an account exists with this email, a password reset link has been sent'
             });
         } catch (error) {
-            // Log but don't expose errors
             logger.error({ error }, 'Forgot password error');
+            // Always return success to prevent email enumeration
             res.status(200).json({
                 success: true,
                 message: 'If an account exists with this email, a password reset link has been sent'
@@ -236,8 +234,8 @@ export class AuthController {
                 success: true,
                 message: 'Password reset successfully. Please login with your new password.'
             });
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            res.status(400).json(formatError('PASSWORD_RESET_FAILED', error.message));
         }
     }
 
@@ -249,9 +247,7 @@ export class AuthController {
             const user = (req as any).user;
 
             if (!user?.sub || !user?.sessionId) {
-                return res.status(401).json({
-                    error: { code: 'UNAUTHORIZED', message: 'Not authenticated' }
-                });
+                return res.status(401).json(formatError('UNAUTHORIZED', 'Not authenticated'));
             }
 
             const parseResult = ChangePasswordSchema.safeParse(req.body);
@@ -265,8 +261,8 @@ export class AuthController {
                 success: true,
                 message: 'Password changed successfully. Other sessions have been logged out.'
             });
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            res.status(400).json(formatError('PASSWORD_CHANGE_FAILED', error.message));
         }
     }
 
@@ -278,17 +274,65 @@ export class AuthController {
             const { accessToken } = req.body;
 
             if (!accessToken) {
-                return res.status(400).json({
-                    error: { code: 'VALIDATION_ERROR', message: 'Supabase access token is required' }
-                });
+                return res.status(400).json(formatError('VALIDATION_ERROR', 'Supabase access token is required'));
             }
 
             const metadata = getRequestMetadata(req);
             const result = await authService.socialLogin(accessToken, metadata);
 
             res.status(200).json(result);
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            res.status(400).json(formatError('SOCIAL_LOGIN_FAILED', error.message));
+        }
+    }
+
+    /**
+     * POST /oauth/link
+     */
+    async linkOAuth(req: Request, res: Response, next: NextFunction) {
+        try {
+            const user = (req as any).user;
+            const { accessToken } = req.body;
+
+            if (!user?.sub) {
+                return res.status(401).json(formatError('UNAUTHORIZED', 'Not authenticated'));
+            }
+
+            if (!accessToken) {
+                return res.status(400).json(formatError('VALIDATION_ERROR', 'OAuth access token is required'));
+            }
+
+            await authService.linkOAuth(user.sub, accessToken);
+
+            res.status(200).json({
+                success: true,
+                message: 'OAuth account linked successfully'
+            });
+        } catch (error: any) {
+            res.status(400).json(formatError('LINK_FAILED', error.message));
+        }
+    }
+
+    /**
+     * DELETE /oauth/:provider
+     */
+    async unlinkOAuth(req: Request, res: Response, next: NextFunction) {
+        try {
+            const user = (req as any).user;
+            const { provider } = req.params;
+
+            if (!user?.sub) {
+                return res.status(401).json(formatError('UNAUTHORIZED', 'Not authenticated'));
+            }
+
+            await authService.unlinkOAuth(user.sub, provider);
+
+            res.status(200).json({
+                success: true,
+                message: `Linked account (${provider}) removed successfully`
+            });
+        } catch (error: any) {
+            res.status(400).json(formatError('UNLINK_FAILED', error.message));
         }
     }
 
@@ -300,17 +344,36 @@ export class AuthController {
             const { token } = req.body;
 
             if (!token) {
-                return res.status(400).json({
-                    error: { code: 'VALIDATION_ERROR', message: 'Token is required' }
-                });
+                return res.status(400).json(formatError('VALIDATION_ERROR', 'Token is required'));
             }
 
-            // TODO: Implement email verification
-            logger.info('Email verification requested');
+            await authService.verifyEmail(token);
 
             res.status(200).json({
                 success: true,
                 message: 'Email verified successfully'
+            });
+        } catch (error: any) {
+            res.status(400).json(formatError('VERIFICATION_FAILED', error.message));
+        }
+    }
+
+    /**
+     * POST /resend-verification
+     */
+    async resendVerification(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { email } = req.body;
+
+            if (!email) {
+                return res.status(400).json(formatError('VALIDATION_ERROR', 'Email is required'));
+            }
+
+            await authService.resendVerification(email);
+
+            res.status(200).json({
+                success: true,
+                message: 'If an account exists with this email, a verification link has been sent'
             });
         } catch (error) {
             next(error);
@@ -319,26 +382,19 @@ export class AuthController {
 
     /**
      * POST /activate
-     * Account activation for SAP-provisioned users
-     * User sets their password here after clicking the invitation link
      */
     async activateAccount(req: Request, res: Response, next: NextFunction) {
         try {
             const { token, password } = req.body;
 
             if (!token) {
-                return res.status(400).json({
-                    error: { code: 'VALIDATION_ERROR', message: 'Activation token is required' }
-                });
+                return res.status(400).json(formatError('VALIDATION_ERROR', 'Activation token is required'));
             }
 
             if (!password || password.length < 8) {
-                return res.status(400).json({
-                    error: { code: 'VALIDATION_ERROR', message: 'Password must be at least 8 characters' }
-                });
+                return res.status(400).json(formatError('VALIDATION_ERROR', 'Password must be at least 8 characters'));
             }
 
-            // Import ProvisioningService dynamically to avoid circular deps
             const { ProvisioningService } = await import('../../../services/provision.service');
             const provisioningService = new ProvisioningService();
 
@@ -352,11 +408,8 @@ export class AuthController {
                 userId: result.userId,
                 email: result.email,
             });
-        } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : 'Activation failed';
-            res.status(400).json({
-                error: { code: 'ACTIVATION_FAILED', message }
-            });
+        } catch (error: any) {
+            res.status(400).json(formatError('ACTIVATION_FAILED', error.message));
         }
     }
 }

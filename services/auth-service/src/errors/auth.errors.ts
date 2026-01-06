@@ -19,8 +19,8 @@ export class UserExistsError extends BaseError {
 }
 
 export class InvalidCredentialsError extends BaseError {
-    constructor() {
-        super('Invalid email or password', 401, 'INVALID_CREDENTIALS');
+    constructor(message: string = 'Invalid email or password') {
+        super(message, 401, 'INVALID_CREDENTIALS');
     }
 }
 

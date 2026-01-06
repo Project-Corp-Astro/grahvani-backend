@@ -9,6 +9,7 @@ export type AuthEventType =
     | 'user.logout'
     | 'user.provisioned'  // SAP-initiated account creation
     | 'user.activated'    // User completed account activation
+    | 'auth.verification_requested'
     | 'auth.password_reset_requested'
     | 'auth.password_reset'
     | 'auth.password_changed'
