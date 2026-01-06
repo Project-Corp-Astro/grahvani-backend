@@ -8,6 +8,7 @@
     "services/*"
   ],
   "scripts": {
+    "predev": "powershell -ExecutionPolicy Bypass -File clean-start.ps1",
     "dev": "turbo run dev",
     "build": "npm run prisma:generate && turbo run build",
     "test": "turbo run test",

@@ -2,24 +2,26 @@
 # This script kills all processes holding ports 3001, 3002, and 3008
 
 $ports = @(3001, 3002, 3008)
-$found = $false
+$foundAny = $false
 
 foreach ($port in $ports) {
-    $connection = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
-    if ($connection) {
-        $found = $true
-        foreach ($conn in $connection) {
-            $pid = $conn.OwningProcess
-            if ($pid -gt 0) {
-                Write-Host "Killing process $pid on port $port..." -ForegroundColor Yellow
-                Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+    $connections = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+    if ($connections) {
+        $foundAny = $true
+        foreach ($conn in $connections) {
+            $processId = $conn.OwningProcess
+            if ($processId -gt 0) {
+                # Get process name for better logging
+                $processName = (Get-Process -Id $processId -ErrorAction SilentlyContinue).ProcessName
+                Write-Host "Cleaning up $processName (PID: $processId) on port $port..." -ForegroundColor Yellow
+                Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue
             }
         }
     }
 }
 
-if (-not $found) {
-    Write-Host "No active processes found on ports 3001, 3002, or 3008." -ForegroundColor Green
+if (-not $foundAny) {
+    Write-Host "Ports 3001, 3002, and 3008 are already clear." -ForegroundColor Green
 } else {
-    Write-Host "Cleanup complete! You can now run 'npm run dev' safely." -ForegroundColor Green
+    Write-Host "Port cleanup complete." -ForegroundColor Green
 }

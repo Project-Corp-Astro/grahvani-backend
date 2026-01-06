@@ -1,6 +1,5 @@
-// Event Subscriber for User Service
-// Listens to Auth Service events and syncs user data
-import { createClient, RedisClientType } from 'redis';
+import { RedisClientType } from 'redis';
+import { getRedisClient } from '../config/redis';
 import { PrismaClient } from '../generated/prisma';
 
 const prisma = new PrismaClient();
@@ -17,6 +16,8 @@ export interface UserRegisteredEvent {
     };
     timestamp: string;
 }
+
+// ... (rest of interfaces remain same)
 
 export interface UserUpdatedEvent {
     type: 'user.updated';
@@ -40,19 +41,27 @@ export interface UserDeletedEvent {
     timestamp: string;
 }
 
-type AuthEvent = UserRegisteredEvent | UserUpdatedEvent | UserDeletedEvent;
+export interface UserLoginEvent {
+    type: 'user.login';
+    payload: {
+        userId: string;
+        sessionId: string;
+        metadata: {
+            ipAddress?: string;
+            deviceType?: string;
+            userAgent?: string;
+        };
+    };
+    timestamp: string;
+}
+
+type AuthEvent = UserRegisteredEvent | UserUpdatedEvent | UserDeletedEvent | UserLoginEvent;
 
 export class EventSubscriber {
-    private redis: RedisClientType | null = null;
     private isRunning = false;
 
     private async getClient(): Promise<RedisClientType> {
-        if (!this.redis) {
-            const url = process.env.REDIS_URL || 'redis://localhost:6379';
-            this.redis = createClient({ url });
-            await this.redis.connect();
-        }
-        return this.redis;
+        return getRedisClient();
     }
 
     /**
@@ -99,6 +108,9 @@ export class EventSubscriber {
                     break;
                 case 'user.deleted':
                     await this.handleUserDeleted(event);
+                    break;
+                case 'user.login':
+                    await this.handleUserLogin(event);
                     break;
                 default:
                     console.warn(`[EventSubscriber] Unknown event type: ${(event as any).type}`);
@@ -196,13 +208,31 @@ export class EventSubscriber {
     }
 
     /**
+     * Handle user.login - Log activity in User Service
+     */
+    private async handleUserLogin(event: UserLoginEvent): Promise<void> {
+        const { userId, metadata } = event.payload;
+
+        try {
+            await prisma.userActivityLog.create({
+                data: {
+                    userId,
+                    action: 'user_login',
+                    ipAddress: metadata.ipAddress || null,
+                    userAgent: metadata.userAgent || null,
+                },
+            });
+
+            console.log(`[EventSubscriber] Login activity logged for user: ${userId}`);
+        } catch (error) {
+            console.error(`[EventSubscriber] Failed to log login activity:`, error);
+        }
+    }
+
+    /**
      * Stop the subscriber
      */
     async stop(): Promise<void> {
-        if (this.redis) {
-            await this.redis.disconnect();
-            this.redis = null;
-        }
         this.isRunning = false;
         console.log('[EventSubscriber] Stopped');
     }
