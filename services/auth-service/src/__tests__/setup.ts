@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/prisma';
 
 // 1. Create the persistent mocks
 export const prismaMock = mockDeep<PrismaClient>();

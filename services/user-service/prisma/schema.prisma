@@ -1,10 +1,17 @@
+// Prisma Schema for User Service
+// Uses single Session Pooler URL (Port 5432) for all operations
+
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  schemas   = ["app_users"]
 }
 
 // Enums
@@ -12,6 +19,8 @@ enum UserRole {
   user
   admin
   moderator
+
+  @@schema("app_users")
 }
 
 enum UserStatus {
@@ -19,6 +28,8 @@ enum UserStatus {
   suspended
   pending_verification
   deleted
+
+  @@schema("app_users")
 }
 
 enum Gender {
@@ -26,6 +37,8 @@ enum Gender {
   female
   other
   prefer_not_to_say
+
+  @@schema("app_users")
 }
 
 // Models
@@ -67,6 +80,7 @@ model User {
   following       UserFollower[] @relation("Follower")
   
   @@map("users")
+  @@schema("app_users")
   @@index([tenantId])
   @@index([email])
   @@index([status])
@@ -87,6 +101,7 @@ model UserPreference {
   
   @@unique([userId, category, key])
   @@map("user_preferences")
+  @@schema("app_users")
   @@index([userId])
   @@index([category])
 }
@@ -109,6 +124,7 @@ model UserAddress {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("user_addresses")
+  @@schema("app_users")
   @@index([userId])
 }
 
@@ -128,6 +144,7 @@ model UserActivityLog {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("user_activity_logs")
+  @@schema("app_users")
   @@index([userId, createdAt])
   @@index([action])
   @@index([entityType, entityId])
@@ -145,6 +162,7 @@ model UserFollower {
   
   @@unique([followerId, followingId])
   @@map("user_followers")
+  @@schema("app_users")
   @@index([followerId])
   @@index([followingId])
 }

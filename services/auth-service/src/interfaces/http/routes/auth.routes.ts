@@ -19,6 +19,7 @@ router.post('/refresh', authController.refreshToken);
 router.post('/forgot-password', passwordResetRateLimiter, authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
 router.post('/verify-email', authController.verifyEmail);
+router.post('/resend-verification', authController.resendVerification);
 router.post('/activate', authController.activateAccount);
 
 // Protected routes (auth required)
@@ -26,7 +27,9 @@ router.use(authMiddleware);
 router.post('/logout', authController.logout);
 router.get('/me', authController.getCurrentUser);
 router.get('/sessions', authController.getSessions);
-router.delete('/sessions/:id', authController.revokeSession);
+router.post('/sessions/:id/revoke', authController.revokeSession);
+router.post('/oauth/link', authController.linkOAuth);
+router.delete('/oauth/:provider', authController.unlinkOAuth);
 router.post('/change-password', authController.changePassword);
 
 export { router as authRoutes };

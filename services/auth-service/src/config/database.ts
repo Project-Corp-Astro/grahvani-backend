@@ -1,5 +1,5 @@
 // Prisma Database Client
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/prisma';
 import { logger } from './logger';
 
 let prismaClient: PrismaClient | null = null;
