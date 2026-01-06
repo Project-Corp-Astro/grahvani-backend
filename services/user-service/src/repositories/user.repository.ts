@@ -31,13 +31,16 @@ export class UserRepository {
      * Find user by ID within tenant
      */
     async findById(tenantId: string, id: string): Promise<User | null> {
-        return prisma.user.findFirst({
+        console.log('[UserRepository.findById] Querying:', { id, tenantId });
+        const user = await prisma.user.findFirst({
             where: { id, tenantId, deletedAt: null },
             include: {
                 preferences: true,
                 addresses: true,
             },
         });
+        console.log('[UserRepository.findById] Result:', user ? { id: user.id, email: user.email, tenantId: user.tenantId } : 'NOT FOUND');
+        return user;
     }
 
     /**
