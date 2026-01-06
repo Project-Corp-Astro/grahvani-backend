@@ -1,7 +1,10 @@
 import app from './app';
 import dotenv from 'dotenv';
+import path from 'path';
 
-dotenv.config();
+// Load environment variables
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') }); // Root .env
+dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true }); // Service .env
 
 const PORT = process.env.PORT || 3008;
 

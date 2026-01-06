@@ -41,11 +41,13 @@ export class SessionService {
         // Detect device type from user agent
         const deviceType = this.detectDeviceType(data.userAgent || '');
 
+        const tempHash = `temp_${Math.random().toString(36).substring(2)}_${Date.now()}`;
+
         const session = await this.prisma.session.create({
             data: {
                 userId: data.userId,
-                tokenHash: '', // Will be updated when tokens are generated
-                refreshTokenHash: '',
+                tokenHash: tempHash,
+                refreshTokenHash: `refresh_${tempHash}`,
                 ipAddress: data.ipAddress,
                 userAgent: data.userAgent,
                 deviceType: deviceType || data.deviceType,

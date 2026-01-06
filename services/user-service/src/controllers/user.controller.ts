@@ -57,13 +57,18 @@ export const UserController = {
             const tenantId = req.user!.tenantId;
             const userId = req.user!.id;
 
+            console.log('[UserController.getMe] Request received:', { userId, tenantId, email: req.user!.email });
+
             const user = await userService.getCurrentUser(tenantId, userId);
 
             // Update last active (non-blocking)
             userService.updateLastActive(tenantId, userId).catch(console.error);
 
+            console.log('[UserController.getMe] User found:', { id: user.id, email: user.email });
+
             res.json(user);
         } catch (error) {
+            console.error('[UserController.getMe] Error:', error);
             if (error instanceof BaseError) {
                 return res.status(error.statusCode).json(createErrorResponse(error, requestId));
             }
