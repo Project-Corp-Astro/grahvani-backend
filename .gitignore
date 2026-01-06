@@ -28,6 +28,9 @@ yarn-error.log*
 /services/*/prisma/migrations/
 !/services/*/prisma/schema.prisma
 
+# Prisma Generated Client (regenerate with: npm run prisma:generate)
+**/src/generated/prisma/
+
 # Temporary files
 *.tmp
 *.temp

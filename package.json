@@ -9,9 +9,10 @@
   ],
   "scripts": {
     "dev": "turbo run dev",
-    "build": "turbo run build",
+    "build": "npm run prisma:generate && turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",
+    "prisma:generate": "npm run prisma:generate --workspace=auth-service && npm run prisma:generate --workspace=client-service && npm run prisma:generate --workspace=user-service",
     "postinstall": "turbo run generate"
   },
   "devDependencies": {
