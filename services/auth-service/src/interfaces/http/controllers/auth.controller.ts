@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../../../services/auth.service';
 import { PasswordService } from '../../../services/password.service';
+import { DeviceUtils } from '../../../utils/device.utils';
 import {
     RegisterSchema,
     LoginSchema,
@@ -20,10 +21,15 @@ const passwordService = new PasswordService();
  * Extract request metadata for session tracking
  */
 function getRequestMetadata(req: Request) {
+    const userAgent = req.headers['user-agent'] || 'unknown';
+    const deviceType = req.headers['x-device-type'] as string || DeviceUtils.detectDeviceType(userAgent);
+    const deviceName = req.headers['x-device-name'] as string || DeviceUtils.generateDeviceName(userAgent);
+
     return {
         ipAddress: req.ip || req.socket.remoteAddress || 'unknown',
-        userAgent: req.headers['user-agent'] || 'unknown',
-        deviceName: req.body?.deviceName,
+        userAgent,
+        deviceType,
+        deviceName,
     };
 }
 
@@ -105,7 +111,8 @@ export class AuthController {
                 return res.status(401).json(formatError('UNAUTHORIZED', 'Not authenticated'));
             }
 
-            await authService.logout(user.sub, user.sessionId, allDevices);
+            const metadata = getRequestMetadata(req);
+            await authService.logout(user.sub, user.sessionId, metadata, allDevices);
 
             res.status(200).json({
                 success: true,
@@ -184,7 +191,8 @@ export class AuthController {
                 return res.status(401).json(formatError('UNAUTHORIZED', 'Not authenticated'));
             }
 
-            await authService.revokeSession(user.sub, sessionId);
+            const metadata = getRequestMetadata(req);
+            await authService.revokeSession(user.sub, sessionId, metadata);
 
             res.status(200).json({ success: true, message: 'Session revoked' });
         } catch (error) {
@@ -228,7 +236,8 @@ export class AuthController {
                 return res.status(400).json(formatValidationError(parseResult.error));
             }
 
-            await passwordService.resetPassword(parseResult.data);
+            const metadata = getRequestMetadata(req);
+            await passwordService.resetPassword(parseResult.data, metadata);
 
             res.status(200).json({
                 success: true,
@@ -255,7 +264,8 @@ export class AuthController {
                 return res.status(400).json(formatValidationError(parseResult.error));
             }
 
-            await passwordService.changePassword(user.sub, parseResult.data, user.sessionId);
+            const metadata = getRequestMetadata(req);
+            await passwordService.changePassword(user.sub, parseResult.data, user.sessionId, metadata);
 
             res.status(200).json({
                 success: true,

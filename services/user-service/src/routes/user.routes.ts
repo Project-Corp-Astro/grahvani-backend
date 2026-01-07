@@ -15,6 +15,12 @@ router.get('/me', UserController.getMe);
 router.patch('/me', UserController.updateMe);
 router.delete('/me', UserController.deleteMe);
 
+// ============ /me/addresses Endpoints ============
+router.get('/me/addresses', UserController.getMyAddresses);
+router.post('/me/addresses', UserController.addAddress);
+router.patch('/me/addresses/:id', UserController.updateAddress);
+router.delete('/me/addresses/:id', UserController.deleteAddress);
+
 // ============ /me/preferences Endpoints ============
 router.get('/me/preferences', PreferencesController.getPreferences);
 router.put('/me/preferences', PreferencesController.updatePreferences);

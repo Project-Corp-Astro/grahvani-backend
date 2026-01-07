@@ -2,10 +2,12 @@
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { PrismaClient } from '../generated/prisma';
+import { getPrismaClient } from '../config/database';
 import { getRedisClient } from '../config/redis';
 import { SessionService } from './session.service';
 import { TokenService } from './token.service';
 import { EventPublisher } from './event.publisher';
+import { RequestMetadata } from './auth.service';
 import { logger } from '../config/logger';
 import { config } from '../config';
 import {
@@ -20,7 +22,7 @@ import {
 } from '../errors/auth.errors';
 
 export class PasswordService {
-    private prisma = new PrismaClient();
+    private prisma = getPrismaClient();
     private redis = getRedisClient();
     private sessionService = new SessionService();
     private tokenService = new TokenService();
@@ -80,7 +82,7 @@ export class PasswordService {
     /**
      * Reset password with token
      */
-    async resetPassword(data: ResetPasswordInput): Promise<void> {
+    async resetPassword(data: ResetPasswordInput, metadata: RequestMetadata): Promise<void> {
         // Find valid token
         const tokenHash = this.hashToken(data.token);
         const resetToken = await this.prisma.passwordResetToken.findUnique({
@@ -121,6 +123,12 @@ export class PasswordService {
         // Publish event
         await this.eventPublisher.publish('auth.password_reset', {
             userId: resetToken.userId,
+            metadata: {
+                ipAddress: metadata.ipAddress,
+                userAgent: metadata.userAgent,
+                deviceType: metadata.deviceType,
+                deviceName: metadata.deviceName,
+            },
         });
 
         logger.info({ userId: resetToken.userId }, 'Password reset successfully');
@@ -132,7 +140,8 @@ export class PasswordService {
     async changePassword(
         userId: string,
         data: ChangePasswordInput,
-        currentSessionId: string
+        currentSessionId: string,
+        metadata: RequestMetadata
     ): Promise<void> {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
@@ -167,6 +176,12 @@ export class PasswordService {
         // Publish event
         await this.eventPublisher.publish('auth.password_changed', {
             userId,
+            metadata: {
+                ipAddress: metadata.ipAddress,
+                userAgent: metadata.userAgent,
+                deviceType: metadata.deviceType,
+                deviceName: metadata.deviceName,
+            },
         });
 
         logger.info({ userId }, 'Password changed successfully');

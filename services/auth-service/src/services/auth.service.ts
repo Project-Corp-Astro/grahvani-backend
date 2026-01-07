@@ -7,6 +7,7 @@ import { TokenService } from '@/services/token.service';
 import { SessionService } from '@/services/session.service';
 import { VerificationService } from '@/services/verification.service';
 import { EventPublisher } from '@/services/event.publisher';
+import { getPrismaClient } from '../config/database';
 import { logger } from '@/config/logger';
 import { config } from '@/config';
 import {
@@ -68,7 +69,7 @@ export class AuthService {
     private sessionService = new SessionService();
     private verificationService = new VerificationService();
     private eventPublisher = new EventPublisher();
-    private prisma = new PrismaClient();
+    private prisma = getPrismaClient();
     private redis = getRedisClient();
     private supabase = getSupabaseClient();
 
@@ -178,20 +179,21 @@ export class AuthService {
         });
 
         if (!user || !user.passwordHash) {
-            await this.recordLoginAttempt(data.email, metadata, false, 'User not found');
+            const potentialUser = await this.prisma.user.findUnique({ where: { email: data.email } });
+            await this.recordLoginAttempt(data.email, metadata, false, 'User not found', potentialUser?.id);
             throw new InvalidCredentialsError();
         }
 
         // Verify password
         const passwordValid = await bcrypt.compare(data.password, user.passwordHash);
         if (!passwordValid) {
-            await this.recordLoginAttempt(data.email, metadata, false, 'Invalid password');
+            await this.recordLoginAttempt(data.email, metadata, false, 'Invalid password', user.id);
             throw new InvalidCredentialsError();
         }
 
         // Check account status
         if (user.status === 'suspended') {
-            await this.recordLoginAttempt(data.email, metadata, false, 'Account suspended');
+            await this.recordLoginAttempt(data.email, metadata, false, 'Account suspended', user.id);
             throw new AccountSuspendedError();
         }
 
@@ -225,7 +227,7 @@ export class AuthService {
         });
 
         // Record successful login
-        await this.recordLoginAttempt(data.email, metadata, true);
+        await this.recordLoginAttempt(data.email, metadata, true, undefined, user.id);
 
         // Clear rate limit on successful login
         const rateKey = `login_attempts:${data.email}:${metadata.ipAddress} `;
@@ -237,7 +239,9 @@ export class AuthService {
             sessionId,
             metadata: {
                 ipAddress: metadata.ipAddress,
-                deviceType: session.deviceType,
+                userAgent: metadata.userAgent,
+                deviceType: metadata.deviceType,
+                deviceName: metadata.deviceName,
             },
         });
 
@@ -317,6 +321,7 @@ export class AuthService {
     async logout(
         userId: string,
         sessionId: string,
+        metadata: RequestMetadata,
         allDevices: boolean = false
     ): Promise<void> {
         if (allDevices) {
@@ -329,7 +334,13 @@ export class AuthService {
         await this.eventPublisher.publish('user.logout', {
             userId,
             sessionId,
-            metadata: { allDevices },
+            metadata: {
+                allDevices,
+                ipAddress: metadata.ipAddress,
+                userAgent: metadata.userAgent,
+                deviceType: metadata.deviceType,
+                deviceName: metadata.deviceName,
+            },
         });
 
         logger.info({ userId, sessionId, allDevices }, 'User logged out');
@@ -369,12 +380,18 @@ export class AuthService {
     /**
      * Revoke a session
      */
-    async revokeSession(userId: string, sessionId: string): Promise<void> {
+    async revokeSession(userId: string, sessionId: string, metadata: RequestMetadata): Promise<void> {
         await this.sessionService.revokeSession(sessionId, userId);
 
         await this.eventPublisher.publish('auth.session_revoked', {
             userId,
             sessionId,
+            metadata: {
+                ipAddress: metadata.ipAddress,
+                userAgent: metadata.userAgent,
+                deviceType: metadata.deviceType,
+                deviceName: metadata.deviceName,
+            },
         });
     }
 
@@ -434,9 +451,17 @@ export class AuthService {
             // Publish registration event
             await this.eventPublisher.publish('user.registered', {
                 userId: user.id,
+                tenantId: user.tenantId,
                 email: user.email,
                 name: user.name,
+                role: user.role,
                 isSocial: true,
+                metadata: {
+                    ipAddress: metadata.ipAddress,
+                    userAgent: metadata.userAgent,
+                    deviceType: metadata.deviceType,
+                    deviceName: metadata.deviceName,
+                },
             });
         } else {
             // Update last login and activate if pending
@@ -599,7 +624,8 @@ export class AuthService {
         email: string,
         metadata: RequestMetadata,
         success: boolean,
-        failureReason?: string
+        failureReason?: string,
+        userId?: string
     ): Promise<void> {
         // Increment rate limit counter on failure
         if (!success) {
@@ -611,8 +637,12 @@ export class AuthService {
         // Record in database
         await this.prisma.loginAttempt.create({
             data: {
+                userId,
                 email,
                 ipAddress: metadata.ipAddress,
+                userAgent: metadata.userAgent,
+                deviceType: metadata.deviceType,
+                deviceName: metadata.deviceName,
                 success,
                 failureReason,
             }

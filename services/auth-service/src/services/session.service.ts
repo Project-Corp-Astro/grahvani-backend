@@ -2,6 +2,8 @@
 import { getRedisClient } from '../config/redis';
 import { TokenService } from './token.service';
 import { PrismaClient, Session } from '../generated/prisma';
+import { getPrismaClient } from '../config/database';
+import { DeviceUtils } from '../utils/device.utils';
 import { logger } from '../config/logger';
 
 export interface SessionInfo {
@@ -26,7 +28,7 @@ export interface CreateSessionData {
 }
 
 export class SessionService {
-    private prisma = new PrismaClient();
+    private prisma = getPrismaClient();
     private redis = getRedisClient();
     private tokenService = new TokenService();
 
@@ -39,7 +41,7 @@ export class SessionService {
             : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);  // 7 days
 
         // Detect device type from user agent
-        const deviceType = this.detectDeviceType(data.userAgent || '');
+        const deviceType = DeviceUtils.detectDeviceType(data.userAgent || '');
 
         const tempHash = `temp_${Math.random().toString(36).substring(2)}_${Date.now()}`;
 
@@ -51,7 +53,7 @@ export class SessionService {
                 ipAddress: data.ipAddress,
                 userAgent: data.userAgent,
                 deviceType: deviceType || data.deviceType,
-                deviceName: data.deviceName || this.generateDeviceName(data.userAgent || ''),
+                deviceName: data.deviceName || DeviceUtils.generateDeviceName(data.userAgent || ''),
                 expiresAt,
                 lastActivityAt: new Date(),
             }

@@ -3,6 +3,7 @@
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { PrismaClient } from '../generated/prisma';
+import { getPrismaClient } from '../config/database';
 import { getRedisClient } from '../config/redis';
 import { getSupabaseAdmin } from '../config/supabase';
 import { EventPublisher } from '@/services/event.publisher';
@@ -41,7 +42,7 @@ export interface ActivateResult {
 // ============ PROVISIONING SERVICE ============
 
 export class ProvisioningService {
-    private prisma = new PrismaClient();
+    private prisma = getPrismaClient();
     private redis = getRedisClient();
     private eventPublisher = new EventPublisher();
 

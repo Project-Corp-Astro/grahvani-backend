@@ -1,11 +1,12 @@
 // Verification Service - Part of Auth Service
 import crypto from 'crypto';
 import { PrismaClient } from '../generated/prisma';
+import { getPrismaClient } from '../config/database';
 import { EventPublisher } from './event.publisher';
 import { logger } from '../config/logger';
 
 export class VerificationService {
-    private prisma = new PrismaClient();
+    private prisma = getPrismaClient();
     private eventPublisher = new EventPublisher();
 
     /**

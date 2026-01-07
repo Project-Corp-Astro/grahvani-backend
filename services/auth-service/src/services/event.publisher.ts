@@ -20,12 +20,13 @@ export interface AuthEventPayload {
     userId?: string;
     email?: string;
     name?: string;
+    role?: string;
     token?: string;
     sessionId?: string;
     expiresAt?: string;
     isSocial?: boolean;
-    tenantId?: string;  // Added for provisioning events
-    metadata?: Record<string, unknown>;
+    tenantId?: string;
+    metadata?: Record<string, any>;
 }
 
 export interface AuthEvent {
