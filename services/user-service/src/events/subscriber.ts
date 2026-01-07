@@ -171,7 +171,6 @@ export class EventSubscriber {
     private async handleAuthEvent(message: string): Promise<void> {
         try {
             const event: AuthEvent = JSON.parse(message);
-            console.log(`[EventSubscriber] Received ${event.type}:`, event.data);
 
             switch (event.type) {
                 case 'user.registered':
