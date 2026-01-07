@@ -11,6 +11,9 @@ import { logger } from './config/logger';
 
 const app = express();
 
+// Trust proxy for correct IP capture behind load balancers/Nginx
+app.set('trust proxy', true);
+
 // ============ SECURITY MIDDLEWARES ============
 app.use(helmet());
 app.use(cors({

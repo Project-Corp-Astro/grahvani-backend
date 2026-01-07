@@ -77,6 +77,7 @@ export class UserRepository {
         return prisma.user.update({
             where: { id },
             data,
+            include: { addresses: true, preferences: true },
         });
     }
 
@@ -126,6 +127,46 @@ export class UserRepository {
             orderBy: { createdAt: 'desc' },
             skip,
             take: limit,
+        });
+    }
+
+    // ============ ADDRESS METHODS ============
+
+    async findAddressById(userId: string, addressId: string) {
+        return prisma.userAddress.findFirst({
+            where: { id: addressId, userId },
+        });
+    }
+
+    async createAddress(userId: string, data: any) {
+        if (data.isDefault) {
+            await this.clearDefaultAddresses(userId);
+        }
+        return prisma.userAddress.create({
+            data: { ...data, userId },
+        });
+    }
+
+    async updateAddress(userId: string, addressId: string, data: any) {
+        if (data.isDefault) {
+            await this.clearDefaultAddresses(userId);
+        }
+        return prisma.userAddress.update({
+            where: { id: addressId },
+            data,
+        });
+    }
+
+    async deleteAddress(userId: string, addressId: string) {
+        return prisma.userAddress.delete({
+            where: { id: addressId, userId },
+        });
+    }
+
+    private async clearDefaultAddresses(userId: string) {
+        await prisma.userAddress.updateMany({
+            where: { userId, isDefault: true },
+            data: { isDefault: false },
         });
     }
 }

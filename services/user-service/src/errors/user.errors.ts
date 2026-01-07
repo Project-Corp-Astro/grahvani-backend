@@ -18,6 +18,12 @@ export class UserNotFoundError extends BaseError {
     }
 }
 
+export class NotFoundError extends BaseError {
+    constructor(resource: string = 'Resource') {
+        super(`${resource} not found`, 404, 'NOT_FOUND');
+    }
+}
+
 export class DisplayNameTakenError extends BaseError {
     constructor() {
         super('This display name is already in use', 400, 'DISPLAY_NAME_TAKEN');

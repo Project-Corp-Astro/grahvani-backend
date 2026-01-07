@@ -30,6 +30,10 @@ export const supabaseClientMock = {
 };
 
 // 2. Mock the modules to return these persistent instances
+jest.mock('../generated/prisma', () => ({
+    PrismaClient: jest.fn().mockImplementation(() => prismaMock),
+}));
+
 jest.mock('../config/database', () => ({
     getPrismaClient: () => prismaMock,
 }));

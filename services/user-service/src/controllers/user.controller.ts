@@ -9,6 +9,11 @@ import {
 } from '../dtos';
 import { BaseError, ValidationError } from '../errors';
 import { v4 as uuidv4 } from 'uuid';
+import { addressService } from '../services/address.service';
+import {
+    CreateAddressRequestSchema,
+    UpdateAddressRequestSchema
+} from '../dtos/address.dto';
 
 // Helper to create structured error response
 const createErrorResponse = (error: BaseError, requestId: string): ErrorResponse => ({
@@ -306,6 +311,109 @@ export const UserController = {
                 updatedBy: adminId,
                 updatedAt: new Date().toISOString(),
             });
+        } catch (error) {
+            if (error instanceof BaseError) {
+                return res.status(error.statusCode).json(createErrorResponse(error, requestId));
+            }
+            next(error);
+        }
+    },
+
+    // ============ ADDRESS ENDPOINTS ============
+
+    /**
+     * GET /users/me/addresses - Get current user addresses
+     */
+    async getMyAddresses(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const userId = req.user!.id;
+            const addresses = await addressService.getUserAddresses(userId);
+            res.json(addresses);
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    /**
+     * POST /users/me/addresses - Add a new address
+     */
+    async addAddress(req: AuthRequest, res: Response, next: NextFunction) {
+        const requestId = uuidv4();
+        try {
+            const validation = CreateAddressRequestSchema.safeParse(req.body);
+            if (!validation.success) {
+                const errors: Record<string, string[]> = {};
+                validation.error.errors.forEach((e) => {
+                    const path = e.path.join('.');
+                    if (!errors[path]) errors[path] = [];
+                    errors[path].push(e.message);
+                });
+                return res.status(400).json(createErrorResponse(new ValidationError(errors), requestId));
+            }
+
+            const userId = req.user!.id;
+            const address = await addressService.addAddress(userId, validation.data, {
+                ipAddress: req.ip,
+                userAgent: req.get('User-Agent'),
+            });
+
+            res.status(201).json(address);
+        } catch (error) {
+            if (error instanceof BaseError) {
+                return res.status(error.statusCode).json(createErrorResponse(error, requestId));
+            }
+            next(error);
+        }
+    },
+
+    /**
+     * PATCH /users/me/addresses/:id - Update an address
+     */
+    async updateAddress(req: AuthRequest, res: Response, next: NextFunction) {
+        const requestId = uuidv4();
+        try {
+            const { id } = req.params;
+            const validation = UpdateAddressRequestSchema.safeParse(req.body);
+            if (!validation.success) {
+                const errors: Record<string, string[]> = {};
+                validation.error.errors.forEach((e) => {
+                    const path = e.path.join('.');
+                    if (!errors[path]) errors[path] = [];
+                    errors[path].push(e.message);
+                });
+                return res.status(400).json(createErrorResponse(new ValidationError(errors), requestId));
+            }
+
+            const userId = req.user!.id;
+            const address = await addressService.updateAddress(userId, id, validation.data, {
+                ipAddress: req.ip,
+                userAgent: req.get('User-Agent'),
+            });
+
+            res.json(address);
+        } catch (error) {
+            if (error instanceof BaseError) {
+                return res.status(error.statusCode).json(createErrorResponse(error, requestId));
+            }
+            next(error);
+        }
+    },
+
+    /**
+     * DELETE /users/me/addresses/:id - Delete an address
+     */
+    async deleteAddress(req: AuthRequest, res: Response, next: NextFunction) {
+        const requestId = uuidv4();
+        try {
+            const { id } = req.params;
+            const userId = req.user!.id;
+
+            await addressService.deleteAddress(userId, id, {
+                ipAddress: req.ip,
+                userAgent: req.get('User-Agent'),
+            });
+
+            res.status(204).send();
         } catch (error) {
             if (error instanceof BaseError) {
                 return res.status(error.statusCode).json(createErrorResponse(error, requestId));

@@ -1,0 +1,36 @@
+
+> user-service@1.0.0 test
+> jest src/__tests__/user-sync.test.ts
+
+  console.log
+    [UserRepository.findById] Querying: {
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      tenantId: '550e8400-e29b-41d4-a716-446655440001'
+    }
+
+      at UserRepository.findById (src/repositories/user.repository.ts:34:17)
+
+  console.log
+    [UserRepository.findById] Result: {
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      email: 'naveenmotika143@gmail.com',
+      tenantId: '550e8400-e29b-41d4-a716-446655440001'
+    }
+
+      at UserRepository.findById (src/repositories/user.repository.ts:42:17)
+
+  console.log
+    [EventPublisher] Published user.profile_updated: 550e8400-e29b-41d4-a716-446655440000
+
+      at EventPublisher.publish (src/events/publisher.ts:42:21)
+
+  console.log
+    [UserService] Profile updated for user 550e8400-e29b-41d4-a716-446655440000: [ 'name', 'birthDate', 'gender' ]
+
+      at UserService.updateProfile (src/services/user.service.ts:186:17)
+
+  console.log
+    [EventSubscriber] Login activity logged for user: 550e8400-e29b-41d4-a716-446655440000
+
+      at EventSubscriber.handleUserLogin (src/events/subscriber.ts:328:21)
+

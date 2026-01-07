@@ -101,6 +101,8 @@ model UserActivityLog {
   newValues  Json?    @map("new_values")
   ipAddress  String?  @map("ip_address") @db.VarChar(45)
   userAgent  String?  @map("user_agent") @db.VarChar(500)
+  deviceType String?  @map("device_type") @db.VarChar(50)
+  deviceName String?  @map("device_name") @db.VarChar(100)
   createdAt  DateTime @default(now()) @map("created_at")
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
