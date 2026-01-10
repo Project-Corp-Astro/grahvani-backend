@@ -112,7 +112,10 @@ export class AuthController {
             }
 
             const metadata = getRequestMetadata(req);
-            await authService.logout(user.sub, user.sessionId, metadata, allDevices);
+            const authHeader = req.headers.authorization;
+            const token = authHeader?.substring(7);
+
+            await authService.logout(user.sub, user.sessionId, metadata, token, allDevices);
 
             res.status(200).json({
                 success: true,
