@@ -322,12 +322,18 @@ export class AuthService {
         userId: string,
         sessionId: string,
         metadata: RequestMetadata,
+        accessToken?: string,
         allDevices: boolean = false
     ): Promise<void> {
         if (allDevices) {
             await this.sessionService.revokeAllSessions(userId);
         } else {
             await this.sessionService.revokeSession(sessionId, userId);
+        }
+
+        // Blacklist current token if provided
+        if (accessToken) {
+            await this.tokenService.blacklistToken(accessToken);
         }
 
         // Publish event
