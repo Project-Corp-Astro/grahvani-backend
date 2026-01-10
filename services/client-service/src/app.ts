@@ -4,8 +4,12 @@ import helmet from 'helmet';
 import pino from 'pino-http';
 
 import routes from './routes';
+import { errorMiddleware } from './middleware/error.middleware';
 
 const app: Express = express();
+
+// Trust proxy for correct IP capture
+app.set('trust proxy', true);
 
 // Middleware
 app.use(helmet());
@@ -20,6 +24,9 @@ app.use('/api/v1', routes);
 app.get('/', (req: Request, res: Response) => {
     res.json({ message: 'Client Service API' });
 });
+
+// Error Handling
+app.use(errorMiddleware);
 
 // Health Check
 app.get('/health', (req: Request, res: Response) => {
