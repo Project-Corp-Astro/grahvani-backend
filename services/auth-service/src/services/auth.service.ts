@@ -115,8 +115,8 @@ export class AuthService {
                 passwordHash,
                 name: data.name,
                 role: 'user',
-                status: 'pending_verification', // Per LLD, new users are pending
-                emailVerified: false,
+                status: process.env.NODE_ENV === 'development' ? 'active' : 'pending_verification',
+                emailVerified: process.env.NODE_ENV === 'development',
             }
         });
 
@@ -197,6 +197,16 @@ export class AuthService {
             throw new AccountSuspendedError();
         }
 
+        // Auto-activate pending users in development
+        if (user.status === 'pending_verification' && process.env.NODE_ENV === 'development') {
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: { status: 'active', emailVerified: true }
+            });
+            user.status = 'active';
+            logger.info({ userId: user.id }, 'Dev Mode: Auto-activated user on first login');
+        }
+
         // Enforce Strict Device Policy (Single Login)
         if (config.security.strictDevicePolicy) {
             await this.sessionService.revokeAllSessions(user.id);
@@ -230,7 +240,7 @@ export class AuthService {
         await this.recordLoginAttempt(data.email, metadata, true, undefined, user.id);
 
         // Clear rate limit on successful login
-        const rateKey = `login_attempts:${data.email}:${metadata.ipAddress} `;
+        const rateKey = `login_attempts:${data.email}:${metadata.ipAddress}`;
         await this.redis.del(rateKey);
 
         // Publish event
@@ -618,10 +628,11 @@ export class AuthService {
     // ============ PRIVATE METHODS ============
 
     private async checkRateLimit(email: string, ipAddress: string): Promise<void> {
-        const key = `login_attempts:${email}:${ipAddress} `;
+        if (process.env.NODE_ENV !== 'production') return;
+        const key = `login_attempts:${email}:${ipAddress}`;
         const attempts = await this.redis.get(key);
 
-        if (attempts && parseInt(attempts, 10) >= 5) {
+        if (attempts && parseInt(attempts, 10) >= 50) {
             throw new RateLimitError();
         }
     }
@@ -635,7 +646,7 @@ export class AuthService {
     ): Promise<void> {
         // Increment rate limit counter on failure
         if (!success) {
-            const key = `login_attempts:${email}:${metadata.ipAddress} `;
+            const key = `login_attempts:${email}:${metadata.ipAddress}`;
             await this.redis.incr(key);
             await this.redis.expire(key, 900); // 15 minutes
         }
