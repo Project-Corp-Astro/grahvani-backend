@@ -14,6 +14,7 @@ export interface BirthData {
     longitude: number;
     timezoneOffset: number;
     userName?: string;
+    system?: Ayanamsa;      // Optional: 'lahiri' | 'raman' | 'kp'
 }
 
 export interface AstroResponse<T = any> {
@@ -116,92 +117,52 @@ class AstroEngineClient {
      * Get Natal Chart (D1) for any Ayanamsa system
      */
     async getNatalChart(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
-        logger.info({ ayanamsa }, 'Generating natal chart');
-
-        switch (ayanamsa) {
-            case 'raman':
-                return (await this.apiClient.post('/raman/natal', birthData)).data;
-            case 'kp':
-                // KP uses internal client for now
-                return (await this.internalClient.post('/natal', birthData)).data;
-            case 'lahiri':
-            default:
-                return (await this.internalClient.post('/natal', birthData)).data;
-        }
+        logger.info({ ayanamsa }, 'Generating natal chart via proxy');
+        // The proxy now handles system routing internally for the /natal endpoint
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post('/natal', payload)).data;
     }
 
     /**
      * Get Transit Chart for any Ayanamsa system
      */
     async getTransitChart(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
-        logger.info({ ayanamsa }, 'Generating transit chart');
-
-        switch (ayanamsa) {
-            case 'raman':
-                return (await this.apiClient.post('/raman/transit', birthData)).data;
-            case 'kp':
-            case 'lahiri':
-            default:
-                return (await this.internalClient.post('/transit', birthData)).data;
-        }
+        logger.info({ ayanamsa }, 'Generating transit chart via proxy');
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post('/transit', payload)).data;
     }
 
     /**
      * Get Divisional Chart (D2-D60) for any Ayanamsa system
      */
     async getDivisionalChart(birthData: BirthData, chartType: string, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
-        logger.info({ ayanamsa, chartType }, 'Generating divisional chart');
-
-        switch (ayanamsa) {
-            case 'raman':
-                return (await this.apiClient.post(`/raman/divisional/${chartType}`, birthData)).data;
-            case 'kp':
-            case 'lahiri':
-            default:
-                return (await this.internalClient.post(`/divisional/${chartType}`, birthData)).data;
-        }
+        logger.info({ ayanamsa, chartType }, 'Generating divisional chart via proxy');
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post(`/divisional/${chartType}`, payload)).data;
     }
 
     /**
      * Get Moon Chart for any Ayanamsa system
      */
     async getMoonChart(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
-        switch (ayanamsa) {
-            case 'raman':
-                return (await this.apiClient.post('/raman/moon', birthData)).data;
-            case 'kp':
-            case 'lahiri':
-            default:
-                return (await this.internalClient.post('/moon-chart', birthData)).data;
-        }
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post('/moon-chart', payload)).data;
     }
 
     /**
      * Get Sun Chart for any Ayanamsa system
      */
     async getSunChart(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
-        switch (ayanamsa) {
-            case 'raman':
-                return (await this.apiClient.post('/raman/sun', birthData)).data;
-            case 'kp':
-            case 'lahiri':
-            default:
-                return (await this.internalClient.post('/sun-chart', birthData)).data;
-        }
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post('/sun-chart', payload)).data;
     }
 
     /**
      * Get Sudarshan Chakra for any Ayanamsa system
      */
     async getSudarshanChakra(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
-        switch (ayanamsa) {
-            case 'raman':
-                return (await this.apiClient.post('/raman/sudarshan-chakra', birthData)).data;
-            case 'kp':
-            case 'lahiri':
-            default:
-                return (await this.internalClient.post('/sudarshan-chakra', birthData)).data;
-        }
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post('/sudarshan-chakra', payload)).data;
     }
 
     // =========================================================================
@@ -213,17 +174,8 @@ class AstroEngineClient {
      */
     async getVimshottariDasha(birthData: BirthData, level: string = 'mahadasha', ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
         logger.info({ ayanamsa, level }, 'Generating Vimshottari Dasha');
-
-        switch (ayanamsa) {
-            case 'raman':
-                // Map level to Raman endpoint
-                const ramanEndpoint = this.getRamanDashaEndpoint(level);
-                return (await this.apiClient.post(`/raman/dasha/${ramanEndpoint}`, birthData)).data;
-            case 'kp':
-            case 'lahiri':
-            default:
-                return (await this.internalClient.post(`/dasha/vimshottari?level=${level}`, birthData)).data;
-        }
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post(`/dasha/vimshottari?level=${level}`, payload)).data;
     }
 
     private getRamanDashaEndpoint(level: string): string {
@@ -253,36 +205,18 @@ class AstroEngineClient {
     // =========================================================================
 
     async getAshtakavarga(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
-        switch (ayanamsa) {
-            case 'raman':
-                return (await this.apiClient.post('/raman/bhinna-ashtakavarga', birthData)).data;
-            case 'kp':
-            case 'lahiri':
-            default:
-                return (await this.internalClient.post('/ashtakavarga', birthData)).data;
-        }
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post('/ashtakavarga', payload)).data;
     }
 
     async getSarvaAshtakavarga(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
-        switch (ayanamsa) {
-            case 'raman':
-                return (await this.apiClient.post('/raman/sarva-ashtakavarga', birthData)).data;
-            case 'kp':
-            case 'lahiri':
-            default:
-                return (await this.internalClient.post('/sarva-ashtakavarga', birthData)).data;
-        }
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post('/sarva-ashtakavarga', payload)).data;
     }
 
     async getShodashaVarga(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
-        switch (ayanamsa) {
-            case 'raman':
-                return (await this.apiClient.post('/raman/shodasha-varga', birthData)).data;
-            case 'kp':
-            case 'lahiri':
-            default:
-                return (await this.internalClient.post('/shodasha-varga', birthData)).data;
-        }
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post('/shodasha-varga', payload)).data;
     }
 
     // =========================================================================

@@ -1,0 +1,113 @@
+import { BaseAstroClient } from './base.client';
+import { BirthData, HoraryData } from '../types';
+import { KP_ENDPOINTS, DASHA_LEVEL_MAP } from '../constants';
+
+// =============================================================================
+// KP (KRISHNAMURTI PADDHATI) SYSTEM CLIENT
+// Handles all KP system calculations (12 endpoints)
+// =============================================================================
+
+export class KpClient extends BaseAstroClient {
+    constructor() {
+        super('kp-client');
+    }
+
+    // =========================================================================
+    // PLANETS & CUSPS
+    // =========================================================================
+
+    /**
+     * Get planets and cusps with sub-lords
+     * Returns: ascendant, house_cusps, planets, significators
+     */
+    async getPlanetsCusps(data: BirthData) {
+        return this.post(KP_ENDPOINTS.PLANETS_CUSPS, data);
+    }
+
+    /**
+     * Get current ruling planets
+     * For timing analysis
+     */
+    async getRulingPlanets(data: BirthData) {
+        return this.post(KP_ENDPOINTS.RULING_PLANETS, data);
+    }
+
+    /**
+     * Get bhava (house) details
+     */
+    async getBhavaDetails(data: BirthData) {
+        return this.post(KP_ENDPOINTS.BHAVA_DETAILS, data);
+    }
+
+    /**
+     * Get house significations
+     * Which planets signify which houses
+     */
+    async getSignifications(data: BirthData) {
+        return this.post(KP_ENDPOINTS.SIGNIFICATIONS, data);
+    }
+
+    // =========================================================================
+    // VIMSHOTTARI DASHA (5 Levels)
+    // =========================================================================
+
+    /**
+     * Get Vimshottari Dasha at specified level
+     * @param level - mahadasha | antardasha | pratyantardasha | sookshma | prana
+     */
+    async getVimshottariDasha(data: BirthData, level: string = 'mahadasha') {
+        const endpoint = DASHA_LEVEL_MAP[level.toLowerCase()] || DASHA_LEVEL_MAP['mahadasha'];
+        return this.post(endpoint, data);
+    }
+
+    async getMahaAntarDasha(data: BirthData) {
+        return this.post(KP_ENDPOINTS.MAHA_ANTAR_DASHA, data);
+    }
+
+    async getPratyantarDasha(data: BirthData) {
+        return this.post(KP_ENDPOINTS.PRATYANTAR_DASHA, data);
+    }
+
+    async getSookshmaDasha(data: BirthData) {
+        return this.post(KP_ENDPOINTS.SOOKSHMA_DASHA, data);
+    }
+
+    async getPranaDasha(data: BirthData) {
+        return this.post(KP_ENDPOINTS.PRANA_DASHA, data);
+    }
+
+    // =========================================================================
+    // HORARY (Prashna)
+    // =========================================================================
+
+    /**
+     * KP Horary analysis
+     * @param data - Includes horaryNumber (1-249) and question
+     */
+    async getHorary(data: HoraryData) {
+        const payload = {
+            horary_number: data.horaryNumber,
+            date: data.birthDate,
+            time: data.birthTime,
+            latitude: String(data.latitude),
+            longitude: String(data.longitude),
+            tz_offset: data.timezoneOffset,
+            question: data.question,
+        };
+        const response = await this.client.post(KP_ENDPOINTS.HORARY, payload);
+        return response.data;
+    }
+
+    // =========================================================================
+    // VARGA SUMMARY
+    // =========================================================================
+
+    /**
+     * Get Shodasha Varga (16 divisional chart signs summary)
+     */
+    async getShodashaVarga(data: BirthData) {
+        return this.post(KP_ENDPOINTS.SHODASHA_VARGA, data);
+    }
+}
+
+export const kpClient = new KpClient();
