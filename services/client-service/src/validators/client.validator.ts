@@ -57,6 +57,10 @@ export const CreateClientSchema = z.object({
     // Organization
     tags: z.array(z.string()).optional(),
     metadata: z.record(z.any()).optional(),
+
+    // Chart Generation (Optional at registration)
+    system: z.enum(['lahiri', 'raman', 'kp']).optional(),
+    generateInitialChart: z.boolean().optional().default(false),
 });
 
 export const UpdateClientSchema = CreateClientSchema.partial();

@@ -4,6 +4,7 @@ import { CreateClientSchema, UpdateClientSchema } from '../validators/client.val
 import { geocodeService } from './geocode.service';
 import { eventPublisher } from './event.publisher';
 import { activityService } from './activity.service';
+import { chartService } from './chart.service';
 import { logger } from '../config';
 
 export interface RequestMetadata {
@@ -103,9 +104,10 @@ export class ClientService {
             }
         }
 
-        // 5. Convert birthDate string to Date object for Prisma
+        // 5. Build prisma data, omitting internal flags
+        const { system, generateInitialChart, ...clientDataOnly } = clientData;
         const prismaData: any = {
-            ...clientData,
+            ...clientDataOnly,
             clientCode,
             createdBy: metadata.userId,
         };
@@ -155,6 +157,23 @@ export class ClientService {
                 deviceName: metadata.deviceName,
             }
         });
+
+        // 8. Generate initial chart if requested
+        if (validatedData.generateInitialChart && client.birthDate) {
+            try {
+                logger.info({ tenantId, clientId: client.id }, 'Triggering initial chart generation');
+                await chartService.generateAndSaveChart(
+                    tenantId,
+                    client.id,
+                    'D1',
+                    validatedData.system || 'lahiri',
+                    metadata
+                );
+            } catch (err: any) {
+                logger.error({ err, clientId: client.id }, 'Initial chart generation failed');
+                // We don't throw here to avoid failing the whole registration
+            }
+        }
 
         logger.info({ tenantId, clientId: client.id }, 'Client created successfully');
 
