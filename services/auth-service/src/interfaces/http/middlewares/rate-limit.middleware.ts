@@ -13,22 +13,22 @@ interface RateLimitConfig {
 const RATE_LIMITS: Record<string, RateLimitConfig> = {
     login: {
         windowMs: 15 * 60 * 1000,  // 15 minutes
-        maxRequests: 5,            // 5 attempts per 15 min
+        maxRequests: 50,           // Increased from 5 to 50 for better dev experience
         keyPrefix: 'rate:login',
     },
     register: {
-        windowMs: 60 * 60 * 1000,  // 1 hour
-        maxRequests: 10,           // 10 registrations per hour
+        windowMs: 60 * 1000,       // 1 minute (dev only)
+        maxRequests: 1000,         // Relaxed for dev
         keyPrefix: 'rate:register',
     },
     passwordReset: {
-        windowMs: 60 * 60 * 1000,  // 1 hour
-        maxRequests: 3,            // 3 reset attempts per hour
+        windowMs: 60 * 1000,       // 1 minute (dev only)
+        maxRequests: 1000,         // Relaxed for dev
         keyPrefix: 'rate:reset',
     },
     api: {
         windowMs: 60 * 1000,       // 1 minute
-        maxRequests: 100,          // 100 requests per minute
+        maxRequests: 5000,         // Relaxed for dev
         keyPrefix: 'rate:api',
     },
 };
@@ -38,6 +38,11 @@ export function createRateLimiter(type: keyof typeof RATE_LIMITS) {
     const redis = getRedisClient();
 
     return async (req: Request, res: Response, next: NextFunction) => {
+        // Bypass rate limiting in development
+        if (process.env.NODE_ENV !== 'production') {
+            return next();
+        }
+
         try {
             // Use IP + email (if available) as key
             const email = req.body?.email || '';
