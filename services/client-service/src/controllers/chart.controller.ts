@@ -109,6 +109,27 @@ export class ChartController {
             next(error);
         }
     }
+
+    /**
+     * POST /clients/:id/charts/generate-core
+     * Bulk generate core charts (D1, D9) for all systems
+     */
+    async generateCoreCharts(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
+
+            const charts = await chartService.generateCoreCharts(tenantId, id, metadata);
+            res.status(201).json({ success: true, count: charts.length });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export const chartController = new ChartController();

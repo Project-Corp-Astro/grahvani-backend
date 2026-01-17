@@ -60,7 +60,7 @@ export const CreateClientSchema = z.object({
 
     // Chart Generation (Optional at registration)
     system: z.enum(['lahiri', 'raman', 'kp']).optional(),
-    generateInitialChart: z.boolean().optional().default(false),
+    generateInitialChart: z.boolean().optional().default(true),
 });
 
 export const UpdateClientSchema = CreateClientSchema.partial();

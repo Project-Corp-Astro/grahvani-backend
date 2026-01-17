@@ -136,8 +136,9 @@ export class ChartService {
         // Save chart to database
         const chart = await this.saveChart(tenantId, clientId, {
             chartType: chartType.toUpperCase(),
-            chartName: `${client.fullName} - ${chartType.toUpperCase()} Chart`,
+            chartName: `${client.fullName} - ${chartType.toUpperCase()} Chart (${system})`,
             chartData: chartData.data,
+            chartConfig: { system }, // Store system for filtering
             calculatedAt: new Date(),
         }, metadata);
 
@@ -147,6 +148,28 @@ export class ChartService {
             ...chart,
             cached: chartData.cached,
         };
+    }
+
+    /**
+     * Bulk generate core charts (D1, D9) for all 3 systems
+     */
+    async generateCoreCharts(tenantId: string, clientId: string, metadata: RequestMetadata) {
+        const systems: ('lahiri' | 'raman' | 'kp')[] = ['lahiri', 'raman', 'kp'];
+
+        const results = [];
+        for (const sys of systems) {
+            // Systems like KP don't have divisional charts (D9), only Natal (D1)
+            const vargas = sys === 'kp' ? ['D1'] : ['D1', 'D9'];
+
+            for (const varga of vargas) {
+                results.push(
+                    this.generateAndSaveChart(tenantId, clientId, varga, sys, metadata)
+                        .catch(err => logger.error({ err, clientId, sys, varga }, 'Bulk generation failed for specific chart'))
+                );
+            }
+        }
+
+        return Promise.all(results);
     }
 
     /**

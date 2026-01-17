@@ -158,20 +158,14 @@ export class ClientService {
             }
         });
 
-        // 8. Generate initial chart if requested
+        // 8. Generate initial charts for ALL systems (Lahiri, KP, Raman)
+        // prioritizing UX so the astrologer can switch views instantly
         if (validatedData.generateInitialChart && client.birthDate) {
             try {
-                logger.info({ tenantId, clientId: client.id }, 'Triggering initial chart generation');
-                await chartService.generateAndSaveChart(
-                    tenantId,
-                    client.id,
-                    'D1',
-                    validatedData.system || 'lahiri',
-                    metadata
-                );
+                logger.info({ tenantId, clientId: client.id }, 'Triggering initial multi-system core chart generation');
+                await chartService.generateCoreCharts(tenantId, client.id, metadata);
             } catch (err: any) {
-                logger.error({ err, clientId: client.id }, 'Initial chart generation failed');
-                // We don't throw here to avoid failing the whole registration
+                logger.error({ err, clientId: client.id }, 'Initial chart generation workflow failed');
             }
         }
 

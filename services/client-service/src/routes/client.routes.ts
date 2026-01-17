@@ -34,6 +34,7 @@ router.delete('/:id/charts/:chartId', chartController.deleteChart.bind(chartCont
 
 // Chart Generation (via Astro Engine)
 router.post('/:id/charts/generate', chartController.generateChart.bind(chartController));
+router.post('/:id/charts/generate-core', chartController.generateCoreCharts.bind(chartController));
 router.post('/:id/dasha', chartController.generateDasha.bind(chartController));
 
 // Remedies
