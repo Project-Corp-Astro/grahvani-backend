@@ -55,9 +55,9 @@ export class KpClient extends BaseAstroClient {
      * Get Vimshottari Dasha at specified level
      * @param level - mahadasha | antardasha | pratyantardasha | sookshma | prana
      */
-    async getVimshottariDasha(data: BirthData, level: string = 'mahadasha') {
+    async getVimshottariDasha(data: BirthData, level: string = 'mahadasha', context: Record<string, string> = {}) {
         const endpoint = DASHA_LEVEL_MAP[level.toLowerCase()] || DASHA_LEVEL_MAP['mahadasha'];
-        return this.post(endpoint, data);
+        return this.post(endpoint, data, context);
     }
 
     async getMahaAntarDasha(data: BirthData) {

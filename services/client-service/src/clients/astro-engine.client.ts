@@ -172,10 +172,22 @@ class AstroEngineClient {
     /**
      * Get Vimshottari Dasha for any Ayanamsa system
      */
-    async getVimshottariDasha(birthData: BirthData, level: string = 'mahadasha', ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
-        logger.info({ ayanamsa, level }, 'Generating Vimshottari Dasha');
-        const payload = { ...birthData, system: ayanamsa };
-        return (await this.internalClient.post(`/dasha/vimshottari?level=${level}`, payload)).data;
+    async getVimshottariDasha(
+        birthData: BirthData,
+        level: string = 'mahadasha',
+        context: { mahaLord?: string; antarLord?: string; pratyantarLord?: string } = {}
+    ): Promise<AstroResponse> {
+        logger.info({ ayanamsa: birthData.system, level }, 'Generating Vimshottari Dasha');
+        const payload = { ...birthData };
+
+        // Use URLSearchParams for clean query string construction
+        const params = new URLSearchParams();
+        params.append('level', level);
+        if (context.mahaLord) params.append('mahaLord', context.mahaLord);
+        if (context.antarLord) params.append('antarLord', context.antarLord);
+        if (context.pratyantarLord) params.append('pratyantarLord', context.pratyantarLord);
+
+        return (await this.internalClient.post(`/dasha/vimshottari?${params.toString()}`, payload)).data;
     }
 
     private getRamanDashaEndpoint(level: string): string {

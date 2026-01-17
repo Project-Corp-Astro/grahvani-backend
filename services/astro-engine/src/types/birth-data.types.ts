@@ -18,6 +18,7 @@ export interface BirthData {
     timezoneOffset: number; // Hours offset from UTC (e.g., 5.5 for IST)
     userName?: string;      // Optional identifier
     ayanamsa?: AyanamsaType;
+    system?: AyanamsaType;
 }
 
 /**

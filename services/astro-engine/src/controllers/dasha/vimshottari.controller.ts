@@ -18,11 +18,26 @@ export class VimshottariController {
         try {
             const birthData: BirthData = req.body;
             const level = (req.query.level as string) || 'mahadasha';
+            const mahaLord = req.query.mahaLord as string;
+            const antarLord = req.query.antarLord as string;
+            const pratyantarLord = req.query.pratyantarLord as string;
 
             if (!this.validateBirthData(birthData, res)) return;
             if (!this.validateLevel(level, res)) return;
 
-            const cacheKey = { ...birthData, type: `dasha:${level}` };
+            // Route to correct client based on system
+            const system = (birthData.system || birthData.ayanamsa || 'lahiri').toLowerCase();
+            let client;
+            if (system === 'kp') {
+                client = require('../../clients').kpClient;
+            } else if (system === 'raman') {
+                client = require('../../clients').ramanClient;
+            } else {
+                client = require('../../clients').lahiriClient;
+            }
+
+            const context = { mahaLord, antarLord, pratyantarLord };
+            const cacheKey = { ...birthData, ...context, type: `dasha:${level}`, system };
             const cached = await cacheService.get<any>(`dasha:${level}`, cacheKey);
 
             if (cached) {
@@ -30,7 +45,7 @@ export class VimshottariController {
                 return;
             }
 
-            const data = await kpClient.getVimshottariDasha(birthData, level);
+            const data = await client.getVimshottariDasha(birthData, level, context);
             await cacheService.set(`dasha:${level}`, cacheKey, data);
 
             res.json({ success: true, data, cached: false, level, calculatedAt: new Date().toISOString() });
@@ -53,6 +68,7 @@ export class VimshottariController {
         if (!data.birthDate || !data.birthTime || !data.latitude || !data.longitude) {
             res.status(400).json({ success: false, error: 'Missing required fields' });
             return false;
+
         }
         return true;
     }

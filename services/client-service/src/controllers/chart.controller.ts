@@ -90,19 +90,40 @@ export class ChartController {
     /**
      * POST /clients/:id/dasha
      * Generate dasha periods for a client (Ayanamsa-aware)
+     * Optional: save=true to persist to database
      */
     async generateDasha(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
             const tenantId = req.user!.tenantId;
-            const { level, ayanamsa } = req.body;
+            const { level, ayanamsa, save, mahaLord, antarLord, pratyantarLord } = req.body;
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
 
-            const dasha = await chartService.generateDasha(
-                tenantId,
-                id,
-                level || 'mahadasha',
-                ayanamsa || 'lahiri'
-            );
+            const options = { mahaLord, antarLord, pratyantarLord };
+
+            let dasha;
+            if (save) {
+                dasha = await chartService.generateAndSaveDasha(
+                    tenantId,
+                    id,
+                    level || 'mahadasha',
+                    ayanamsa || 'lahiri',
+                    options,
+                    metadata
+                );
+            } else {
+                dasha = await chartService.generateDasha(
+                    tenantId,
+                    id,
+                    level || 'mahadasha',
+                    ayanamsa || 'lahiri',
+                    options
+                );
+            }
 
             res.json(dasha);
         } catch (error) {
@@ -130,7 +151,30 @@ export class ChartController {
             next(error);
         }
     }
+
+    /**
+     * POST /clients/:id/ashtakavarga
+     * Generate Ashtakavarga (Lahiri/Raman only)
+     */
+    async generateAshtakavarga(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const { ayanamsa } = req.body;
+
+            const ashtakavarga = await chartService.generateAshtakavarga(
+                tenantId,
+                id,
+                ayanamsa || 'lahiri'
+            );
+
+            res.json(ashtakavarga);
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export const chartController = new ChartController();
+
 

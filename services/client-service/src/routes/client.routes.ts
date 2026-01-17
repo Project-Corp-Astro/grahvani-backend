@@ -36,6 +36,7 @@ router.delete('/:id/charts/:chartId', chartController.deleteChart.bind(chartCont
 router.post('/:id/charts/generate', chartController.generateChart.bind(chartController));
 router.post('/:id/charts/generate-core', chartController.generateCoreCharts.bind(chartController));
 router.post('/:id/dasha', chartController.generateDasha.bind(chartController));
+router.post('/:id/ashtakavarga', chartController.generateAshtakavarga.bind(chartController));
 
 // Remedies
 router.post('/:id/remedies', remedyController.prescribeRemedy.bind(remedyController));
