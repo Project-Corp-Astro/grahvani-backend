@@ -5,7 +5,7 @@ import { eventPublisher } from './event.publisher';
 import { activityService } from './activity.service';
 import { RequestMetadata } from './client.service';
 import { astroEngineClient } from '../clients/astro-engine.client';
-import { logger } from '../config';
+import { logger, isChartAvailable, getAvailableCharts, AyanamsaSystem } from '../config';
 
 export class ChartService {
     /**
@@ -107,6 +107,11 @@ export class ChartService {
         system: 'lahiri' | 'kp' | 'raman',
         metadata: RequestMetadata
     ) {
+        // Validate chart type is available for this system
+        if (!isChartAvailable(system as AyanamsaSystem, chartType)) {
+            throw new Error(`Chart type ${chartType} is not available for ${system} system. Available: ${getAvailableCharts(system as AyanamsaSystem).join(', ')}`);
+        }
+
         const client = await clientRepository.findById(tenantId, clientId);
         if (!client) throw new ClientNotFoundError(clientId);
 
@@ -179,8 +184,88 @@ export class ChartService {
         tenantId: string,
         clientId: string,
         level: string = 'mahadasha',
-        ayanamsa: 'lahiri' | 'kp' | 'raman' = 'lahiri'
+        ayanamsa: 'lahiri' | 'kp' | 'raman' = 'lahiri',
+        options: { mahaLord?: string; antarLord?: string; pratyantarLord?: string } = {}
     ) {
+        const client = await clientRepository.findById(tenantId, clientId);
+        if (!client) throw new ClientNotFoundError(clientId);
+
+        if (!client.birthDate || !client.birthTime || !client.birthLatitude || !client.birthLongitude) {
+            throw new Error('Client birth details incomplete.');
+        }
+
+        const birthData = {
+            birthDate: client.birthDate.toISOString().split('T')[0],
+            birthTime: client.birthTime.toISOString().split('T')[1].slice(0, 8),
+            latitude: Number(client.birthLatitude),
+            longitude: Number(client.birthLongitude),
+            timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
+            ayanamsa, // Ensure ayanamsa is passed for routing
+        };
+
+        const dashaData = await astroEngineClient.getVimshottariDasha(birthData, level, options);
+
+        logger.info({ tenantId, clientId, level, ayanamsa }, 'Dasha calculated');
+
+        return {
+            clientId,
+            clientName: client.fullName,
+            level,
+            ayanamsa,
+            data: dashaData.data,
+            cached: dashaData.cached,
+            calculatedAt: dashaData.calculatedAt,
+        };
+    }
+
+    /**
+     * Generate dasha and optionally save to database
+     */
+    async generateAndSaveDasha(
+        tenantId: string,
+        clientId: string,
+        level: string = 'mahadasha',
+        ayanamsa: 'lahiri' | 'kp' | 'raman' = 'lahiri',
+        options: { mahaLord?: string; antarLord?: string; pratyantarLord?: string } = {},
+        metadata: RequestMetadata
+    ) {
+        const client = await clientRepository.findById(tenantId, clientId);
+        if (!client) throw new ClientNotFoundError(clientId);
+
+        // Generate dasha data
+        const dashaResult = await this.generateDasha(tenantId, clientId, level, ayanamsa, options);
+
+        // Save to database as chart type 'dasha'
+        const chart = await this.saveChart(tenantId, clientId, {
+            chartType: 'dasha',
+            chartName: `${client.fullName} - ${level} Dasha (${ayanamsa})`,
+            chartData: dashaResult.data,
+            chartConfig: { system: ayanamsa, level },
+            calculatedAt: new Date(),
+        }, metadata);
+
+        logger.info({ tenantId, clientId, level, ayanamsa, chartId: chart.id }, 'Dasha generated and saved');
+
+        return {
+            ...chart,
+            cached: dashaResult.cached,
+            clientName: client.fullName,
+        };
+    }
+
+    /**
+     * Generate Ashtakavarga for a client (Lahiri/Raman only)
+     */
+    async generateAshtakavarga(
+        tenantId: string,
+        clientId: string,
+        ayanamsa: 'lahiri' | 'raman' | 'kp' = 'lahiri'
+    ) {
+        // KP system doesn't support Ashtakavarga
+        if (ayanamsa === 'kp') {
+            throw new Error('Ashtakavarga is not available for KP system');
+        }
+
         const client = await clientRepository.findById(tenantId, clientId);
         if (!client) throw new ClientNotFoundError(clientId);
 
@@ -196,18 +281,17 @@ export class ChartService {
             timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
         };
 
-        const dashaData = await astroEngineClient.getVimshottariDasha(birthData, level, ayanamsa);
+        const ashtakavargaData = await astroEngineClient.getAshtakavarga(birthData, ayanamsa);
 
-        logger.info({ tenantId, clientId, level, ayanamsa }, 'Dasha calculated');
+        logger.info({ tenantId, clientId, ayanamsa }, 'Ashtakavarga calculated');
 
         return {
             clientId,
             clientName: client.fullName,
-            level,
             ayanamsa,
-            data: dashaData.data,
-            cached: dashaData.cached,
-            calculatedAt: dashaData.calculatedAt,
+            data: ashtakavargaData.data,
+            cached: ashtakavargaData.cached,
+            calculatedAt: ashtakavargaData.calculatedAt,
         };
     }
 

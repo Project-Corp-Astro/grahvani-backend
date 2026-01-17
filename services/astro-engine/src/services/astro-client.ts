@@ -282,7 +282,7 @@ export class AstroEngineClient {
     /**
      * Get Vimshottari Dasha at specified level
      */
-    async getVimshottariDasha(data: BirthData, level: string = 'mahadasha'): Promise<any> {
+    async getVimshottariDasha(data: BirthData, level: string = 'mahadasha', context: Record<string, string> = {}): Promise<any> {
         const system = this.getSystem(data);
         let endpoint = '';
 
@@ -316,7 +316,13 @@ export class AstroEngineClient {
             endpoint = lahiriEndpoints[level.toLowerCase()] || lahiriEndpoints['mahadasha'];
         }
 
-        const response = await this.client.post(endpoint, this.buildPayload(data));
+        // Map frontend camelCase context to backend snake_case if they exist
+        const extras: Record<string, any> = {};
+        if (context.mahaLord) extras.maha_lord = context.mahaLord;
+        if (context.antarLord) extras.antar_lord = context.antarLord;
+        if (context.pratyantarLord) extras.pratyantar_lord = context.pratyantarLord;
+
+        const response = await this.client.post(endpoint, this.buildPayload(data, extras));
         return response.data;
     }
 

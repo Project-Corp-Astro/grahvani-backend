@@ -95,6 +95,21 @@ export class LahiriClient extends BaseAstroClient {
     async getSookshmaDasha(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.SOOKSHMA_DASHA, data); }
     async getPranaDasha(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.PRANA_DASHA, data); }
 
+    /**
+     * Generic dasha getter with level and context
+     */
+    async getVimshottariDasha(data: BirthData, level: string = 'mahadasha', context: Record<string, string> = {}) {
+        const lahiriLevelMap: Record<string, string> = {
+            'mahadasha': LAHIRI_ENDPOINTS.ANTAR_DASHA,
+            'antardasha': LAHIRI_ENDPOINTS.ANTAR_DASHA,
+            'pratyantardasha': LAHIRI_ENDPOINTS.PRATYANTAR_DASHA,
+            'sookshma': LAHIRI_ENDPOINTS.SOOKSHMA_DASHA,
+            'prana': LAHIRI_ENDPOINTS.PRANA_DASHA
+        };
+        const endpoint = lahiriLevelMap[level.toLowerCase()] || lahiriLevelMap['mahadasha'];
+        return this.post(endpoint, data, context);
+    }
+
     // =========================================================================
     // COMPATIBILITY & NUMEROLOGY
     // =========================================================================

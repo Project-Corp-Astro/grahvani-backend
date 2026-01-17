@@ -114,6 +114,21 @@ export class RamanClient extends BaseAstroClient {
     async getPratyantarDasha(data: BirthData) { return this.post(RAMAN_ENDPOINTS.PRATYANTAR_DASHA, data); }
     async getSookshmaDasha(data: BirthData) { return this.post(RAMAN_ENDPOINTS.SOOKSHMA_DASHA, data); }
     async getPranaDasha(data: BirthData) { return this.post(RAMAN_ENDPOINTS.PRANA_DASHA, data); }
+
+    /**
+     * Generic dasha getter with level and context
+     */
+    async getVimshottariDasha(data: BirthData, level: string = 'mahadasha', context: Record<string, string> = {}) {
+        const ramanLevelMap: Record<string, string> = {
+            'mahadasha': RAMAN_ENDPOINTS.MAHA_ANTAR_DASHA,
+            'antardasha': RAMAN_ENDPOINTS.MAHA_ANTAR_DASHA,
+            'pratyantardasha': RAMAN_ENDPOINTS.PRATYANTAR_DASHA,
+            'sookshma': RAMAN_ENDPOINTS.SOOKSHMA_DASHA,
+            'prana': RAMAN_ENDPOINTS.PRANA_DASHA
+        };
+        const endpoint = ramanLevelMap[level.toLowerCase()] || ramanLevelMap['mahadasha'];
+        return this.post(endpoint, data, context);
+    }
 }
 
 export const ramanClient = new RamanClient();
