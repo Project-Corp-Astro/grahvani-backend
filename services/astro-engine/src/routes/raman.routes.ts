@@ -25,6 +25,8 @@ router.post('/hora-lagna', ramanController.getHoraLagna.bind(ramanController));
 router.post('/sripathi-bhava', ramanController.getSripathiBhava.bind(ramanController));
 router.post('/kp-bhava', ramanController.getKpBhava.bind(ramanController));
 router.post('/equal-bhava', ramanController.getEqualBhava.bind(ramanController));
+router.post('/karkamsha-d1', ramanController.getKarkamshaD1.bind(ramanController));
+router.post('/karkamsha-d9', ramanController.getKarkamshaD9.bind(ramanController));
 
 // Ashtakavarga
 router.post('/bhinna-ashtakavarga', ramanController.getBhinnaAshtakavarga.bind(ramanController));

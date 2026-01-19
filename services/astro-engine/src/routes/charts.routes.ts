@@ -21,4 +21,14 @@ router.post('/moon', specialChartsController.getMoonChart.bind(specialChartsCont
 router.post('/sun', specialChartsController.getSunChart.bind(specialChartsController));
 router.post('/sudarshan-chakra', specialChartsController.getSudarshanChakra.bind(specialChartsController));
 
+// Special Lagnas & Bhavas
+router.post('/arudha-lagna', specialChartsController.getArudhaLagna.bind(specialChartsController));
+router.post('/bhava-lagna', specialChartsController.getBhavaLagna.bind(specialChartsController));
+router.post('/hora-lagna', specialChartsController.getHoraLagna.bind(specialChartsController));
+router.post('/sripathi-bhava', specialChartsController.getSripathiBhava.bind(specialChartsController));
+router.post('/kp-bhava', specialChartsController.getKpBhava.bind(specialChartsController));
+router.post('/equal-bhava', specialChartsController.getEqualBhava.bind(specialChartsController));
+router.post('/karkamsha-d1', specialChartsController.getKarkamshaD1.bind(specialChartsController));
+router.post('/karkamsha-d9', specialChartsController.getKarkamshaD9.bind(specialChartsController));
+
 export default router;

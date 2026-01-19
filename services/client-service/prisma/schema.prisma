@@ -103,6 +103,15 @@ enum ChartType {
   kp_chart
   moon_chart
   sun_chart
+  arudha_lagna
+  bhava_lagna
+  hora_lagna
+  kp_bhava
+  equal_bhava
+  sripathi_bhava
+  karkamsha
+  karkamsha_d1
+  karkamsha_d9
   @@schema("app_clients")
 }
 
