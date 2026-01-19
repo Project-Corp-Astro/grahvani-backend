@@ -84,6 +84,7 @@ enum ChartType {
   D2
   D3
   D4
+  D6
   D7
   D9
   D10
@@ -96,6 +97,7 @@ enum ChartType {
   D40
   D45
   D60
+  D150
   transit
   dasha
   ashtakavarga
@@ -112,6 +114,40 @@ enum ChartType {
   karkamsha
   karkamsha_d1
   karkamsha_d9
+  numerology_chaldean
+  numerology_loshu
+  yoga_gaja_kesari
+  yoga_guru_mangal
+  yoga_budha_aditya
+  yoga_chandra_mangal
+  yoga_raj
+  yoga_pancha_mahapurusha
+  yoga_daridra
+  yoga_dhan
+  yoga_malefic
+  yoga_rare
+  yoga_special
+  yoga_spiritual
+  yoga_shubh
+  yoga_viparitha_raja
+  yoga_kalpadruma
+  dosha_kala_sarpa
+  dosha_angarak
+  dosha_guru_chandal
+  dosha_shrapit
+  dosha_sade_sati
+  dosha_pitra
+  panchanga
+  choghadiya
+  hora_times
+  lagna_times
+  muhurat
+  remedy_yantra
+  remedy_mantra
+  remedy_general
+  remedy_gemstone
+  remedy_lal_kitab
+  shadbala
   @@schema("app_clients")
 }
 
@@ -288,6 +324,7 @@ model ClientSavedChart {
   tenantId      String    @map("tenant_id") @db.Uuid
   clientId      String    @map("client_id") @db.Uuid
   chartType     ChartType @map("chart_type")
+  system        String    @default("lahiri") @db.VarChar(20)
   chartName     String?   @map("chart_name") @db.VarChar(200)
   chartData     Json      @map("chart_data") @db.JsonB
   chartConfig   Json?     @map("chart_config") @db.JsonB
@@ -302,6 +339,7 @@ model ClientSavedChart {
   @@index([tenantId])
   @@index([clientId])
   @@unique([id, tenantId])
+  @@unique([tenantId, clientId, chartType, system])
   @@index([clientId, chartType])
   
   @@map("client_saved_charts")

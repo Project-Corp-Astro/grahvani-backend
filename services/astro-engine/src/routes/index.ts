@@ -5,6 +5,7 @@ import dashaRoutes from './dasha.routes';
 import ashtakavargaRoutes from './ashtakavarga.routes';
 import ramanRoutes from './raman.routes';
 import compatibilityRoutes from './compatibility.routes';
+import numerologyRoutes from './numerology.routes';
 
 const router = Router();
 
@@ -30,5 +31,8 @@ router.use('/raman', ramanRoutes);
 
 // Compatibility & Relationship: /api/compatibility/*
 router.use('/compatibility', compatibilityRoutes);
+
+// Numerology: /api/numerology/*
+router.use('/numerology', numerologyRoutes);
 
 export default router;

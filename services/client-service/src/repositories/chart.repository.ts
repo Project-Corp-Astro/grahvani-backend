@@ -28,19 +28,36 @@ export class ChartRepository {
      */
     async create(tenantId: string, data: {
         clientId: string;
-        chartName?: string;
         chartType: ChartType;
+        system?: string;
+        chartName?: string;
         chartData: any;
         chartConfig?: any;
         chartImageUrl?: string;
         calculatedAt?: Date;
         createdBy?: string;
     }) {
-        return this.prisma.clientSavedChart.create({
-            data: {
+        const { clientId, chartType, system, ...rest } = data;
+        const calculatedAt = data.calculatedAt || new Date();
+
+        return this.prisma.clientSavedChart.upsert({
+            where: {
+                tenantId_clientId_chartType_system: {
+                    tenantId,
+                    clientId,
+                    chartType,
+                    system: system || 'lahiri'
+                }
+            },
+            update: {
+                ...rest,
+                calculatedAt
+            },
+            create: {
                 ...data,
                 tenantId,
-                calculatedAt: data.calculatedAt || new Date()
+                calculatedAt,
+                system: system || 'lahiri'
             }
         });
     }

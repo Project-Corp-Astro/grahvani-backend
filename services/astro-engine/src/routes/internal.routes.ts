@@ -18,6 +18,12 @@ router.post('/sudarshan-chakra', chartController.getSudarshanChakra.bind(chartCo
 // DIVISIONAL CHARTS (D2-D60)
 // =============================================================================
 router.post('/divisional/:type', chartController.getDivisionalChart.bind(chartController));
+router.post('/yoga/:type', chartController.getYoga.bind(chartController));
+router.post('/dosha/:type', chartController.getDosha.bind(chartController));
+router.post('/remedy/:type', chartController.getRemedy.bind(chartController));
+router.post('/panchanga/:type?', chartController.getPanchanga.bind(chartController));
+router.post('/special/:type', chartController.getSpecialChart.bind(chartController));
+router.post('/shadbala', chartController.getSpecialChart.bind(chartController)); // Shadbala is a special calculation
 
 // =============================================================================
 // ASHTAKAVARGA
