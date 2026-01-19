@@ -257,11 +257,43 @@ class AstroEngineClient {
         return (await this.apiClient.post('/charts/hora-lagna', birthData)).data;
     }
 
+    async getYogaAnalysis(birthData: BirthData, yogaType: string, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post(`/yoga/${yogaType}`, payload)).data;
+    }
+
+    async getDoshaAnalysis(birthData: BirthData, doshaType: string, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post(`/dosha/${doshaType}`, payload)).data;
+    }
+
+    async getRemedy(birthData: BirthData, remedyType: string, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post(`/remedy/${remedyType}`, payload)).data;
+    }
+
+    async getPanchanga(birthData: BirthData, type: string = 'panchanga', ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post(`/panchanga/${type}`, payload)).data;
+    }
+
+    async getShadbala(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post('/shadbala', payload)).data;
+    }
+
     async getSripathiBhava(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
         if (ayanamsa === 'raman') {
             return (await this.apiClient.post('/raman/sripathi-bhava', birthData)).data;
         }
         return (await this.apiClient.post('/charts/sripathi-bhava', birthData)).data;
+    }
+
+    async getKpBhava(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        if (ayanamsa === 'raman') {
+            return (await this.apiClient.post('/raman/kp-bhava', birthData)).data;
+        }
+        return (await this.apiClient.post('/charts/kp-bhava', birthData)).data;
     }
 
     async getEqualBhava(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
@@ -323,6 +355,14 @@ class AstroEngineClient {
 
     async getProgressed(birthData: BirthData & { progressedDate: string }): Promise<AstroResponse> {
         return (await this.apiClient.post('/compatibility/progressed', birthData)).data;
+    }
+
+    async getChaldeanNumerology(data: any): Promise<AstroResponse> {
+        return (await this.apiClient.post('/numerology/chaldean', data)).data;
+    }
+
+    async getLoShuGrid(birthData: any): Promise<AstroResponse> {
+        return (await this.apiClient.post('/numerology/loshu', birthData)).data;
     }
 
     // =========================================================================

@@ -20,3 +20,6 @@ export * from './raman.controller';
 
 // Compatibility & Relationship
 export * from './compatibility.controller';
+
+// Numerology
+export * from './numerology.controller';

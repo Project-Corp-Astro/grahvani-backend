@@ -164,6 +164,136 @@ export class ChartController {
     }
 
     /**
+     * POST /internal/yoga/:type
+     */
+    async getYoga(req: Request, res: Response): Promise<void> {
+        try {
+            const { type } = req.params;
+            const birthData: BirthData = req.body;
+            if (!this.validateBirthData(birthData, res)) return;
+
+            const cacheKey = { ...birthData, type };
+            const cached = await cacheService.get<any>(`yoga:${type}`, cacheKey);
+            if (cached) {
+                res.json({ success: true, data: cached, cached: true, calculatedAt: new Date().toISOString() });
+                return;
+            }
+
+            const data = await astroEngineClient.getYoga(birthData, type);
+            await cacheService.set(`yoga:${type}`, cacheKey, data);
+
+            res.json({ success: true, data, cached: false, calculatedAt: new Date().toISOString() });
+        } catch (error: any) {
+            logger.error({ error: error.message, type: req.params.type }, 'Yoga analysis failed');
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    /**
+     * POST /internal/dosha/:type
+     */
+    async getDosha(req: Request, res: Response): Promise<void> {
+        try {
+            const { type } = req.params;
+            const birthData: BirthData = req.body;
+            if (!this.validateBirthData(birthData, res)) return;
+
+            const cacheKey = { ...birthData, type };
+            const cached = await cacheService.get<any>(`dosha:${type}`, cacheKey);
+            if (cached) {
+                res.json({ success: true, data: cached, cached: true, calculatedAt: new Date().toISOString() });
+                return;
+            }
+
+            const data = await astroEngineClient.getDosha(birthData, type);
+            await cacheService.set(`dosha:${type}`, cacheKey, data);
+
+            res.json({ success: true, data, cached: false, calculatedAt: new Date().toISOString() });
+        } catch (error: any) {
+            logger.error({ error: error.message, type: req.params.type }, 'Dosha analysis failed');
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    /**
+     * POST /internal/remedy/:type
+     */
+    async getRemedy(req: Request, res: Response): Promise<void> {
+        try {
+            const { type } = req.params;
+            const birthData: BirthData = req.body;
+            if (!this.validateBirthData(birthData, res)) return;
+
+            const cacheKey = { ...birthData, type };
+            const cached = await cacheService.get<any>(`remedy:${type}`, cacheKey);
+            if (cached) {
+                res.json({ success: true, data: cached, cached: true, calculatedAt: new Date().toISOString() });
+                return;
+            }
+
+            const data = await astroEngineClient.getRemedy(birthData, type);
+            await cacheService.set(`remedy:${type}`, cacheKey, data);
+
+            res.json({ success: true, data, cached: false, calculatedAt: new Date().toISOString() });
+        } catch (error: any) {
+            logger.error({ error: error.message, type: req.params.type }, 'Remedy retrieval failed');
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    /**
+     * POST /internal/panchanga/:type?
+     */
+    async getPanchanga(req: Request, res: Response): Promise<void> {
+        const type = req.params.type || req.body.type || 'panchanga';
+        try {
+            const birthData: BirthData = req.body;
+            if (!this.validateBirthData(birthData, res)) return;
+
+            const cacheKey = { ...birthData, type };
+            const cached = await cacheService.get<any>(`panchanga:${type}`, cacheKey);
+            if (cached) {
+                res.json({ success: true, data: cached, cached: true, calculatedAt: new Date().toISOString() });
+                return;
+            }
+
+            const data = await astroEngineClient.getPanchanga(birthData, type);
+            await cacheService.set(`panchanga:${type}`, cacheKey, data);
+
+            res.json({ success: true, data, cached: false, calculatedAt: new Date().toISOString() });
+        } catch (error: any) {
+            logger.error({ error: error.message, type }, 'Panchanga calculation failed');
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    /**
+     * POST /internal/special/:type
+     */
+    async getSpecialChart(req: Request, res: Response): Promise<void> {
+        try {
+            const { type } = req.params;
+            const birthData: BirthData = req.body;
+            if (!this.validateBirthData(birthData, res)) return;
+
+            const cacheKey = { ...birthData, type };
+            const cached = await cacheService.get<any>(`special:${type}`, cacheKey);
+            if (cached) {
+                res.json({ success: true, data: cached, cached: true, calculatedAt: new Date().toISOString() });
+                return;
+            }
+
+            const data = await astroEngineClient.getSpecialChart(birthData, type);
+            await cacheService.set(`special:${type}`, cacheKey, data);
+
+            res.json({ success: true, data, cached: false, calculatedAt: new Date().toISOString() });
+        } catch (error: any) {
+            logger.error({ error: error.message, type: req.params.type }, 'Special chart failed');
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    /**
      * POST /internal/ashtakavarga
      * Get Bhinna Ashtakavarga
      */

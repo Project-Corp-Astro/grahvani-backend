@@ -11,6 +11,10 @@ export interface SystemCapabilities {
     charts: string[];
     features: string[];
     specialCharts: string[];
+    yogas?: string[];
+    doshas?: string[];
+    remedies?: string[];
+    panchanga?: string[];
     hasDivisional: boolean;
     hasAshtakavarga: boolean;
     hasNumerology: boolean;
@@ -23,9 +27,13 @@ export interface SystemCapabilities {
  */
 export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
     lahiri: {
-        charts: ['D1', 'D2', 'D3', 'D4', 'D7', 'D9', 'D10', 'D12', 'D16', 'D20', 'D24', 'D27', 'D30', 'D40', 'D45', 'D60'],
+        charts: ['D1', 'D2', 'D3', 'D4', 'D6', 'D7', 'D9', 'D10', 'D12', 'D16', 'D20', 'D24', 'D27', 'D30', 'D40', 'D45', 'D60', 'D150'],
         features: ['natal', 'transit', 'dasha', 'ashtakavarga', 'numerology', 'synastry', 'composite', 'progressed'],
-        specialCharts: ['moon', 'sun', 'sudarshan', 'transit', 'arudha', 'arudha_lagna', 'bhava', 'bhava_lagna', 'hora', 'hora_lagna', 'sripathi', 'kp_bhava', 'equal_bhava', 'karkamsha', 'karkamsha_d1', 'karkamsha_d9'],
+        specialCharts: ['moon', 'sun', 'sudarshan', 'transit', 'arudha', 'arudha_lagna', 'bhava', 'bhava_lagna', 'hora', 'hora_lagna', 'sripathi', 'kp_bhava', 'equal_bhava', 'karkamsha', 'karkamsha_d1', 'karkamsha_d9', 'numerology_chaldean', 'numerology_loshu', 'shadbala'],
+        yogas: ['gaja_kesari', 'guru_mangal', 'budha_aditya', 'chandra_mangal', 'raj_yoga', 'pancha_mahapurusha', 'daridra', 'dhan', 'malefic', 'rare', 'special', 'spiritual', 'shubh', 'vipreeta_raja', 'kalpadruma'],
+        doshas: ['kala_sarpa', 'angarak', 'guru_chandal', 'shrapit', 'sade_sati', 'pitra'],
+        remedies: ['yantra', 'mantra', 'general', 'gemstone', 'lal_kitab'],
+        panchanga: ['panchanga', 'choghadiya', 'hora', 'lagna_times', 'muhurat'],
         hasDivisional: true,
         hasAshtakavarga: true,
         hasNumerology: true,

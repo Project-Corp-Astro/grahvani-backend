@@ -155,6 +155,107 @@ export class AstroEngineClient {
         return response.data;
     }
 
+    /**
+     * Get Yoga Analysis (Generic)
+     */
+    async getYoga(data: BirthData, yogaType: string): Promise<any> {
+        const system = this.getSystem(data);
+        // Map common names to specific Lahiri endpoints
+        const endpointMap: Record<string, string> = {
+            'gaja_kesari': 'comprehensive_gaja_kesari',
+            'guru_mangal': 'comprehensive_guru_mangal',
+            'budha_aditya': 'budha-aditya-yoga',
+            'chandra_mangal': 'chandra-mangal-yoga',
+            'raj_yoga': 'raj-yoga',
+            'pancha_mahapurusha': 'pancha-mahapurusha-yogas',
+            'daridra': 'daridra-analysis',
+            'dhan': 'dhan-yoga-analysis',
+            'malefic': 'malefic_yogas',
+            'rare': 'yoga-analysis',
+            'special': 'special-yogas',
+            'spiritual': 'spiritual_prosperity_yogas',
+            'shubh': 'shubh-yogas',
+            'viparitha_raja': 'viparitha-raja-yoga',
+            'kalpadruma': 'kalpadruma-yoga'
+        };
+        const endpoint = endpointMap[yogaType] || yogaType;
+        const response = await this.client.post(`/${system}/${endpoint}`, this.buildPayload(data));
+        return response.data;
+    }
+
+    /**
+     * Get Dosha Analysis (Generic)
+     */
+    async getDosha(data: BirthData, doshaType: string): Promise<any> {
+        const system = this.getSystem(data);
+        const endpointMap: Record<string, string> = {
+            'kala_sarpa': 'kala-sarpa-fixed',
+            'angarak': 'calculate-angarak-dosha',
+            'guru_chandal': 'guru-chandal-analysis',
+            'shrapit': 'calculate-shrapit-dosha',
+            'sade_sati': 'calculate-sade-sati',
+            'pitra': 'pitra-dosha'
+        };
+        const endpoint = endpointMap[doshaType] || doshaType;
+        const response = await this.client.post(`/${system}/${endpoint}`, this.buildPayload(data));
+        return response.data;
+    }
+
+    /**
+     * Get Remedial Recommendations (Generic)
+     */
+    async getRemedy(data: BirthData, remedyType: string): Promise<any> {
+        const system = this.getSystem(data);
+        const endpointMap: Record<string, string> = {
+            'yantra': 'yantra-recommendations',
+            'mantra': 'mantra-analysis',
+            'general': 'vedic_remedies',
+            'gemstone': 'calculate-gemstone',
+            'lal_kitab': 'lal-kitab-remedies'
+        };
+        const endpoint = endpointMap[remedyType] || remedyType;
+        // Some remedies match /lahiri/ endpoint directly, others need specific paths
+        const response = await this.client.post(`/${system}/${endpoint}`, this.buildPayload(data));
+        return response.data;
+    }
+
+    /**
+     * Get Panchanga & Muhurat Elements (Generic)
+     */
+    async getPanchanga(data: BirthData, type: string = 'panchanga'): Promise<any> {
+        const system = this.getSystem(data);
+        const endpointMap: Record<string, string> = {
+            'panchanga': 'panchanga',
+            'choghadiya': 'choghadiya_times',
+            'hora': 'hora_times',
+            'lagna_times': 'lagna_times',
+            'muhurat': 'muhurat'
+        };
+        const endpoint = endpointMap[type] || type;
+        const response = await this.client.post(`/${system}/${endpoint}`, this.buildPayload(data));
+        return response.data;
+    }
+
+    /**
+     * Get Specialized Charts (Generic)
+     */
+    async getSpecialChart(data: BirthData, type: string): Promise<any> {
+        const system = this.getSystem(data);
+        const endpointMap: Record<string, string> = {
+            'arudha_lagna': 'calculate_arudha_lagna',
+            'bhava_lagna': 'calculate_bhava_lagna',
+            'hora_lagna': 'calculate_hora_lagna',
+            'sripathi_bhava': 'calculate_sripathi_bhava',
+            'kp_bhava': 'calculate_kp_bhava',
+            'equal_bhava': 'calculate_equal_bhava',
+            'karkamsha': 'calculate_karkamsha',
+            'shadbala': 'calculate_shadbala'
+        };
+        const endpoint = endpointMap[type] || type;
+        const response = await this.client.post(`/${system}/${endpoint}`, this.buildPayload(data));
+        return response.data;
+    }
+
     // =========================================================================
     // DIVISIONAL CHARTS (D2-D60)
     // =========================================================================
