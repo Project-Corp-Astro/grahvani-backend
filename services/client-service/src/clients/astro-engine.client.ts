@@ -257,6 +257,34 @@ class AstroEngineClient {
         return (await this.apiClient.post('/charts/hora-lagna', birthData)).data;
     }
 
+    async getSripathiBhava(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        if (ayanamsa === 'raman') {
+            return (await this.apiClient.post('/raman/sripathi-bhava', birthData)).data;
+        }
+        return (await this.apiClient.post('/charts/sripathi-bhava', birthData)).data;
+    }
+
+    async getEqualBhava(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        if (ayanamsa === 'raman') {
+            return (await this.apiClient.post('/raman/equal-bhava', birthData)).data;
+        }
+        return (await this.apiClient.post('/charts/equal-bhava', birthData)).data;
+    }
+
+    async getKarkamshaD1(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        if (ayanamsa === 'raman') {
+            return (await this.apiClient.post('/raman/karkamsha-d1', birthData)).data;
+        }
+        return (await this.apiClient.post('/charts/karkamsha-d1', birthData)).data;
+    }
+
+    async getKarkamshaD9(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        if (ayanamsa === 'raman') {
+            return (await this.apiClient.post('/raman/karkamsha-d9', birthData)).data;
+        }
+        return (await this.apiClient.post('/charts/karkamsha-d9', birthData)).data;
+    }
+
     // =========================================================================
     // KP SYSTEM SPECIFIC ENDPOINTS
     // =========================================================================

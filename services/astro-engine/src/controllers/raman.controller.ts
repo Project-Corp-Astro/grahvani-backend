@@ -173,6 +173,14 @@ export class RamanController {
         await this.handleLagnaChart(req, res, 'equal-bhava', (data) => ramanClient.getEqualBhava(data));
     }
 
+    async getKarkamshaD1(req: Request, res: Response): Promise<void> {
+        await this.handleLagnaChart(req, res, 'karkamsha-d1', (data) => ramanClient.getKarkamshaD1(data));
+    }
+
+    async getKarkamshaD9(req: Request, res: Response): Promise<void> {
+        await this.handleLagnaChart(req, res, 'karkamsha-d9', (data) => ramanClient.getKarkamshaD9(data));
+    }
+
     private async handleLagnaChart(
         req: Request,
         res: Response,

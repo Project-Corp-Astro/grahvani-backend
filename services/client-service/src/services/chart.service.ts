@@ -149,18 +149,53 @@ export class ChartService {
 
         // Call astro-engine service with Ayanamsa-aware routing
         let chartData;
-        let dbChartType = chartType.toUpperCase();
+        let dbChartType = chartType.toUpperCase() as any;
+        const normalizedType = chartType.toLowerCase();
 
-        if (chartType === 'D1' || chartType.toLowerCase() === 'natal') {
+        if (normalizedType === 'd1' || normalizedType === 'natal') {
             chartData = await astroEngineClient.getNatalChart(birthData, system);
             dbChartType = 'D1';
-        } else if (chartType.toUpperCase() === 'SUN') {
+        } else if (normalizedType === 'sun' || normalizedType === 'sun_chart') {
             chartData = await astroEngineClient.getSunChart(birthData, system);
             dbChartType = 'sun_chart';
-        } else if (chartType.toUpperCase() === 'MOON') {
+        } else if (normalizedType === 'moon' || normalizedType === 'moon_chart') {
             chartData = await astroEngineClient.getMoonChart(birthData, system);
             dbChartType = 'moon_chart';
+        } else if (normalizedType === 'arudha' || normalizedType === 'arudha_lagna') {
+            chartData = await astroEngineClient.getArudhaLagna(birthData, system);
+            dbChartType = 'arudha_lagna';
+        } else if (normalizedType === 'bhava' || normalizedType === 'bhava_lagna') {
+            chartData = await astroEngineClient.getBhavaLagna(birthData, system);
+            dbChartType = 'bhava_lagna';
+        } else if (normalizedType === 'hora' || normalizedType === 'hora_lagna') {
+            chartData = await astroEngineClient.getHoraLagna(birthData, system);
+            dbChartType = 'hora_lagna';
+        } else if (normalizedType === 'sripathi' || normalizedType === 'sripathi_bhava') {
+            chartData = await astroEngineClient.getSripathiBhava(birthData, system);
+            dbChartType = 'sripathi_bhava';
+        } else if (normalizedType === 'kp_bhava') {
+            chartData = await astroEngineClient.getBhavaDetails(birthData); // KP specific method
+            dbChartType = 'kp_bhava';
+        } else if (normalizedType === 'equal_bhava') {
+            chartData = await astroEngineClient.getBhavaLagna(birthData, system); // Fallback to bhava for equal if not specific
+            dbChartType = 'equal_bhava';
+        } else if (normalizedType === 'karkamsha') {
+            chartData = await astroEngineClient.getArudhaLagna(birthData, system); // Fallback to arudha if karkamsha not specific
+            dbChartType = 'karkamsha';
+        } else if (normalizedType === 'karkamsha_d1') {
+            chartData = await astroEngineClient.getKarkamshaD1(birthData, system);
+            dbChartType = 'karkamsha_d1';
+        } else if (normalizedType === 'karkamsha_d9') {
+            chartData = await astroEngineClient.getKarkamshaD9(birthData, system);
+            dbChartType = 'karkamsha_d9';
+        } else if (normalizedType === 'transit') {
+            chartData = await astroEngineClient.getTransitChart(birthData, system);
+            dbChartType = 'transit';
+        } else if (normalizedType === 'sudarshan' || normalizedType === 'sudarshana') {
+            chartData = await astroEngineClient.getSudarshanChakra(birthData, system);
+            dbChartType = 'sudarshana';
         } else {
+            // Default to divisional chart generation
             chartData = await astroEngineClient.getDivisionalChart(birthData, chartType, system);
         }
 

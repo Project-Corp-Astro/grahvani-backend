@@ -2,6 +2,43 @@ import { Response, NextFunction } from 'express';
 import { clientService } from '../services/client.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 
+/**
+ * Transform client data to ensure birthTime is formatted correctly.
+ * PostgreSQL Time type returns a Date object which causes timezone issues.
+ * We extract the UTC time components to get the original "face value" time.
+ */
+function transformClient(client: any): any {
+    if (!client) return client;
+
+    const transformed = { ...client };
+
+    // Fix birthTime - extract HH:mm:ss from Date object using UTC to preserve face value
+    if (transformed.birthTime instanceof Date) {
+        const hours = transformed.birthTime.getUTCHours().toString().padStart(2, '0');
+        const minutes = transformed.birthTime.getUTCMinutes().toString().padStart(2, '0');
+        const seconds = transformed.birthTime.getUTCSeconds().toString().padStart(2, '0');
+        transformed.birthTime = `${hours}:${minutes}:${seconds}`;
+    } else if (typeof transformed.birthTime === 'string' && transformed.birthTime.includes('T')) {
+        // If it's already an ISO string, extract just the time part from UTC
+        const dt = new Date(transformed.birthTime);
+        const hours = dt.getUTCHours().toString().padStart(2, '0');
+        const minutes = dt.getUTCMinutes().toString().padStart(2, '0');
+        const seconds = dt.getUTCSeconds().toString().padStart(2, '0');
+        transformed.birthTime = `${hours}:${minutes}:${seconds}`;
+    }
+
+    // Fix birthDate - just the date part
+    if (transformed.birthDate instanceof Date) {
+        transformed.birthDate = transformed.birthDate.toISOString().split('T')[0];
+    }
+
+    return transformed;
+}
+
+function transformClients(clients: any[]): any[] {
+    return clients.map(transformClient);
+}
+
 export class ClientController {
     /**
      * GET /clients
@@ -11,6 +48,8 @@ export class ClientController {
             const tenantId = req.user!.tenantId;
             const userId = req.user!.id;
             const result = await clientService.getAllClients(tenantId, { ...req.query, userId });
+            // Transform clients in the response
+            result.clients = transformClients(result.clients);
             res.json(result);
         } catch (error) {
             next(error);
@@ -30,7 +69,7 @@ export class ClientController {
                 userAgent: req.get('user-agent'),
             };
             const client = await clientService.getClient(tenantId, id, metadata);
-            res.json(client);
+            res.json(transformClient(client));
         } catch (error) {
             next(error);
         }
@@ -48,7 +87,7 @@ export class ClientController {
                 userAgent: req.get('user-agent'),
             };
             const client = await clientService.createClient(tenantId, req.body, metadata);
-            res.status(201).json(client);
+            res.status(201).json(transformClient(client));
         } catch (error) {
             next(error);
         }
@@ -67,7 +106,7 @@ export class ClientController {
                 userAgent: req.get('user-agent'),
             };
             const client = await clientService.updateClient(tenantId, id, req.body, metadata);
-            res.json(client);
+            res.json(transformClient(client));
         } catch (error) {
             next(error);
         }
@@ -94,3 +133,4 @@ export class ClientController {
 }
 
 export const clientController = new ClientController();
+
