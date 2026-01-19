@@ -350,7 +350,7 @@ export class ChartService {
 
         const birthData = {
             birthDate: client.birthDate.toISOString().split('T')[0],
-            birthTime: client.birthTime.toISOString().split('T')[1].slice(0, 8),
+            birthTime: this.extractTimeString(client.birthTime),
             latitude: Number(client.birthLatitude),
             longitude: Number(client.birthLongitude),
             timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
@@ -523,7 +523,7 @@ export class ChartService {
 
         const birthData = {
             birthDate: client.birthDate!.toISOString().split('T')[0],
-            birthTime: client.birthTime!.toISOString().split('T')[1].slice(0, 8),
+            birthTime: this.extractTimeString(client.birthTime),
             latitude: Number(client.birthLatitude),
             longitude: Number(client.birthLongitude),
             timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
@@ -611,7 +611,7 @@ export class ChartService {
 
         const birthData = {
             birthDate: client.birthDate.toISOString().split('T')[0],
-            birthTime: client.birthTime.toISOString().split('T')[1].slice(0, 8),
+            birthTime: this.extractTimeString(client.birthTime),
             latitude: Number(client.birthLatitude),
             longitude: Number(client.birthLongitude),
             timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
@@ -690,7 +690,7 @@ export class ChartService {
 
         const birthData = {
             birthDate: client.birthDate.toISOString().split('T')[0],
-            birthTime: client.birthTime.toISOString().split('T')[1].slice(0, 8),
+            birthTime: this.extractTimeString(client.birthTime),
             latitude: Number(client.birthLatitude),
             longitude: Number(client.birthLongitude),
             timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
