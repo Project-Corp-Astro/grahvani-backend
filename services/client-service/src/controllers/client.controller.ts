@@ -24,7 +24,12 @@ export class ClientController {
         try {
             const { id } = req.params;
             const tenantId = req.user!.tenantId;
-            const client = await clientService.getClient(tenantId, id);
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
+            const client = await clientService.getClient(tenantId, id, metadata);
             res.json(client);
         } catch (error) {
             next(error);

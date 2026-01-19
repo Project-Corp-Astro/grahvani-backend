@@ -29,7 +29,12 @@ export class ChartController {
         try {
             const { id } = req.params;
             const tenantId = req.user!.tenantId;
-            const charts = await chartService.getClientCharts(tenantId, id);
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
+            const charts = await chartService.getClientCharts(tenantId, id, metadata);
             res.json(charts);
         } catch (error) {
             next(error);
@@ -96,17 +101,24 @@ export class ChartController {
         try {
             const { id } = req.params;
             const tenantId = req.user!.tenantId;
-            const { level, ayanamsa, save, mahaLord, antarLord, pratyantarLord } = req.body;
+            const { level, ayanamsa, save, mahaLord, antarLord, pratyantarLord, sookshmaLord } = req.body;
             const metadata = {
                 userId: req.user!.id,
                 ipAddress: req.ip,
                 userAgent: req.get('user-agent'),
             };
 
-            const options = { mahaLord, antarLord, pratyantarLord };
+            const options = { mahaLord, antarLord, pratyantarLord, sookshmaLord };
 
             let dasha;
-            if (save) {
+            if (level === 'deep') {
+                dasha = await chartService.generateDeepDasha(
+                    tenantId,
+                    id,
+                    ayanamsa || 'lahiri',
+                    metadata
+                );
+            } else if (save) {
                 dasha = await chartService.generateAndSaveDasha(
                     tenantId,
                     id,
@@ -153,6 +165,47 @@ export class ChartController {
     }
 
     /**
+     * POST /clients/:id/charts/generate-full
+     * Exhaustive generation of all possible diagrams and tables
+     */
+    async generateFullVedicProfile(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
+
+            const result = await chartService.generateFullVedicProfile(tenantId, id, metadata);
+            res.status(201).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * POST /charts/generate-all
+     * Generate core charts for all clients in the tenant
+     */
+    async generateAllClientsCharts(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const tenantId = req.user!.tenantId;
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
+
+            await chartService.generateBulkCharts(tenantId, metadata);
+            res.status(200).json({ success: true, message: 'Bulk generation started' });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
      * POST /clients/:id/ashtakavarga
      * Generate Ashtakavarga (Lahiri/Raman only)
      */
@@ -160,15 +213,68 @@ export class ChartController {
         try {
             const { id } = req.params;
             const tenantId = req.user!.tenantId;
-            const { ayanamsa } = req.body;
+            const { ayanamsa, type, save } = req.body;
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
 
-            const ashtakavarga = await chartService.generateAshtakavarga(
-                tenantId,
-                id,
-                ayanamsa || 'lahiri'
-            );
+            let result;
+            if (save || true) { // Defaulting to save as per user requirements for persistence
+                result = await chartService.generateAndSaveAshtakavarga(
+                    tenantId,
+                    id,
+                    type || 'bhinna',
+                    ayanamsa || 'lahiri',
+                    metadata
+                );
+            } else {
+                result = await chartService.generateAshtakavarga(
+                    tenantId,
+                    id,
+                    type || 'bhinna',
+                    ayanamsa || 'lahiri'
+                );
+            }
 
-            res.json(ashtakavarga);
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * POST /clients/:id/sudarshan-chakra
+     */
+    async generateSudarshanChakra(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const { ayanamsa, save } = req.body;
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
+
+            let chakra;
+            if (save || true) { // Defaulting to save
+                chakra = await chartService.generateAndSaveSudarshanChakra(
+                    tenantId,
+                    id,
+                    ayanamsa || 'lahiri',
+                    metadata
+                );
+            } else {
+                chakra = await chartService.generateSudarshanChakra(
+                    tenantId,
+                    id,
+                    ayanamsa || 'lahiri'
+                );
+            }
+
+            res.json(chakra);
         } catch (error) {
             next(error);
         }

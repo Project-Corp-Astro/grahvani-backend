@@ -61,11 +61,18 @@ export class ClientService {
     /**
      * Get client details
      */
-    async getClient(tenantId: string, id: string) {
+    async getClient(tenantId: string, id: string, metadata?: RequestMetadata) {
         const client = await clientRepository.findById(tenantId, id);
         if (!client) {
             throw new ClientNotFoundError(id);
         }
+
+        // Pre-emptive technical audit and generation whenever a client is selected
+        // This ensures charts are ready before the user clicks on specific astrology tabs
+        if (metadata && client.birthDate) {
+            chartService.ensureFullVedicProfile(tenantId, id, metadata);
+        }
+
         return client;
     }
 
@@ -117,14 +124,16 @@ export class ClientService {
             prismaData.birthDate = new Date(prismaData.birthDate);
         }
 
+        // 3. Handle data conversions for Prisma
         if (prismaData.birthTime && typeof prismaData.birthTime === 'string') {
             if (prismaData.birthTime.includes('T')) {
                 prismaData.birthTime = new Date(prismaData.birthTime);
             } else {
                 // Create a dummy date with the provided time
+                // CRITICAL: Treat "HH:mm:ss" as UTC face value to avoid timezone shifts
                 const [hours, minutes, seconds] = prismaData.birthTime.split(':').map(Number);
                 const timeDate = new Date();
-                timeDate.setHours(hours, minutes, seconds || 0, 0);
+                timeDate.setUTCHours(hours, minutes, seconds || 0, 0); // Use UTC setters
                 prismaData.birthTime = timeDate;
             }
         }
@@ -162,10 +171,10 @@ export class ClientService {
         // prioritizing UX so the astrologer can switch views instantly
         if (validatedData.generateInitialChart && client.birthDate) {
             try {
-                logger.info({ tenantId, clientId: client.id }, 'Triggering initial multi-system core chart generation');
-                await chartService.generateCoreCharts(tenantId, client.id, metadata);
+                logger.info({ tenantId, clientId: client.id }, 'Triggering exhaustive initial multi-system Vedic profile generation');
+                await chartService.generateFullVedicProfile(tenantId, client.id, metadata);
             } catch (err: any) {
-                logger.error({ err, clientId: client.id }, 'Initial chart generation workflow failed');
+                logger.error({ err, clientId: client.id }, 'Initial exhaustive chart generation workflow failed');
             }
         }
 
@@ -207,7 +216,32 @@ export class ClientService {
         }
 
         // 4. Perform update
+        // Ensure "notes" is passed through if provided in data
+        if (data.notes !== undefined) {
+            prismaData.notes = data.notes;
+        }
+
         const updatedClient = await clientRepository.update(tenantId, id, prismaData);
+
+        // 5. Check if birth details changed to trigger chart regeneration
+        const isBirthDataChanged =
+            (prismaData.birthDate && existing.birthDate?.getTime() !== prismaData.birthDate.getTime()) ||
+            (prismaData.birthTime && existing.birthTime?.getTime() !== prismaData.birthTime.getTime()) ||
+            (prismaData.birthLatitude && existing.birthLatitude !== prismaData.birthLatitude) ||
+            (prismaData.birthLongitude && existing.birthLongitude !== prismaData.birthLongitude) ||
+            (prismaData.birthTimezone && existing.birthTimezone !== prismaData.birthTimezone);
+
+        if (isBirthDataChanged) {
+            try {
+                logger.info({ tenantId, clientId: id }, 'Birth details updated - Triggering full chart regeneration');
+                // Run in background to not block response
+                chartService.generateFullVedicProfile(tenantId, id, metadata).catch(err => {
+                    logger.error({ err, clientId: id }, 'Background chart regeneration failed after update');
+                });
+            } catch (err) {
+                logger.error({ err, clientId: id }, 'Failed to initiate chart regeneration');
+            }
+        }
 
         // 4. Record activity
         await activityService.recordActivity({

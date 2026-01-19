@@ -81,7 +81,8 @@ export class AstroEngineClient {
      * Get the resolved ayanamsa system from birth data (handles aliases)
      */
     private getSystem(data: BirthData): 'lahiri' | 'kp' | 'raman' {
-        return data.system || data.ayanamsa || 'lahiri';
+        const sys = data.system || data.ayanamsa || 'lahiri';
+        return sys.toLowerCase() as 'lahiri' | 'kp' | 'raman';
     }
 
     /**

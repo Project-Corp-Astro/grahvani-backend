@@ -101,6 +101,8 @@ enum ChartType {
   ashtakavarga
   sudarshana
   kp_chart
+  moon_chart
+  sun_chart
   @@schema("app_clients")
 }
 

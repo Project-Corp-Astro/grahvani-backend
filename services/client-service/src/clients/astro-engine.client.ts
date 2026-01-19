@@ -175,7 +175,7 @@ class AstroEngineClient {
     async getVimshottariDasha(
         birthData: BirthData,
         level: string = 'mahadasha',
-        context: { mahaLord?: string; antarLord?: string; pratyantarLord?: string } = {}
+        context: { mahaLord?: string; antarLord?: string; pratyantarLord?: string; sookshmaLord?: string } = {}
     ): Promise<AstroResponse> {
         logger.info({ ayanamsa: birthData.system, level }, 'Generating Vimshottari Dasha');
         const payload = { ...birthData };
@@ -186,6 +186,7 @@ class AstroEngineClient {
         if (context.mahaLord) params.append('mahaLord', context.mahaLord);
         if (context.antarLord) params.append('antarLord', context.antarLord);
         if (context.pratyantarLord) params.append('pratyantarLord', context.pratyantarLord);
+        if (context.sookshmaLord) params.append('sookshmaLord', context.sookshmaLord);
 
         return (await this.internalClient.post(`/dasha/vimshottari?${params.toString()}`, payload)).data;
     }

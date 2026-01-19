@@ -33,10 +33,13 @@ router.get('/:id/charts', chartController.getCharts.bind(chartController));
 router.delete('/:id/charts/:chartId', chartController.deleteChart.bind(chartController));
 
 // Chart Generation (via Astro Engine)
+router.post('/charts/generate-all', chartController.generateAllClientsCharts.bind(chartController));
 router.post('/:id/charts/generate', chartController.generateChart.bind(chartController));
 router.post('/:id/charts/generate-core', chartController.generateCoreCharts.bind(chartController));
+router.post('/:id/charts/generate-full', chartController.generateFullVedicProfile.bind(chartController));
 router.post('/:id/dasha', chartController.generateDasha.bind(chartController));
 router.post('/:id/ashtakavarga', chartController.generateAshtakavarga.bind(chartController));
+router.post('/:id/sudarshan-chakra', chartController.generateSudarshanChakra.bind(chartController));
 
 // Remedies
 router.post('/:id/remedies', remedyController.prescribeRemedy.bind(remedyController));
