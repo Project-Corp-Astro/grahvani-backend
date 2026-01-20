@@ -278,8 +278,8 @@ model ClientFamilyLink {
   createdBy         String?  @map("created_by") @db.Uuid
   
   // Relations
-  client        Client @relation("FamilyLinkFrom", fields: [clientId], references: [id])
-  relatedClient Client @relation("FamilyLinkTo", fields: [relatedClientId], references: [id])
+  client        Client @relation("FamilyLinkFrom", fields: [clientId], references: [id], onDelete: Cascade)
+  relatedClient Client @relation("FamilyLinkTo", fields: [relatedClientId], references: [id], onDelete: Cascade)
   
   // Constraints
   @@unique([id, tenantId])
@@ -309,7 +309,7 @@ model ClientConsultation {
   createdBy        String?   @map("created_by") @db.Uuid
   
   // Relations
-  client   Client @relation(fields: [clientId], references: [id])
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
   remedies ClientRemedy[]
   
   @@index([tenantId])
@@ -337,7 +337,7 @@ model ClientSavedChart {
   createdBy     String?   @map("created_by") @db.Uuid
   
   // Relations
-  client Client @relation(fields: [clientId], references: [id])
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
   
   @@index([tenantId])
   @@index([clientId])
@@ -359,7 +359,7 @@ model ClientNote {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  client      Client   @relation(fields: [clientId], references: [id])
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
   @@unique([id, tenantId])
@@ -385,8 +385,8 @@ model ClientRemedy {
   updatedAt        DateTime @updatedAt @map("updated_at")
   createdBy        String?  @map("created_by") @db.Uuid
 
-  client         Client             @relation(fields: [clientId], references: [id])
-  consultation   ClientConsultation? @relation(fields: [consultationId], references: [id])
+  client         Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  consultation   ClientConsultation? @relation(fields: [consultationId], references: [id], onDelete: SetNull)
 
   @@index([tenantId])
   @@unique([id, tenantId])
@@ -432,7 +432,7 @@ model ClientActivityLog {
   timestamp       DateTime @default(now())
   
   // Relations
-  client          Client?  @relation(fields: [clientId], references: [id])
+  client          Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
   @@index([clientId])

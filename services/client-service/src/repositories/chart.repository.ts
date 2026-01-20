@@ -63,6 +63,15 @@ export class ChartRepository {
     }
 
     /**
+     * Delete all charts for a client (used during regeneration)
+     */
+    async deleteByClientId(tenantId: string, clientId: string) {
+        return this.prisma.clientSavedChart.deleteMany({
+            where: { clientId, tenantId }
+        });
+    }
+
+    /**
      * Delete a saved chart
      */
     async delete(tenantId: string, id: string) {

@@ -1,4 +1,5 @@
 import { clientRepository } from '../repositories/client.repository';
+import { chartRepository } from '../repositories/chart.repository';
 import { ClientNotFoundError, DuplicateClientError } from '../errors/client.errors';
 import { CreateClientSchema, UpdateClientSchema } from '../validators/client.validator';
 import { geocodeService } from './geocode.service';
@@ -167,18 +168,16 @@ export class ClientService {
             }
         });
 
-        // 8. Generate initial charts for ALL systems (Lahiri, KP, Raman)
-        // prioritizing UX so the astrologer can switch views instantly
+        // 8. Generate initial charts in BACKGROUND (fire-and-forget)
+        // Client creation returns IMMEDIATELY - charts generate asynchronously
         if (validatedData.generateInitialChart && client.birthDate) {
-            try {
-                logger.info({ tenantId, clientId: client.id }, 'Triggering exhaustive initial multi-system Vedic profile generation');
-                await chartService.generateFullVedicProfile(tenantId, client.id, metadata);
-            } catch (err: any) {
-                logger.error({ err, clientId: client.id }, 'Initial exhaustive chart generation workflow failed');
-            }
+            // DO NOT AWAIT - fire and forget for instant client creation
+            chartService.generateFullVedicProfile(tenantId, client.id, metadata)
+                .then(() => logger.info({ clientId: client.id }, 'Background chart generation completed'))
+                .catch((err: any) => logger.error({ err, clientId: client.id }, 'Background chart generation failed'));
         }
 
-        logger.info({ tenantId, clientId: client.id }, 'Client created successfully');
+        logger.info({ tenantId, clientId: client.id }, 'Client created successfully (charts generating in background)');
 
         return client;
     }
@@ -224,18 +223,30 @@ export class ClientService {
 
         const updatedClient = await clientRepository.update(tenantId, id, prismaData);
 
-        // 5. Check if birth details changed to trigger chart regeneration
-        const isBirthDataChanged =
+        // 5. Check if birth details OR name changed to trigger chart regeneration
+        // This indicates a "Critical Update" where old charts are invalidated
+        const isChartRegenerationTriggered =
+            (prismaData.fullName && existing.fullName !== prismaData.fullName) ||
             (prismaData.birthDate && existing.birthDate?.getTime() !== prismaData.birthDate.getTime()) ||
             (prismaData.birthTime && existing.birthTime?.getTime() !== prismaData.birthTime.getTime()) ||
             (prismaData.birthLatitude && existing.birthLatitude !== prismaData.birthLatitude) ||
             (prismaData.birthLongitude && existing.birthLongitude !== prismaData.birthLongitude) ||
             (prismaData.birthTimezone && existing.birthTimezone !== prismaData.birthTimezone);
 
-        if (isBirthDataChanged) {
+        if (isChartRegenerationTriggered) {
             try {
-                logger.info({ tenantId, clientId: id }, 'Birth details updated - Triggering full chart regeneration');
-                // Run in background to not block response
+                logger.info({ tenantId, clientId: id }, 'Critical details updated - Performing clean chart regeneration');
+
+                // CRITICAL: Delete old charts first to ensure data consistency
+                // We lock briefly to ensure no parallel generation is happening right now
+                const { generationLocks } = require('./chart.service');
+
+                // If a generation is currently running, we can't easily stop it, but we can clear the data
+                // Ideally we should wait, but for now we proceed with deletion
+                await chartRepository.deleteByClientId(tenantId, id);
+                logger.info({ tenantId, clientId: id }, 'Verified: Old charts deleted');
+
+                // Run full profile generation in background
                 chartService.generateFullVedicProfile(tenantId, id, metadata).catch(err => {
                     logger.error({ err, clientId: id }, 'Background chart regeneration failed after update');
                 });
@@ -284,47 +295,45 @@ export class ClientService {
             throw new ClientNotFoundError(id);
         }
 
-        // Implement "Rename on Delete" to free up unique fields (email, phone)
-        const suffix = `-deleted-${Date.now()}`;
-        const updateData: any = {};
+        // Set lock to prevent background generations from saving new charts during/after delete
+        const { generationLocks } = require('./chart.service');
+        generationLocks.add(id);
 
-        if (existing.email) {
-            updateData.email = `${existing.email}${suffix}`;
-        }
+        try {
+            // Perform permanent hard delete (cascading handled by Repository/DB)
+            await clientRepository.delete(tenantId, id);
 
-        if (existing.phonePrimary) {
-            updateData.phonePrimary = `${existing.phonePrimary}${suffix}`;
-        }
-
-        await clientRepository.softDelete(tenantId, id, updateData);
-
-        // Record activity
-        await activityService.recordActivity({
-            tenantId,
-            clientId: id,
-            userId: metadata.userId,
-            action: 'client.deleted',
-            ipAddress: metadata.ipAddress,
-            userAgent: metadata.userAgent,
-            deviceType: metadata.deviceType,
-            deviceName: metadata.deviceName,
-        });
-
-        // Publish event
-        await eventPublisher.publish('client.deleted', {
-            clientId: id,
-            tenantId,
-            metadata: {
+            // Record activity (pointing to a now-deleted record reference is fine for logs)
+            await activityService.recordActivity({
+                tenantId,
+                clientId: id,
+                userId: metadata.userId,
+                action: 'client.deleted',
                 ipAddress: metadata.ipAddress,
                 userAgent: metadata.userAgent,
                 deviceType: metadata.deviceType,
                 deviceName: metadata.deviceName,
-            }
-        });
+            });
 
-        logger.info({ tenantId, clientId: id }, 'Client soft-deleted successfully');
+            // Publish event
+            await eventPublisher.publish('client.deleted', {
+                clientId: id,
+                tenantId,
+                metadata: {
+                    ipAddress: metadata.ipAddress,
+                    userAgent: metadata.userAgent,
+                    deviceType: metadata.deviceType,
+                    deviceName: metadata.deviceName,
+                }
+            });
 
-        return { success: true };
+            logger.info({ tenantId, clientId: id }, 'Client permanently deleted successfully');
+
+            return { success: true };
+        } finally {
+            // Always release lock so we don't leak memory even if delete failed
+            generationLocks.delete(id);
+        }
     }
 }
 

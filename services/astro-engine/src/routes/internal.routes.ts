@@ -37,6 +37,7 @@ router.post('/shodasha-varga', chartController.getShodashaVarga.bind(chartContro
 // =============================================================================
 router.post('/dasha/vimshottari', dashaController.getVimshottariDasha.bind(dashaController));
 router.post('/dasha/prana', dashaController.getPranaDasha.bind(dashaController));
+router.post('/dasha/other', dashaController.getOtherDasha.bind(dashaController));
 
 // =============================================================================
 // KP SYSTEM

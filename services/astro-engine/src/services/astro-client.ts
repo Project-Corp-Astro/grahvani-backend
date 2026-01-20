@@ -437,6 +437,32 @@ export class AstroEngineClient {
         return response.data;
     }
 
+    /**
+     * Get Other Dasha Systems (Tribhagi, Shodashottari, Dwadashottari, etc.)
+     */
+    async getOtherDasha(data: BirthData, dashaType: string): Promise<any> {
+        const endpointMap: Record<string, string> = {
+            'tribhagi': '/lahiri/calculate_tribhagi_dasha',
+            'shodashottari': '/lahiri/shodashottari-dasha',
+            'dwadashottari': '/lahiri/dwadashottari-dasha',
+            'panchottari': '/lahiri/calculate-panchottari-dasha',
+            'chaturshitisama': '/lahiri/calculate_Chaturshitisama_dasha',
+            'satabdika': '/lahiri/calculate_satabdika',
+            'dwisaptati': '/lahiri/calculate_dwisaptati',
+            'shastihayani': '/lahiri/calculate_shastihayani',
+            'shattrimshatsama': '/lahiri/calculate_Shattrimshatsama_dasha',
+            'chara': '/kp/chara-dasha',
+        };
+
+        const endpoint = endpointMap[dashaType.toLowerCase()];
+        if (!endpoint) {
+            throw new Error(`Unknown dasha type: ${dashaType}`);
+        }
+
+        const response = await this.client.post(endpoint, this.buildPayload(data));
+        return response.data;
+    }
+
     // =========================================================================
     // ASHTAKAVARGA
     // =========================================================================
