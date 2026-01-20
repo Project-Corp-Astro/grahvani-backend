@@ -66,6 +66,44 @@ export class DashaController {
             res.status(500).json({ success: false, error: error.message });
         }
     }
+
+    /**
+     * POST /internal/dasha/other
+     * Get Other Dasha systems (Tribhagi, Shodashottari, Dwadashottari, etc.)
+     */
+    async getOtherDasha(req: Request, res: Response): Promise<void> {
+        try {
+            const birthData: BirthData = req.body;
+            const dashaType = req.query.type as string;
+
+            if (!dashaType) {
+                res.status(400).json({ success: false, error: 'Missing dasha type parameter' });
+                return;
+            }
+
+            if (!birthData.birthDate || !birthData.birthTime || !birthData.latitude || !birthData.longitude) {
+                res.status(400).json({ success: false, error: 'Missing required fields' });
+                return;
+            }
+
+            const cacheKey = { ...birthData, type: `dasha:${dashaType}` };
+            const cached = await cacheService.get<any>(`dasha:${dashaType}`, cacheKey);
+
+            if (cached) {
+                res.json({ success: true, data: cached, cached: true, dashaType, calculatedAt: new Date().toISOString() });
+                return;
+            }
+
+            const data = await astroEngineClient.getOtherDasha(birthData, dashaType);
+            await cacheService.set(`dasha:${dashaType}`, cacheKey, data);
+
+            res.json({ success: true, data, cached: false, dashaType, calculatedAt: new Date().toISOString() });
+        } catch (error: any) {
+            logger.error({ error: error.message }, 'Other dasha calculation failed');
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
 }
 
 export const dashaController = new DashaController();
+

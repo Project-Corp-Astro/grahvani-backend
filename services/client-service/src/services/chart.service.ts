@@ -10,6 +10,36 @@ import { logger, isChartAvailable, getAvailableCharts, AyanamsaSystem, SYSTEM_CA
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Max concurrent DB operations for Supabase free tier (10 connections max)
+const MAX_CONCURRENT_OPS = 2; // Safer limit to allow some buffer for other requests
+
+// Track background generation tasks to avoid overlaps
+export const generationLocks = new Set<string>();
+
+// Sleep utility for rate limiting
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Execute promises in batches to avoid connection pool exhaustion
+ * Optimized for Supabase free tier (limited connections)
+ */
+async function executeBatched<T>(
+    operations: (() => Promise<T>)[],
+    batchSize: number = MAX_CONCURRENT_OPS
+): Promise<T[]> {
+    const results: T[] = [];
+    for (let i = 0; i < operations.length; i += batchSize) {
+        const batch = operations.slice(i, i + batchSize);
+        const batchResults = await Promise.all(batch.map(op => op()));
+        results.push(...batchResults);
+        // Small delay between batches to let connections release
+        if (i + batchSize < operations.length) {
+            await sleep(100);
+        }
+    }
+    return results;
+}
+
 function validateUuid(id: string | undefined | null): string | undefined {
     if (!id) return undefined;
     return UUID_REGEX.test(id) ? id : undefined;
@@ -251,14 +281,14 @@ export class ChartService {
      */
     async generateCoreCharts(tenantId: string, clientId: string, metadata: RequestMetadata) {
         const systems: ('lahiri' | 'raman' | 'kp')[] = ['lahiri', 'raman', 'kp'];
+        const operations: (() => Promise<any>)[] = [];
 
-        const results = [];
         for (const sys of systems) {
             // Systems like KP don't have divisional charts (D9) or Ashtakavarga
             const vargas = sys === 'kp' ? ['D1'] : ['D1', 'D9'];
 
             for (const varga of vargas) {
-                results.push(
+                operations.push(() =>
                     this.generateAndSaveChart(tenantId, clientId, varga, sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys, varga }, 'Bulk generation failed for specific chart'))
                 );
@@ -266,30 +296,29 @@ export class ChartService {
 
             // Also generate Ashtakavarga and Sudarshan Chakra for compatible systems
             if (sys !== 'kp') {
-                results.push(
+                operations.push(() =>
                     this.generateAndSaveAshtakavarga(tenantId, clientId, 'sarva', sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys }, 'Bulk Ashtakavarga generation failed'))
                 );
-                results.push(
+                operations.push(() =>
                     this.generateAndSaveSudarshanChakra(tenantId, clientId, sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys }, 'Bulk Sudarshan Chakra generation failed'))
                 );
             }
         }
 
-        return Promise.all(results);
+        // Execute in batches
+        return executeBatched(operations);
     }
 
-    /**
-     * Generate core charts for all clients in a tenant
-     */
     /**
      * Generate full astrological profile for a client
      * This is exhaustive: all vargas, dashas, and diagrams for all systems
      */
     async generateFullVedicProfile(tenantId: string, clientId: string, metadata: RequestMetadata) {
         const systems: ('lahiri' | 'raman' | 'kp')[] = ['lahiri', 'raman', 'kp'];
-        const results = [];
+        // Use thunks (factory functions) for batched execution
+        const operations: (() => Promise<any>)[] = [];
 
         for (const sys of systems) {
             const capabilities = SYSTEM_CAPABILITIES[sys];
@@ -299,7 +328,7 @@ export class ChartService {
 
             // 1. Generate all Divisional Charts
             for (const varga of capabilities.charts) {
-                results.push(
+                operations.push(() =>
                     this.generateAndSaveChart(tenantId, clientId, varga, sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys, varga }, 'Full profile: Divisional chart failed'))
                 );
@@ -310,7 +339,7 @@ export class ChartService {
                 // Skip those handled by specific methods or already handled
                 if (['sudarshan', 'ashtakavarga', 'dasha', 'sun', 'moon'].includes(special)) continue;
 
-                results.push(
+                operations.push(() =>
                     this.generateAndSaveChart(tenantId, clientId, special, sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys, special }, `Full profile: Special chart ${special} failed`))
                 );
@@ -318,15 +347,15 @@ export class ChartService {
 
             // 3. Generate Ashtakavarga (if available)
             if (capabilities.hasAshtakavarga) {
-                results.push(
+                operations.push(() =>
                     this.generateAndSaveAshtakavarga(tenantId, clientId, 'sarva', sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys }, 'Full profile: SAV failed'))
                 );
-                results.push(
+                operations.push(() =>
                     this.generateAndSaveAshtakavarga(tenantId, clientId, 'bhinna', sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys }, 'Full profile: BAV failed'))
                 );
-                results.push(
+                operations.push(() =>
                     this.generateAndSaveAshtakavarga(tenantId, clientId, 'shodasha', sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Shodasha Varga Summary failed'))
                 );
@@ -334,7 +363,7 @@ export class ChartService {
 
             // 4. Generate Sudarshan Chakra (if available)
             if (capabilities.specialCharts.includes('sudarshan')) {
-                results.push(
+                operations.push(() =>
                     this.generateAndSaveSudarshanChakra(tenantId, clientId, sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Sudarshan failed'))
                 );
@@ -342,13 +371,13 @@ export class ChartService {
 
             // 5. Generate Sun and Moon Charts (if available)
             if (capabilities.specialCharts.includes('sun')) {
-                results.push(
+                operations.push(() =>
                     this.generateAndSaveChart(tenantId, clientId, 'SUN', sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Sun chart failed'))
                 );
             }
             if (capabilities.specialCharts.includes('moon')) {
-                results.push(
+                operations.push(() =>
                     this.generateAndSaveChart(tenantId, clientId, 'MOON', sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Moon chart failed'))
                 );
@@ -357,7 +386,7 @@ export class ChartService {
             // 6. Generate Yogas (if available)
             if (capabilities.yogas) {
                 for (const yoga of capabilities.yogas) {
-                    results.push(
+                    operations.push(() =>
                         this.generateAndSaveChart(tenantId, clientId, `yoga:${yoga}`, sys, metadata)
                             .catch(err => logger.error({ err, clientId, sys, yoga }, 'Full profile: Yoga failed'))
                     );
@@ -367,7 +396,7 @@ export class ChartService {
             // 7. Generate Doshas (if available)
             if (capabilities.doshas) {
                 for (const dosha of capabilities.doshas) {
-                    results.push(
+                    operations.push(() =>
                         this.generateAndSaveChart(tenantId, clientId, `dosha:${dosha}`, sys, metadata)
                             .catch(err => logger.error({ err, clientId, sys, dosha }, 'Full profile: Dosha failed'))
                     );
@@ -377,7 +406,7 @@ export class ChartService {
             // 8. Generate Remedies (if available)
             if (capabilities.remedies) {
                 for (const remedy of capabilities.remedies) {
-                    results.push(
+                    operations.push(() =>
                         this.generateAndSaveChart(tenantId, clientId, `remedy:${remedy}`, sys, metadata)
                             .catch(err => logger.error({ err, clientId, sys, remedy }, 'Full profile: Remedy failed'))
                     );
@@ -387,7 +416,7 @@ export class ChartService {
             // 9. Generate Panchanga & Reports (if available)
             if (capabilities.panchanga) {
                 for (const report of capabilities.panchanga) {
-                    results.push(
+                    operations.push(() =>
                         this.generateAndSaveChart(tenantId, clientId, `panchanga:${report}`, sys, metadata)
                             .catch(err => logger.error({ err, clientId, sys, report }, 'Full profile: Panchanga/Report failed'))
                     );
@@ -396,7 +425,7 @@ export class ChartService {
 
             // 10. Generate Shadbala (if available)
             if (capabilities.specialCharts.includes('shadbala')) {
-                results.push(
+                operations.push(() =>
                     this.generateAndSaveChart(tenantId, clientId, 'shadbala', sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Shadbala failed'))
                 );
@@ -404,13 +433,15 @@ export class ChartService {
 
             // 11. Generate Exhaustive Dasha Tree (Maha to Prana)
             // This replaces the experimental Deep Dasha with a production-ready tree
-            results.push(
+            operations.push(() =>
                 this.generateDeepDasha(tenantId, clientId, sys, metadata)
                     .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Dasha tree failed'))
             );
         }
 
-        const resolved = await Promise.all(results);
+        // Execute in batches to avoid Supabase connection pool exhaustion
+        logger.info({ tenantId, clientId, operationCount: operations.length }, 'Starting batched profile generation');
+        const resolved = await executeBatched(operations);
         logger.info({ tenantId, clientId, count: resolved.length }, 'Full Vedic Profile generation completed');
         return { success: true, count: resolved.length };
     }
@@ -423,17 +454,14 @@ export class ChartService {
 
         logger.info({ tenantId, clientCount: clients.length }, 'Starting exhaustive bulk generation for all clients');
 
-        const results = [];
-        for (const client of clients) {
-            if (!client.birthDate || !client.birthTime || !client.birthLatitude || !client.birthLongitude) continue;
-
-            results.push(
+        const operations = clients
+            .filter(client => client.birthDate && client.birthTime && client.birthLatitude && client.birthLongitude)
+            .map(client => () =>
                 this.generateFullVedicProfile(tenantId, client.id, metadata)
                     .catch(err => logger.error({ err, clientId: client.id }, 'Bulk complete profile failed for client'))
             );
-        }
 
-        return Promise.all(results);
+        return executeBatched(operations, 1); // Only 1 client at a time for bulk operations
     }
 
     /**
@@ -451,11 +479,21 @@ export class ChartService {
             });
 
             if (lahiriCharts.length < 18) {
+                // Prevent concurrent generation for the same client
+                if (generationLocks.has(clientId)) {
+                    logger.debug({ clientId }, 'Profile generation already in progress, skipping ensure');
+                    return;
+                }
+
                 logger.info({ tenantId, clientId, count: lahiriCharts.length }, 'Target client profile incomplete. Auditing and generating exhaustive charts.');
+
+                // Set lock
+                generationLocks.add(clientId);
+
                 // Trigger in background to avoid blocking getClient response
-                // but starts the process "whenever astrologers select the client"
                 this.generateFullVedicProfile(tenantId, clientId, metadata)
-                    .catch(err => logger.error({ err, clientId }, 'Pre-emptive profile generation failed'));
+                    .catch(err => logger.error({ err, clientId }, 'Pre-emptive profile generation failed'))
+                    .finally(() => generationLocks.delete(clientId));
             }
         } catch (err) {
             logger.warn({ err, clientId }, 'Failed to perform automatic profile audit');
@@ -905,8 +943,20 @@ export class ChartService {
      */
     private extractTimeString(timeValue: Date | string | null | undefined): string {
         if (!timeValue) return '12:00:00';
-        if (typeof timeValue === 'string') return timeValue;
-        // For Time type stored in DB, use local time to avoid timezone issues
+
+        if (typeof timeValue === 'string') {
+            // Ensure format is HH:MM:SS. If HH:MM, append :00
+            const segments = timeValue.split(':');
+            if (segments.length === 2) {
+                return `${timeValue}:00`;
+            }
+            if (segments.length === 1) {
+                return `${timeValue.padStart(2, '0')}:00:00`;
+            }
+            return timeValue;
+        }
+
+        // For Time type stored in DB (Date object), use local time to avoid timezone issues
         const hours = timeValue.getHours().toString().padStart(2, '0');
         const mins = timeValue.getMinutes().toString().padStart(2, '0');
         const secs = timeValue.getSeconds().toString().padStart(2, '0');
