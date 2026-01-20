@@ -208,9 +208,10 @@ export class ClientService {
                 prismaData.birthTime = new Date(prismaData.birthTime);
             } else {
                 // Create a dummy date with the provided time
+                // CRITICAL: Treat "HH:mm:ss" as UTC face value to avoid timezone shifts (matching createClient)
                 const [hours, minutes, seconds] = prismaData.birthTime.split(':').map(Number);
                 const timeDate = new Date();
-                timeDate.setHours(hours, minutes, seconds || 0, 0);
+                timeDate.setUTCHours(hours, minutes, seconds || 0, 0); // Use UTC setters
                 prismaData.birthTime = timeDate;
             }
         }

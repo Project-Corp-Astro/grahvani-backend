@@ -795,8 +795,14 @@ export class ChartService {
 
         const result = await this.generateAshtakavarga(tenantId, clientId, type, ayanamsa);
 
+        const chartTypeMap = {
+            'bhinna': 'ashtakavarga_bhinna',
+            'sarva': 'ashtakavarga_sarva',
+            'shodasha': 'ashtakavarga_shodasha'
+        } as const;
+
         const chart = await this.saveChart(tenantId, clientId, {
-            chartType: 'ashtakavarga',
+            chartType: chartTypeMap[type] || 'ashtakavarga_bhinna',
             chartName: `${client.fullName} - ${type.toUpperCase()} Ashtakavarga (${ayanamsa})`,
             chartData: result.data,
             chartConfig: { system: ayanamsa, type },

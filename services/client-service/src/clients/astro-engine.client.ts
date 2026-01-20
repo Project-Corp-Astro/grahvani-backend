@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { logger } from '../config';
+import { BaseError } from '../errors/client.errors';
 
 // =============================================================================
 // Types & Interfaces
@@ -28,14 +29,13 @@ export interface AstroResponse<T = any> {
 // Error Classes
 // =============================================================================
 
-export class AstroEngineError extends Error {
+export class AstroEngineError extends BaseError {
     constructor(
         message: string,
-        public readonly statusCode: number = 500,
-        public readonly code: string = 'ASTRO_ENGINE_ERROR'
+        statusCode: number = 500,
+        code: string = 'ASTRO_ENGINE_ERROR'
     ) {
-        super(message);
-        this.name = 'AstroEngineError';
+        super(message, statusCode, code);
     }
 }
 

@@ -101,6 +101,9 @@ enum ChartType {
   transit
   dasha
   ashtakavarga
+  ashtakavarga_bhinna
+  ashtakavarga_sarva
+  ashtakavarga_shodasha
   sudarshana
   kp_chart
   moon_chart
