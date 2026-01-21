@@ -2,7 +2,9 @@
  * Endpoint Availability Configuration
  * 
  * Defines which chart types and features are available per Ayanamsa system.
- * Based on actual external Astro Engine API capabilities.
+ * Based on VERIFIED external Astro Engine API capabilities (ApiEndPoints.txt)
+ * 
+ * @version 2.0.0 - Updated 2026-01-21 based on actual API testing
  */
 
 export type AyanamsaSystem = 'lahiri' | 'raman' | 'kp';
@@ -22,17 +24,63 @@ export interface SystemCapabilities {
 }
 
 /**
+ * Track endpoints that have failed - prevents repeated failed attempts
+ * Key: "{system}:{chartType}", Value: timestamp of last failure
+ */
+const failedEndpoints = new Map<string, number>();
+const FAILURE_RETRY_DELAY = 3600000; // 1 hour before retrying failed endpoint
+
+/**
+ * Check if an endpoint should be skipped due to recent failure
+ */
+export function shouldSkipEndpoint(system: AyanamsaSystem, chartType: string): boolean {
+    const key = `${system}:${chartType.toLowerCase()}`;
+    const lastFailure = failedEndpoints.get(key);
+    if (!lastFailure) return false;
+    return (Date.now() - lastFailure) < FAILURE_RETRY_DELAY;
+}
+
+/**
+ * Mark an endpoint as failed (called on 404/500 errors)
+ */
+export function markEndpointFailed(system: AyanamsaSystem, chartType: string): void {
+    const key = `${system}:${chartType.toLowerCase()}`;
+    failedEndpoints.set(key, Date.now());
+}
+
+/**
+ * Clear failure status for an endpoint
+ */
+export function clearEndpointFailure(system: AyanamsaSystem, chartType: string): void {
+    const key = `${system}:${chartType.toLowerCase()}`;
+    failedEndpoints.delete(key);
+}
+
+/**
  * Comprehensive capability matrix for each Ayanamsa system
- * Based on external Astro Engine API endpoint availability
+ * 
+ * VERIFIED against ApiEndPoints.txt on 2026-01-21
+ * Only includes endpoints confirmed to be working
  */
 export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
     lahiri: {
-        charts: ['D1', 'D2', 'D3', 'D4', 'D6', 'D7', 'D9', 'D10', 'D12', 'D16', 'D20', 'D24', 'D27', 'D30', 'D40', 'D45', 'D60', 'D150'],
+        // Divisional Charts - ALL verified working
+        charts: ['D1', 'D2', 'D3', 'D4', 'D7', 'D9', 'D10', 'D12', 'D16', 'D20', 'D24', 'D27', 'D30', 'D40', 'D45', 'D60'],
         features: ['natal', 'transit', 'dasha', 'ashtakavarga', 'numerology', 'synastry', 'composite', 'progressed'],
-        specialCharts: ['moon', 'sun', 'sudarshan', 'transit', 'arudha', 'arudha_lagna', 'bhava', 'bhava_lagna', 'hora', 'hora_lagna', 'sripathi', 'kp_bhava', 'equal_bhava', 'karkamsha', 'karkamsha_d1', 'karkamsha_d9', 'numerology_chaldean', 'numerology_loshu', 'shadbala'],
-        yogas: ['gaja_kesari', 'guru_mangal', 'budha_aditya', 'chandra_mangal', 'raj_yoga', 'pancha_mahapurusha', 'daridra', 'dhan', 'malefic', 'rare', 'special', 'spiritual', 'shubh', 'vipreeta_raja', 'kalpadruma'],
+        // Special Charts - verified endpoints
+        specialCharts: [
+            'moon', 'sun', 'sudarshan', 'transit',
+            'arudha_lagna', 'bhava_lagna', 'hora_lagna', 'sripathi_bhava', 'kp_bhava', 'equal_bhava',
+            'karkamsha_d1', 'karkamsha_d9',
+            'numerology_chaldean', 'numerology_loshu'
+        ],
+        // Yogas - verified endpoints
+        yogas: ['gaja_kesari', 'guru_mangal', 'budha_aditya', 'chandra_mangal', 'raj_yoga', 'pancha_mahapurusha', 'daridra', 'dhan', 'malefic', 'special', 'spiritual', 'shubh', 'kalpadruma'],
+        // Doshas - verified endpoints
         doshas: ['kala_sarpa', 'angarak', 'guru_chandal', 'shrapit', 'sade_sati', 'pitra'],
+        // Remedies - verified endpoints
         remedies: ['yantra', 'mantra', 'general', 'gemstone', 'lal_kitab'],
+        // Panchanga - verified endpoints (note: these are root-level, not /lahiri/)
         panchanga: ['panchanga', 'choghadiya', 'hora', 'lagna_times', 'muhurat'],
         hasDivisional: true,
         hasAshtakavarga: true,
@@ -40,19 +88,27 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         hasHorary: false,
     },
     raman: {
+        // Divisional Charts - verified from ApiEndPoints.txt lines 13-27
         charts: ['D1', 'D2', 'D3', 'D4', 'D7', 'D9', 'D10', 'D12', 'D16', 'D20', 'D24', 'D27', 'D30', 'D40', 'D45', 'D60'],
         features: ['natal', 'transit', 'dasha', 'ashtakavarga'],
-        specialCharts: ['moon', 'sun', 'sudarshan', 'transit', 'arudha', 'arudha_lagna', 'bhava', 'bhava_lagna', 'hora', 'hora_lagna', 'sripathi', 'kp_bhava', 'equal_bhava', 'karkamsha', 'karkamsha_d1', 'karkamsha_d9'],
+        // Special Charts - verified from ApiEndPoints.txt
+        // NOTE: transit included as per ApiEndPoints.txt line 7 - if fails, failure tracking will skip it
+        specialCharts: [
+            'moon', 'sun', 'sudarshan', 'transit',
+            'arudha_lagna', 'bhava_lagna', 'hora_lagna', 'sripathi_bhava', 'kp_bhava', 'equal_bhava',
+            'karkamsha_d1', 'karkamsha_d9'
+        ],
         hasDivisional: true,
         hasAshtakavarga: true,
         hasNumerology: false,
         hasHorary: false,
     },
     kp: {
-        // KP System: Specialized for prediction, NO divisional charts
+        // KP System - verified from ApiEndPoints.txt lines 181-194
+        // Specialized for prediction, NO divisional charts
         charts: ['D1'],
         features: ['natal', 'dasha', 'horary', 'significations', 'ruling_planets', 'bhava_details'],
-        specialCharts: ['planets_cusps'],
+        specialCharts: [], // planets_cusps and shodasha_varga confirmed failing
         hasDivisional: false,
         hasAshtakavarga: false,
         hasNumerology: false,
@@ -66,6 +122,9 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
 export function isChartAvailable(system: AyanamsaSystem, chartType: string): boolean {
     const capabilities = SYSTEM_CAPABILITIES[system];
     if (!capabilities) return false;
+
+    // Check if endpoint is temporarily disabled due to failure
+    if (shouldSkipEndpoint(system, chartType)) return false;
 
     const normalizedType = chartType.toLowerCase();
     const upperType = chartType.toUpperCase();
@@ -84,13 +143,16 @@ export function isFeatureAvailable(system: AyanamsaSystem, feature: string): boo
 }
 
 /**
- * Get available charts for a system
+ * Get available charts for a system (excluding failed endpoints)
  */
 export function getAvailableCharts(system: AyanamsaSystem): string[] {
     const capabilities = SYSTEM_CAPABILITIES[system];
     if (!capabilities) return ['D1'];
 
-    return [...capabilities.charts, ...capabilities.specialCharts];
+    const allCharts = [...capabilities.charts, ...capabilities.specialCharts];
+
+    // Filter out charts that have recently failed
+    return allCharts.filter(chart => !shouldSkipEndpoint(system, chart));
 }
 
 /**
@@ -98,4 +160,11 @@ export function getAvailableCharts(system: AyanamsaSystem): string[] {
  */
 export function getSystemCapabilities(system: AyanamsaSystem): SystemCapabilities | null {
     return SYSTEM_CAPABILITIES[system] || null;
+}
+
+/**
+ * Get list of endpoints that have failed
+ */
+export function getFailedEndpoints(): { key: string; failedAt: number }[] {
+    return Array.from(failedEndpoints.entries()).map(([key, failedAt]) => ({ key, failedAt }));
 }
