@@ -1,8 +1,8 @@
 import { RedisClientType } from 'redis';
 import { getRedisClient } from '../config/redis';
-import { PrismaClient } from '../generated/prisma';
+import { getPrismaClient } from '../config/database';
 
-const prisma = new PrismaClient();
+const prisma = getPrismaClient();
 
 export interface UserRegisteredEvent {
     type: 'user.registered';

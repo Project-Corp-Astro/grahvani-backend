@@ -173,14 +173,38 @@ export class AuthService {
         // Rate limit check
         await this.checkRateLimit(data.email, metadata.ipAddress);
 
-        // Find user
-        const user = await this.prisma.user.findUnique({
-            where: { email: data.email }
-        });
+        // Find user from Cache or DB
+        const cacheKey = `auth:user:${data.email}`;
+        let user: User | null = null;
 
-        if (!user || !user.passwordHash) {
-            const potentialUser = await this.prisma.user.findUnique({ where: { email: data.email } });
-            await this.recordLoginAttempt(data.email, metadata, false, 'User not found', potentialUser?.id);
+        try {
+            const cached = await this.redis.get(cacheKey);
+            if (cached) {
+                user = JSON.parse(cached);
+            }
+        } catch (e) {
+            logger.warn({ err: e }, 'Redis read failed in login');
+        }
+
+        if (!user) {
+            user = await this.prisma.user.findUnique({
+                where: { email: data.email }
+            });
+
+            // Cache for 5 mins to offload DB during login spikes
+            if (user) {
+                await this.redis.set(cacheKey, JSON.stringify(user), 'EX', 300);
+            }
+        }
+
+        if (!user) {
+            // User not found - record attempt and throw (no need to query again, we just checked)
+            await this.recordLoginAttempt(data.email, metadata, false, 'User not found');
+            throw new InvalidCredentialsError();
+        }
+
+        if (!user.passwordHash) {
+            // OAuth-only user attempting password login
             throw new InvalidCredentialsError();
         }
 
@@ -204,6 +228,8 @@ export class AuthService {
                 data: { status: 'active', emailVerified: true }
             });
             user.status = 'active';
+            // Invalidate cache since status changed
+            await this.redis.del(cacheKey);
             logger.info({ userId: user.id }, 'Dev Mode: Auto-activated user on first login');
         }
 
@@ -230,11 +256,11 @@ export class AuthService {
             data.rememberMe
         );
 
-        // Update last login
-        await this.prisma.user.update({
+        // Update last login (fire and forget to avoid waiting on DB write)
+        this.prisma.user.update({
             where: { id: user.id },
             data: { lastLoginAt: new Date() }
-        });
+        }).catch(err => logger.error({ err }, 'Failed to update lastLoginAt'));
 
         // Record successful login
         await this.recordLoginAttempt(data.email, metadata, true, undefined, user.id);
@@ -266,7 +292,7 @@ export class AuthService {
                 role: user.role,
                 status: user.status,
                 emailVerified: user.emailVerified,
-                createdAt: user.createdAt.toISOString(),
+                createdAt: typeof user.createdAt === 'string' ? user.createdAt : user.createdAt?.toISOString(),
             },
             tokens: {
                 accessToken: tokenPair.accessToken,

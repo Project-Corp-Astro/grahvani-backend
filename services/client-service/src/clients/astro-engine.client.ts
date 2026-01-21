@@ -50,6 +50,9 @@ export class AstroEngineUnavailableError extends AstroEngineError {
 // Routes requests to correct endpoints based on selected Ayanamsa system
 // =============================================================================
 
+import * as http from 'http';
+import * as https from 'https';
+
 class AstroEngineClient {
     private internalClient: AxiosInstance; // For /internal/* (Lahiri default)
     private apiClient: AxiosInstance;      // For /api/* (Raman, KP, etc.)
@@ -58,10 +61,16 @@ class AstroEngineClient {
     constructor() {
         this.baseURL = process.env.ASTRO_ENGINE_URL || 'http://localhost:3014';
 
+        // Use persistent connections to avoid exhaustion
+        const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 10, maxFreeSockets: 5 });
+        const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 10, maxFreeSockets: 5 });
+
         // Client for internal routes (Lahiri - backward compatible)
         this.internalClient = axios.create({
             baseURL: `${this.baseURL}/internal`,
             timeout: 60000,
+            httpAgent,
+            httpsAgent,
             headers: {
                 'Content-Type': 'application/json',
                 'X-Service-Name': 'client-service',
@@ -72,6 +81,8 @@ class AstroEngineClient {
         this.apiClient = axios.create({
             baseURL: `${this.baseURL}/api`,
             timeout: 60000,
+            httpAgent,
+            httpsAgent,
             headers: {
                 'Content-Type': 'application/json',
                 'X-Service-Name': 'client-service',
@@ -96,7 +107,36 @@ class AstroEngineClient {
                 logger.info({ url: response.config.url, status: response.status }, 'Astro Engine response');
                 return response;
             },
-            (error: AxiosError) => this.handleError(error)
+            async (error: AxiosError) => {
+                const config = error.config as InternalAxiosRequestConfig & { _retryCount?: number };
+
+                // Retry conditions: 503 (Service Unavailable), 504 (Gateway Timeout), Network Errors
+                const shouldRetry =
+                    config &&
+                    !config._retryCount || (config._retryCount || 0) < 3 &&
+                    (
+                        (error.response && (error.response.status === 503 || error.response.status === 504)) ||
+                        error.code === 'ECONNREFUSED' ||
+                        error.code === 'ETIMEDOUT'
+                    );
+
+                if (shouldRetry) {
+                    config._retryCount = (config._retryCount || 0) + 1;
+                    const delay = Math.pow(2, config._retryCount) * 1000; // 2s, 4s, 8s
+
+                    logger.warn({
+                        url: config.url,
+                        attempt: config._retryCount,
+                        delay,
+                        error: error.message
+                    }, 'Astro Engine unavailable - Retrying...');
+
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return client(config);
+                }
+
+                return this.handleError(error);
+            }
         );
     }
 

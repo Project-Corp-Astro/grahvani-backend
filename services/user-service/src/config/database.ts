@@ -1,5 +1,5 @@
 /**
- * Enterprise-grade Prisma Database Client for Auth Service
+ * Enterprise-grade Prisma Database Client for User Service
  * 
  * Features:
  * - Direct connection (bypasses Supabase PgBouncer limits)
@@ -10,11 +10,10 @@
  * @module config/database
  */
 import { PrismaClient } from '../generated/prisma';
-import { logger } from './logger';
 
 // ============ CONFIGURATION ============
-const SERVICE_NAME = 'AuthService';
-const POOL_SIZE = 5;        // Higher pool for multiple auth operations per login
+const SERVICE_NAME = 'UserService';
+const POOL_SIZE = 3;        // Standard CRUD operations
 const POOL_TIMEOUT = 10;    // Fail fast (seconds)
 const CONNECT_TIMEOUT = 5;  // Quick failure detection (seconds)
 
@@ -53,28 +52,19 @@ export const getPrismaClient = (): PrismaClient => {
                 db: { url }
             },
             log: [
-                { emit: 'event', level: 'query' },
                 { emit: 'event', level: 'error' },
                 { emit: 'event', level: 'warn' },
             ],
         });
 
-        // Query logging in development
-        if (process.env.NODE_ENV === 'development') {
-            globalForPrisma.prisma.$on('query' as never, (e: any) => {
-                // REDACTED: Do not log raw queries to prevent password leakage 
-                logger.debug({ duration: e.duration }, 'Prisma Query Executed');
-            });
-        }
-
         // Error logging
         globalForPrisma.prisma.$on('error' as never, (e: any) => {
-            logger.error({ error: e }, 'Prisma Error');
+            console.error(`[${SERVICE_NAME}] Prisma Error:`, e);
             globalForPrisma.isHealthy = false;
         });
 
         globalForPrisma.isHealthy = true;
-        logger.info(`Prisma client initialized for ${SERVICE_NAME} (Global Singleton)`);
+        console.log(`[${SERVICE_NAME}] Prisma client initialized (Global Singleton)`);
     }
 
     return globalForPrisma.prisma;
@@ -91,7 +81,7 @@ export const checkConnection = async (): Promise<boolean> => {
         globalForPrisma.isHealthy = true;
         return true;
     } catch (error) {
-        logger.error({ error }, `[${SERVICE_NAME}] Database health check failed`);
+        console.error(`[${SERVICE_NAME}] Database health check failed:`, error);
         globalForPrisma.isHealthy = false;
         return false;
     }
@@ -108,13 +98,10 @@ export const isHealthy = (): boolean => {
  * Graceful shutdown - disconnect from database
  * Call this on SIGTERM/SIGINT for clean process exit
  */
-export const closePrisma = async (): Promise<void> => {
+export const disconnectDb = async (): Promise<void> => {
     if (globalForPrisma.prisma) {
         await globalForPrisma.prisma.$disconnect();
         globalForPrisma.isHealthy = false;
-        logger.info(`[${SERVICE_NAME}] Database disconnected`);
+        console.log(`[${SERVICE_NAME}] Database disconnected`);
     }
 };
-
-// Legacy export for backward compatibility
-export { closePrisma as disconnect };

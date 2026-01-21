@@ -42,3 +42,9 @@ export class ValidationError extends BaseError {
         this.message = JSON.stringify(details);
     }
 }
+
+export class FeatureNotSupportedError extends BaseError {
+    constructor(feature: string, system: string) {
+        super(`Feature or Chart type '${feature}' is not available for the '${system}' system`, 400, 'FEATURE_NOT_SUPPORTED');
+    }
+}

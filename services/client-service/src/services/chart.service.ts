@@ -1,12 +1,12 @@
 import { chartRepository } from '../repositories/chart.repository';
 import { clientRepository } from '../repositories/client.repository';
-import { ClientNotFoundError } from '../errors/client.errors';
+import { ClientNotFoundError, FeatureNotSupportedError } from '../errors/client.errors';
 import { eventPublisher } from './event.publisher';
 import { activityService } from './activity.service';
 import { RequestMetadata } from './client.service';
 import { astroEngineClient } from '../clients/astro-engine.client';
 import { calculateSubPeriods } from '../utils/vimshottari-calc';
-import { logger, isChartAvailable, getAvailableCharts, AyanamsaSystem, SYSTEM_CAPABILITIES } from '../config';
+import { logger, isChartAvailable, getAvailableCharts, AyanamsaSystem, SYSTEM_CAPABILITIES, markEndpointFailed, shouldSkipEndpoint } from '../config';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -96,12 +96,28 @@ export class ChartService {
      * Get saved charts for client
      */
     async getClientCharts(tenantId: string, clientId: string, metadata?: RequestMetadata) {
-        // Pre-emptive technical audit and generation whenever charts are fetched
+        // Pre-emptive technical audit
+        // Fetch charts once
+        const charts = await chartRepository.findByClientId(tenantId, clientId);
+
+        // Exclude massive deep dasha trees from bulk responses to avoid 19MB payloads
+        // These can be fetched specifically via generateDasha/generateDeepDasha if needed
+        const filteredCharts = charts.filter(c => {
+            if (c.chartType === ('dasha' as any)) {
+                const config = c.chartConfig as any;
+                if (config?.level === 'mahadasha_to_prana' || config?.level === 'exhaustive_vimshottari') {
+                    return false;
+                }
+            }
+            return true;
+        });
+
         // This is a safety layer to ensure data is updated/assigned correctly
         if (metadata) {
-            this.ensureFullVedicProfile(tenantId, clientId, metadata);
+            // Pass the already fetched charts to the background audit to avoid redundant DB hits
+            this.ensureFullVedicProfile(tenantId, clientId, metadata, charts);
         }
-        return chartRepository.findByClientId(tenantId, clientId);
+        return filteredCharts;
     }
 
     /**
@@ -156,7 +172,8 @@ export class ChartService {
     ) {
         // Validate chart type is available for this system
         if (!isChartAvailable(system as AyanamsaSystem, chartType)) {
-            throw new Error(`Chart type ${chartType} is not available for ${system} system. Available: ${getAvailableCharts(system as AyanamsaSystem).join(', ')}`);
+            logger.warn({ system, chartType, clientId }, 'Requested chart type not available for selected system');
+            throw new FeatureNotSupportedError(chartType, system);
         }
 
         const client = await clientRepository.findById(tenantId, clientId);
@@ -465,39 +482,177 @@ export class ChartService {
     }
 
     /**
-     * Ensure a client has a complete Vedic profile (Lahiri focus)
-     * Triggers generation if critical charts are missing
+     * Ensure a client has a complete Vedic profile
+     * DYNAMICALLY checks SYSTEM_CAPABILITIES against database and generates missing charts
+     * IMPORTANT: Uses setImmediate to be fully non-blocking
      */
-    async ensureFullVedicProfile(tenantId: string, clientId: string, metadata: RequestMetadata) {
-        try {
-            const existing = await chartRepository.findByClientId(tenantId, clientId);
-
-            // Heuristic check: Lahiri system should have ~18+ entries for a full profile (16 vargas + SAV + BAV + Dasha + Sudarshan)
-            const lahiriCharts = existing.filter(c => {
-                const config = c.chartConfig as any;
-                return (config?.system === 'lahiri' || !config?.system); // null system often means default lahiri
-            });
-
-            if (lahiriCharts.length < 18) {
+    async ensureFullVedicProfile(tenantId: string, clientId: string, metadata: RequestMetadata, existingCharts?: any[]) {
+        // Defer all checks to next tick to avoid blocking getClient response
+        setImmediate(async () => {
+            try {
                 // Prevent concurrent generation for the same client
                 if (generationLocks.has(clientId)) {
                     logger.debug({ clientId }, 'Profile generation already in progress, skipping ensure');
                     return;
                 }
 
-                logger.info({ tenantId, clientId, count: lahiriCharts.length }, 'Target client profile incomplete. Auditing and generating exhaustive charts.');
-
-                // Set lock
+                // Set lock immediately to protect the audit phase too
                 generationLocks.add(clientId);
 
-                // Trigger in background to avoid blocking getClient response
-                this.generateFullVedicProfile(tenantId, clientId, metadata)
-                    .catch(err => logger.error({ err, clientId }, 'Pre-emptive profile generation failed'))
-                    .finally(() => generationLocks.delete(clientId));
+                // Use passed charts if available, otherwise fetch only metadata to save bandwidth
+                const existing = existingCharts || await chartRepository.findMetadataByClientId(tenantId, clientId);
+
+                // Get all existing chart types grouped by system
+                const existingBySystem: Record<string, Set<string>> = {};
+                for (const chart of existing) {
+                    const system = (chart as any).system || 'lahiri'; // Metadata or Full both have this
+                    if (!existingBySystem[system]) {
+                        existingBySystem[system] = new Set();
+                    }
+                    existingBySystem[system].add(chart.chartType!.toLowerCase());
+                }
+
+                // Check each system for missing charts using SYSTEM_CAPABILITIES as source of truth
+                const systemsToCheck: ('lahiri' | 'raman' | 'kp')[] = ['lahiri', 'raman', 'kp'];
+                const allMissingCharts: { system: 'lahiri' | 'raman' | 'kp'; charts: string[] }[] = [];
+
+                for (const sys of systemsToCheck) {
+                    const capabilities = SYSTEM_CAPABILITIES[sys];
+                    if (!capabilities) continue;
+
+                    const existingForSystem = existingBySystem[sys] || new Set<string>();
+
+                    // Build expected chart list from capabilities
+                    const expectedCharts: string[] = [
+                        ...capabilities.charts, // D1, D2, D3, etc.
+                        ...capabilities.specialCharts, // transit, arudha_lagna, bhava_lagna, karkamsha_d9, etc.
+                    ];
+
+                    // Add ashtakavarga types if supported
+                    if (capabilities.hasAshtakavarga) {
+                        expectedCharts.push('ashtakavarga_sarva', 'ashtakavarga_bhinna', 'ashtakavarga_shodasha');
+                    }
+
+                    // Add dasha
+                    expectedCharts.push('dasha');
+
+                    // Find missing charts for this system
+                    const missingForSystem = expectedCharts.filter(chart =>
+                        !existingForSystem.has(chart.toLowerCase())
+                    );
+
+                    if (missingForSystem.length > 0) {
+                        allMissingCharts.push({ system: sys, charts: missingForSystem });
+                    }
+                }
+
+                // If no missing charts, we're done
+                if (allMissingCharts.length === 0) {
+                    logger.debug({ clientId }, 'All charts present for all systems');
+                    generationLocks.delete(clientId);
+                    return;
+                }
+
+                // Log what's missing
+                const totalMissing = allMissingCharts.reduce((acc, m) => acc + m.charts.length, 0);
+                logger.info({
+                    tenantId,
+                    clientId,
+                    totalMissing,
+                    breakdown: allMissingCharts.map(m => ({ system: m.system, count: m.charts.length, charts: m.charts.slice(0, 5) }))
+                }, 'Generating missing charts');
+
+                // Generate missing charts for each system
+                try {
+                    for (const { system, charts } of allMissingCharts) {
+                        await this.generateMissingCharts(tenantId, clientId, charts, system, metadata);
+                    }
+                    logger.info({ clientId, totalMissing }, 'Missing charts generation completed');
+                } catch (err: any) {
+                    logger.error({ err, clientId }, 'Missing charts generation failed');
+                } finally {
+                    generationLocks.delete(clientId);
+                }
+
+            } catch (err: any) {
+                logger.warn({ err, clientId }, 'Failed to perform automatic profile audit');
+                generationLocks.delete(clientId);
             }
-        } catch (err) {
-            logger.warn({ err, clientId }, 'Failed to perform automatic profile audit');
+        });
+    }
+
+    /**
+     * Generate only specific missing charts (more efficient than full regeneration)
+     * Uses endpoint failure tracking to skip known-failing endpoints
+     */
+    private async generateMissingCharts(
+        tenantId: string,
+        clientId: string,
+        missingCharts: string[],
+        system: 'lahiri' | 'raman' | 'kp',
+        metadata: RequestMetadata
+    ) {
+        const operations: (() => Promise<any>)[] = [];
+
+        for (const chartType of missingCharts) {
+            const lowerType = chartType.toLowerCase();
+
+            // Skip endpoints that have recently failed
+            if (shouldSkipEndpoint(system, chartType)) {
+                logger.debug({ system, chartType }, 'Skipping previously failed endpoint');
+                continue;
+            }
+
+            if (lowerType.startsWith('ashtakavarga_')) {
+                const type = lowerType.replace('ashtakavarga_', '') as 'sarva' | 'bhinna' | 'shodasha';
+                operations.push(() =>
+                    this.generateAndSaveAshtakavarga(tenantId, clientId, type, system, metadata)
+                        .catch(err => {
+                            if (err?.statusCode === 404 || err?.statusCode === 500) {
+                                markEndpointFailed(system, chartType);
+                            }
+                            logger.warn({ clientId, chartType, system }, 'Chart generation failed - endpoint marked');
+                        })
+                );
+            } else if (lowerType === 'sudarshana' || lowerType === 'sudarshan') {
+                operations.push(() =>
+                    this.generateAndSaveSudarshanChakra(tenantId, clientId, system, metadata)
+                        .catch(err => {
+                            if (err?.statusCode === 404 || err?.statusCode === 500) {
+                                markEndpointFailed(system, chartType);
+                            }
+                            logger.warn({ clientId, chartType, system }, 'Chart generation failed - endpoint marked');
+                        })
+                );
+            } else if (lowerType === 'dasha') {
+                operations.push(() =>
+                    this.generateDeepDasha(tenantId, clientId, system, metadata)
+                        .catch(err => {
+                            if (err?.statusCode === 404 || err?.statusCode === 500) {
+                                markEndpointFailed(system, chartType);
+                            }
+                            logger.warn({ clientId, chartType, system }, 'Chart generation failed - endpoint marked');
+                        })
+                );
+            } else {
+                operations.push(() =>
+                    this.generateAndSaveChart(tenantId, clientId, chartType, system, metadata)
+                        .catch(err => {
+                            if (err?.statusCode === 404 || err?.statusCode === 500) {
+                                markEndpointFailed(system, chartType);
+                            }
+                            logger.warn({ clientId, chartType, system }, 'Chart generation failed - endpoint marked');
+                        })
+                );
+            }
         }
+
+        if (operations.length === 0) {
+            logger.debug({ clientId, system }, 'No chart operations to run (all endpoints skipped or no missing charts)');
+            return [];
+        }
+
+        return executeBatched(operations, 2);
     }
 
     /**
