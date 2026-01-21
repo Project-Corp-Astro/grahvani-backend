@@ -841,6 +841,48 @@ export class ChartService {
     }
 
     /**
+     * Generate Other Dasha Systems (Tribhagi, Shodashottari, Dwadashottari, etc.)
+     * Available types: tribhagi, shodashottari, dwadashottari, panchottari, 
+     * chaturshitisama, satabdika, dwisaptati, shastihayani, shattrimshatsama, chara
+     */
+    async generateOtherDasha(
+        tenantId: string,
+        clientId: string,
+        dashaType: string,
+        ayanamsa: 'lahiri' | 'kp' | 'raman' = 'lahiri'
+    ) {
+        const client = await clientRepository.findById(tenantId, clientId);
+        if (!client) throw new ClientNotFoundError(clientId);
+
+        if (!client.birthDate || !client.birthTime || !client.birthLatitude || !client.birthLongitude) {
+            throw new Error('Client birth details incomplete.');
+        }
+
+        const birthData = {
+            birthDate: client.birthDate.toISOString().split('T')[0],
+            birthTime: this.extractTimeString(client.birthTime),
+            latitude: Number(client.birthLatitude),
+            longitude: Number(client.birthLongitude),
+            timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
+            ayanamsa,
+        };
+
+        const dashaData = await astroEngineClient.getOtherDasha(birthData, dashaType, ayanamsa);
+
+        logger.info({ tenantId, clientId, dashaType, ayanamsa }, 'Other Dasha calculated');
+
+        return {
+            clientId,
+            clientName: client.fullName,
+            dashaType,
+            ayanamsa,
+            data: dashaData.data,
+            cached: dashaData.cached,
+            calculatedAt: dashaData.calculatedAt,
+        };
+    }
+
+    /**
      * Generate Exhaustive 5-level Dasha Tree (Maha to Prana)
      * Fetches Level 1 from Engine and calculates the rest recursively.
      */

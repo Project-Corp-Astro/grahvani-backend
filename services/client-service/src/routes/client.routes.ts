@@ -38,6 +38,7 @@ router.post('/:id/charts/generate', chartController.generateChart.bind(chartCont
 router.post('/:id/charts/generate-core', chartController.generateCoreCharts.bind(chartController));
 router.post('/:id/charts/generate-full', chartController.generateFullVedicProfile.bind(chartController));
 router.post('/:id/dasha', chartController.generateDasha.bind(chartController));
+router.post('/:id/dasha/other', chartController.generateOtherDasha.bind(chartController));
 router.post('/:id/ashtakavarga', chartController.generateAshtakavarga.bind(chartController));
 router.post('/:id/sudarshan-chakra', chartController.generateSudarshanChakra.bind(chartController));
 

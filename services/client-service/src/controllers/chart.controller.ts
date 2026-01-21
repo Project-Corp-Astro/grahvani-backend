@@ -144,6 +144,34 @@ export class ChartController {
     }
 
     /**
+     * POST /clients/:id/dasha/other
+     * Generate other dasha systems (Tribhagi, Shodashottari, etc.)
+     */
+    async generateOtherDasha(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const { type, ayanamsa } = req.body;
+
+            if (!type) {
+                res.status(400).json({ success: false, error: 'Missing dasha type parameter' });
+                return;
+            }
+
+            const dasha = await chartService.generateOtherDasha(
+                tenantId,
+                id,
+                type,
+                ayanamsa || 'lahiri'
+            );
+
+            res.json(dasha);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
      * POST /clients/:id/charts/generate-core
      * Bulk generate core charts (D1, D9) for all systems
      */
