@@ -14,9 +14,9 @@ import { logger } from './logger';
 
 // ============ CONFIGURATION ============
 const SERVICE_NAME = 'AuthService';
-const POOL_SIZE = 5;        // Higher pool for multiple auth operations per login
-const POOL_TIMEOUT = 10;    // Fail fast (seconds)
-const CONNECT_TIMEOUT = 5;  // Quick failure detection (seconds)
+const POOL_SIZE = 2;        // Reduced for Supabase free tier limits
+const POOL_TIMEOUT = 30;    // Increased patience for background tasks (seconds)
+const CONNECT_TIMEOUT = 10; // Patient connection (seconds)
 
 // ============ SINGLETON ============
 const globalForPrisma = global as unknown as {
@@ -39,7 +39,9 @@ export const getPrismaClient = (): PrismaClient => {
         }
 
         // Optimal connection parameters for direct connection
-        const connectionParams = `connection_limit=${POOL_SIZE}&pool_timeout=${POOL_TIMEOUT}&connect_timeout=${CONNECT_TIMEOUT}`;
+        // Port 6543/5439 are usually PgBouncer - need pgbouncer=true flag
+        const usePgbouncer = directUrl.includes(':6543') || directUrl.includes(':5439') || directUrl.includes('pgbouncer=true');
+        const connectionParams = `connection_limit=${POOL_SIZE}&pool_timeout=${POOL_TIMEOUT}&connect_timeout=${CONNECT_TIMEOUT}${usePgbouncer ? '&pgbouncer=true' : ''}`;
         const url = directUrl.includes('?')
             ? `${directUrl}&${connectionParams}`
             : `${directUrl}?${connectionParams}`;

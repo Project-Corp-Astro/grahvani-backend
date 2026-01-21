@@ -11,7 +11,7 @@ import { logger, isChartAvailable, getAvailableCharts, AyanamsaSystem, SYSTEM_CA
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Max concurrent DB operations for Supabase free tier (10 connections max)
-const MAX_CONCURRENT_OPS = 2; // Safer limit to allow some buffer for other requests
+const MAX_CONCURRENT_OPS = 1; // Strict limit to avoid "MaxClientsInSessionMode"
 
 // Track background generation tasks to avoid overlaps
 export const generationLocks = new Set<string>();
@@ -34,7 +34,7 @@ async function executeBatched<T>(
         results.push(...batchResults);
         // Small delay between batches to let connections release
         if (i + batchSize < operations.length) {
-            await sleep(100);
+            await sleep(200); // Increased sleep to let DB "breathe"
         }
     }
     return results;
