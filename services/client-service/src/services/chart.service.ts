@@ -237,7 +237,15 @@ export class ChartService {
             chartData = await astroEngineClient.getKarkamshaD9(birthData, system);
             dbChartType = 'karkamsha_d9';
         } else if (normalizedType === 'transit') {
-            chartData = await astroEngineClient.getTransitChart(birthData, system);
+            // For Transit (Gochar), we must use the current date/time to see live positions
+            // while maintaining the natal geolocation for house calculations
+            const now = new Date();
+            const transitData = {
+                ...birthData,
+                birthDate: now.toISOString().split('T')[0],
+                birthTime: now.toTimeString().split(' ')[0], // HH:MM:SS
+            };
+            chartData = await astroEngineClient.getTransitChart(transitData, system);
             dbChartType = 'transit';
         } else if (normalizedType === 'sudarshan' || normalizedType === 'sudarshana') {
             chartData = await astroEngineClient.getSudarshanChakra(birthData, system);
