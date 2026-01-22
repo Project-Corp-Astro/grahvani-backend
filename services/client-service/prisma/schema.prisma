@@ -151,6 +151,11 @@ enum ChartType {
   remedy_gemstone
   remedy_lal_kitab
   shadbala
+  dasha_3months
+  dasha_6months
+  dasha_report_1year
+  dasha_report_2years
+  dasha_report_3years
   @@schema("app_clients")
 }
 

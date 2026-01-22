@@ -1,13 +1,14 @@
-import { PrismaClient, ClientRemedy, RemedyType, RemedyStatus } from '../generated/prisma';
+import { ClientRemedy, RemedyType, RemedyStatus } from '../generated/prisma';
+import { getPrismaClient } from '../config/database';
 
-const prisma = new PrismaClient();
+// LAZY: Prisma accessed via getPrismaClient() inside methods, NOT at module load time
 
 export class RemedyRepository {
     /**
      * Find remedies for a client
      */
     async findByClientId(tenantId: string, clientId: string) {
-        return prisma.clientRemedy.findMany({
+        return getPrismaClient().clientRemedy.findMany({
             where: { tenantId, clientId },
             orderBy: { createdAt: 'desc' }
         });
@@ -17,7 +18,7 @@ export class RemedyRepository {
      * Find remedies for a specific consultation
      */
     async findByConsultationId(tenantId: string, consultationId: string) {
-        return prisma.clientRemedy.findMany({
+        return getPrismaClient().clientRemedy.findMany({
             where: { tenantId, consultationId },
             orderBy: { createdAt: 'desc' }
         });
@@ -38,7 +39,7 @@ export class RemedyRepository {
         status?: RemedyStatus;
         createdBy?: string;
     }) {
-        return prisma.clientRemedy.create({
+        return getPrismaClient().clientRemedy.create({
             data: {
                 ...data,
                 tenantId
@@ -50,7 +51,7 @@ export class RemedyRepository {
      * Update remedy status or notes
      */
     async update(tenantId: string, id: string, data: any) {
-        return prisma.clientRemedy.update({
+        return getPrismaClient().clientRemedy.update({
             where: { id, tenantId },
             data
         });

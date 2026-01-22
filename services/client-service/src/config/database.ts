@@ -1,122 +1,80 @@
 /**
- * Enterprise-grade Prisma Database Client for Client Service
+ * Stable Prisma Database Client Singleton for Client Service
  * 
  * Features:
- * - Direct connection (bypasses Supabase PgBouncer limits)
- * - Connection health check
- * - Graceful shutdown
- * - Debug query logging
+ * - LAZY initialization - connection only opens on first query
+ * - globalThis-based singleton survives hot reloads
+ * - Graceful shutdown on SIGINT/SIGTERM
+ * - Connection logging for debugging
  * 
  * @module config/database
  */
 import { PrismaClient } from '../generated/prisma';
-import { logger } from './logger';
 
-// ============ CONFIGURATION ============
-const SERVICE_NAME = 'ClientService';
-const POOL_SIZE = 2;        // Reduced for Supabase free tier limits
-const POOL_TIMEOUT = 30;    // Increased patience for background tasks (seconds)
-const CONNECT_TIMEOUT = 10; // Patient connection (seconds)
-
-// ============ SINGLETON ============
-const globalForPrisma = global as unknown as {
-    prisma: PrismaClient;
-    isHealthy: boolean;
+const globalForPrisma = globalThis as unknown as {
+    prisma: PrismaClient | undefined;
+    prismaConnected: boolean;
 };
 
+let prismaInstance: PrismaClient | undefined;
+
 /**
- * Get or create the Prisma client singleton
- * Uses DIRECT_URL (port 5432) to bypass Supabase PgBouncer connection limits
+ * Get or create Prisma client - LAZY, connection only opens on first query
  */
 export const getPrismaClient = (): PrismaClient => {
-    if (!globalForPrisma.prisma) {
-        // Prefer DIRECT_URL (session mode) over DATABASE_URL (transaction pooler)
-        // PgBouncer on port 6543 has aggressive global limits causing timeouts
-        const directUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
+    if (!prismaInstance) {
+        console.log('[ClientService] 🔗 Initializing Prisma client (lazy - no connection yet)');
 
-        if (!directUrl) {
-            throw new Error(`[${SERVICE_NAME}] Neither DIRECT_URL nor DATABASE_URL is configured`);
-        }
-
-        // Optimal connection parameters for direct connection
-        // Port 6543/5439 are usually PgBouncer - need pgbouncer=true flag
-        const usePgbouncer = directUrl.includes(':6543') || directUrl.includes(':5439') || directUrl.includes('pgbouncer=true');
-        const connectionParams = `connection_limit=${POOL_SIZE}&pool_timeout=${POOL_TIMEOUT}&connect_timeout=${CONNECT_TIMEOUT}${usePgbouncer ? '&pgbouncer=true' : ''}`;
-        const url = directUrl.includes('?')
-            ? `${directUrl}&${connectionParams}`
-            : `${directUrl}?${connectionParams}`;
-
-        // Log connection mode (safe: doesn't expose credentials)
-        const isDirectConnection = directUrl.includes(':5432');
-        console.log(`[${SERVICE_NAME}] Using ${isDirectConnection ? 'DIRECT' : 'POOLED'} connection (pool: ${POOL_SIZE}, timeout: ${POOL_TIMEOUT}s)`);
-
-        globalForPrisma.prisma = new PrismaClient({
-            datasources: {
-                db: { url }
-            },
-            log: [
-                { emit: 'event', level: 'query' },
-                { emit: 'event', level: 'error' },
-                { emit: 'event', level: 'warn' },
-            ],
+        prismaInstance = new PrismaClient({
+            log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
         });
 
-        // Query logging in debug mode
-        if (process.env.DEBUG_SQL === 'true' || process.env.NODE_ENV === 'development') {
-            globalForPrisma.prisma.$on('query' as never, (e: any) => {
-                logger.debug({ duration: e.duration }, 'Prisma Query');
-            });
-        }
-
-        // Error logging
-        globalForPrisma.prisma.$on('error' as never, (e: any) => {
-            logger.error({ error: e }, 'Prisma Error');
-            globalForPrisma.isHealthy = false;
+        // Log when first query actually runs
+        prismaInstance.$use(async (params, next) => {
+            if (!globalForPrisma.prismaConnected) {
+                console.log(`[ClientService] ⚡ FIRST DB QUERY: ${params.model}.${params.action}`);
+                globalForPrisma.prismaConnected = true;
+            }
+            return next(params);
         });
 
-        globalForPrisma.isHealthy = true;
-        logger.info(`Prisma client initialized for ${SERVICE_NAME} (Global Singleton)`);
+        if (process.env.NODE_ENV !== 'production') {
+            globalForPrisma.prisma = prismaInstance;
+        }
     }
 
-    return globalForPrisma.prisma;
+    return prismaInstance;
 };
 
-/**
- * Check database connection health
- * Used by health check endpoints and monitoring
- */
+// NOTE: Do NOT export a module-level `prisma` constant - it triggers eager connection
+// Always use getPrismaClient() for lazy access
+
+// Graceful shutdown handlers
+const shutdown = async () => {
+    console.log('[ClientService] Disconnecting Prisma...');
+    if (prismaInstance) {
+        await prismaInstance.$disconnect();
+    }
+    process.exit(0);
+};
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
+// Legacy exports
 export const checkConnection = async (): Promise<boolean> => {
     try {
-        const prisma = getPrismaClient();
-        await prisma.$queryRaw`SELECT 1`;
-        globalForPrisma.isHealthy = true;
+        await getPrismaClient().$queryRaw`SELECT 1`;
         return true;
     } catch (error) {
-        logger.error({ error }, `[${SERVICE_NAME}] Database health check failed`);
-        globalForPrisma.isHealthy = false;
+        console.error('[ClientService] DB connection check failed:', error);
         return false;
     }
 };
 
-/**
- * Check if database is currently healthy (cached status)
- */
-export const isHealthy = (): boolean => {
-    return globalForPrisma.isHealthy ?? false;
-};
-
-/**
- * Graceful shutdown - disconnect from database
- * Call this on SIGTERM/SIGINT for clean process exit
- */
-export const disconnectDb = async (): Promise<void> => {
-    if (globalForPrisma.prisma) {
-        await globalForPrisma.prisma.$disconnect();
-        globalForPrisma.isHealthy = false;
-        logger.info(`[${SERVICE_NAME}] Database disconnected`);
+export const disconnectDb = async () => {
+    if (prismaInstance) {
+        await prismaInstance.$disconnect();
     }
 };
-
-// Legacy export for backward compatibility
 export { disconnectDb as disconnect };
-

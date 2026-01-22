@@ -1,13 +1,14 @@
-import { PrismaClient, ClientConsultation, ConsultationType, ConsultationStatus } from '../generated/prisma';
+import { ClientConsultation, ConsultationType, ConsultationStatus } from '../generated/prisma';
+import { getPrismaClient } from '../config/database';
 
-const prisma = new PrismaClient();
+// LAZY: Prisma accessed via getPrismaClient() inside methods, NOT at module load time
 
 export class HistoryRepository {
     /**
      * Find consultations for a client
      */
     async findByClientId(tenantId: string, clientId: string) {
-        return prisma.clientConsultation.findMany({
+        return getPrismaClient().clientConsultation.findMany({
             where: { tenantId, clientId },
             orderBy: { consultationDate: 'desc' },
             include: {
@@ -31,7 +32,7 @@ export class HistoryRepository {
         consultationDate: Date;
         createdBy?: string;
     }) {
-        return prisma.clientConsultation.create({
+        return getPrismaClient().clientConsultation.create({
             data: {
                 ...data,
                 tenantId
@@ -43,7 +44,7 @@ export class HistoryRepository {
      * Update consultation
      */
     async update(tenantId: string, id: string, data: any) {
-        return prisma.clientConsultation.update({
+        return getPrismaClient().clientConsultation.update({
             where: { id, tenantId },
             data
         });

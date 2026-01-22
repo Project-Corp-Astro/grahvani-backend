@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { config } from '../config';
 import { logger } from '../config/logger';
+import { cacheService } from './cache.service';
 
 // =============================================================================
 // Types & Interfaces
@@ -111,8 +112,15 @@ export class AstroEngineClient {
     async getNatalChart(data: BirthData): Promise<any> {
         const system = this.getSystem(data);
         const endpoint = system === 'kp' ? '/kp/cusps_chart' : `/${system}/natal`;
+
+        // Cache for 24 hours (86400 seconds)
+        const cached = await cacheService.get<any>(`natal:${system}`, data);
+        if (cached) return { data: cached, cached: true };
+
         const response = await this.client.post(endpoint, this.buildPayload(data));
-        return response.data;
+        await cacheService.set(`natal:${system}`, data, response.data, 86400);
+
+        return { data: response.data, cached: false };
     }
 
     /**
@@ -121,8 +129,15 @@ export class AstroEngineClient {
     async getTransitChart(data: BirthData): Promise<any> {
         const system = this.getSystem(data);
         const endpoint = `/${system}/transit`;
+
+        // Cache for 1 hour (3600 seconds)
+        const cached = await cacheService.get<any>(`transit:${system}`, data);
+        if (cached) return { data: cached, cached: true };
+
         const response = await this.client.post(endpoint, this.buildPayload(data));
-        return response.data;
+        await cacheService.set(`transit:${system}`, data, response.data, 3600);
+
+        return { data: response.data, cached: false };
     }
 
     /**
@@ -131,8 +146,14 @@ export class AstroEngineClient {
     async getMoonChart(data: BirthData): Promise<any> {
         const system = this.getSystem(data);
         const endpoint = `/${system}/calculate_moon_chart`;
+
+        const cached = await cacheService.get<any>(`moon:${system}`, data);
+        if (cached) return { data: cached, cached: true };
+
         const response = await this.client.post(endpoint, this.buildPayload(data));
-        return response.data;
+        await cacheService.set(`moon:${system}`, data, response.data);
+
+        return { data: response.data, cached: false };
     }
 
     /**
@@ -141,8 +162,14 @@ export class AstroEngineClient {
     async getSunChart(data: BirthData): Promise<any> {
         const system = this.getSystem(data);
         const endpoint = `/${system}/calculate_sun_chart`;
+
+        const cached = await cacheService.get<any>(`sun:${system}`, data);
+        if (cached) return { data: cached, cached: true };
+
         const response = await this.client.post(endpoint, this.buildPayload(data));
-        return response.data;
+        await cacheService.set(`sun:${system}`, data, response.data);
+
+        return { data: response.data, cached: false };
     }
 
     /**
@@ -179,8 +206,14 @@ export class AstroEngineClient {
             'kalpadruma': 'kalpadruma-yoga'
         };
         const endpoint = endpointMap[yogaType] || yogaType;
+
+        const cached = await cacheService.get<any>(`yoga:${system}:${yogaType}`, data);
+        if (cached) return { data: cached, cached: true };
+
         const response = await this.client.post(`/${system}/${endpoint}`, this.buildPayload(data));
-        return response.data;
+        await cacheService.set(`yoga:${system}:${yogaType}`, data, response.data);
+
+        return { data: response.data, cached: false };
     }
 
     /**
@@ -197,8 +230,14 @@ export class AstroEngineClient {
             'pitra': 'pitra-dosha'
         };
         const endpoint = endpointMap[doshaType] || doshaType;
+
+        const cached = await cacheService.get<any>(`dosha:${system}:${doshaType}`, data);
+        if (cached) return { data: cached, cached: true };
+
         const response = await this.client.post(`/${system}/${endpoint}`, this.buildPayload(data));
-        return response.data;
+        await cacheService.set(`dosha:${system}:${doshaType}`, data, response.data);
+
+        return { data: response.data, cached: false };
     }
 
     /**
@@ -272,6 +311,9 @@ export class AstroEngineClient {
             throw new Error('Divisional charts (D2-D60) are not supported in the KP system. Please use Lahiri or Raman.');
         }
 
+        const cached = await cacheService.get<any>(`divisional:${system}:${type}`, data);
+        if (cached) return { data: cached, cached: true };
+
         // System-aware endpoint mappings
         const systemMappings: Record<string, Record<string, string>> = {
             'raman': {
@@ -314,7 +356,9 @@ export class AstroEngineClient {
         const endpoint = `/${system}/${endpointPath}`;
 
         const response = await this.client.post(endpoint, this.buildPayload(data));
-        return response.data;
+        await cacheService.set(`divisional:${system}:${type}`, data, response.data);
+
+        return { data: response.data, cached: false };
     }
 
     // =========================================================================
@@ -452,6 +496,11 @@ export class AstroEngineClient {
             'shastihayani': '/lahiri/calculate_shastihayani',
             'shattrimshatsama': '/lahiri/calculate_Shattrimshatsama_dasha',
             'chara': '/kp/chara-dasha',
+            'dasha_3months': '/lahiri/calculate_vimshottari_dasha_3months',
+            'dasha_6months': '/lahiri/calculate_vimshottari_dasha_6months',
+            'dasha_report_1year': '/lahiri/dasha_report_1year',
+            'dasha_report_2years': '/lahiri/dasha_report_2years',
+            'dasha_report_3years': '/lahiri/dasha_report_3years',
         };
 
         const endpoint = endpointMap[dashaType.toLowerCase()];
@@ -459,8 +508,13 @@ export class AstroEngineClient {
             throw new Error(`Unknown dasha type: ${dashaType}`);
         }
 
+        const cached = await cacheService.get<any>(`dasha_other:${dashaType}`, data);
+        if (cached) return { data: cached, cached: true };
+
         const response = await this.client.post(endpoint, this.buildPayload(data));
-        return response.data;
+        await cacheService.set(`dasha_other:${dashaType}`, data, response.data);
+
+        return { data: response.data, cached: false };
     }
 
     // =========================================================================

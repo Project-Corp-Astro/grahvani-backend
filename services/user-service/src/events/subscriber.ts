@@ -2,7 +2,7 @@ import { RedisClientType } from 'redis';
 import { getRedisClient } from '../config/redis';
 import { getPrismaClient } from '../config/database';
 
-const prisma = getPrismaClient();
+// LAZY: Prisma is accessed via getPrismaClient() in handlers, NOT at module load time
 
 export interface UserRegisteredEvent {
     type: 'user.registered';
@@ -213,7 +213,7 @@ export class EventSubscriber {
 
         try {
             // Upsert to handle idempotency (same event received twice)
-            await prisma.user.upsert({
+            await getPrismaClient().user.upsert({
                 where: { id: userId },
                 create: {
                     id: userId,
@@ -240,7 +240,7 @@ export class EventSubscriber {
 
             // Log registration activity
             if (event.data.metadata) {
-                await prisma.userActivityLog.create({
+                await getPrismaClient().userActivityLog.create({
                     data: {
                         userId,
                         action: 'user_registered',
@@ -264,7 +264,7 @@ export class EventSubscriber {
         const { userId, email, name, avatarUrl } = event.data;
 
         try {
-            await prisma.user.update({
+            await getPrismaClient().user.update({
                 where: { id: userId },
                 data: {
                     ...(email && { email }),
@@ -287,7 +287,7 @@ export class EventSubscriber {
         const { userId } = event.data;
 
         try {
-            await prisma.user.update({
+            await getPrismaClient().user.update({
                 where: { id: userId },
                 data: {
                     status: 'deleted',
@@ -313,7 +313,7 @@ export class EventSubscriber {
         const { userId, metadata } = event.data;
 
         try {
-            await prisma.userActivityLog.create({
+            await getPrismaClient().userActivityLog.create({
                 data: {
                     userId,
                     action: 'user_login',
@@ -337,7 +337,7 @@ export class EventSubscriber {
         const { userId, sessionId, metadata } = event.data;
 
         try {
-            await prisma.userActivityLog.create({
+            await getPrismaClient().userActivityLog.create({
                 data: {
                     userId,
                     action: metadata?.allDevices ? 'user_logout_all' : 'user_logout',
@@ -363,7 +363,7 @@ export class EventSubscriber {
         const { userId, sessionId, metadata } = event.data;
 
         try {
-            await prisma.userActivityLog.create({
+            await getPrismaClient().userActivityLog.create({
                 data: {
                     userId,
                     action: 'session_revoked',
@@ -389,7 +389,7 @@ export class EventSubscriber {
         const { userId, metadata } = event.data;
 
         try {
-            await prisma.userActivityLog.create({
+            await getPrismaClient().userActivityLog.create({
                 data: {
                     userId,
                     action: 'password_reset',
@@ -413,7 +413,7 @@ export class EventSubscriber {
         const { userId, metadata } = event.data;
 
         try {
-            await prisma.userActivityLog.create({
+            await getPrismaClient().userActivityLog.create({
                 data: {
                     userId,
                     action: 'password_changed',
