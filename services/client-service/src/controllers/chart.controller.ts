@@ -144,6 +144,55 @@ export class ChartController {
     }
 
     /**
+     * POST /clients/:id/dasha/:system
+     * Generate alternative Dasha systems (tribhagi, shodashottari, dwadashottari, etc)
+     * System param: tribhagi, shodashottari, dwadashottari, panchottari, shattrimshatsama, chaturshitisama, shastihayani, satabdika, dwisaptati
+     */
+    async generateAlternativeDasha(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id, system } = req.params;
+            const tenantId = req.user!.tenantId;
+            const { ayanamsa, save, level } = req.body;
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
+
+            // Map system names directly (astro-engine expects: tribhagi, shodashottari, dwadashottari, etc.)
+            const dashaSystemMap: Record<string, string> = {
+                tribhagi: 'tribhagi',
+                tribhagi40: 'tribhagi',
+                shodashottari: 'shodashottari',
+                dwadashottari: 'dwadashottari',
+                panchottari: 'panchottari',
+                shattrimshatsama: 'shattrimshatsama',
+                chaturshitisama: 'chaturshitisama',
+                shastihayani: 'shastihayani',
+                satabdika: 'satabdika',
+                dwisaptati: 'dwisaptati',
+                other: 'tribhagi', // Default for 'other'
+            };
+
+            const dashaType = dashaSystemMap[system.toLowerCase()] || dashaSystemMap['tribhagi'];
+
+            const dasha = await chartService.generateAlternativeDasha(
+                tenantId,
+                id,
+                dashaType,
+                ayanamsa || 'lahiri',
+                level || 'mahadasha',
+                save || false,
+                metadata
+            );
+
+            res.json(dasha);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
      * POST /clients/:id/charts/generate-core
      * Bulk generate core charts (D1, D9) for all systems
      */

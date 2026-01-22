@@ -859,6 +859,74 @@ export class ChartService {
     }
 
     /**
+     * Generate Alternative Dasha Systems
+     * Supports: tribhagi, shodashottari, dwadashottari, panchottari, shattrimshatsama, chaturshitisama, shastihayani, satabdika, dwisaptati
+     */
+    async generateAlternativeDasha(
+        tenantId: string,
+        clientId: string,
+        dashaType: string,
+        ayanamsa: 'lahiri' | 'kp' | 'raman' = 'lahiri',
+        level: string = 'mahadasha',
+        save: boolean = false,
+        metadata: RequestMetadata
+    ) {
+        const client = await clientRepository.findById(tenantId, clientId);
+        if (!client) throw new ClientNotFoundError(clientId);
+
+        if (!client.birthDate || !client.birthTime || !client.birthLatitude || !client.birthLongitude) {
+            throw new Error('Client birth details incomplete.');
+        }
+
+        const birthData = {
+            birthDate: client.birthDate.toISOString().split('T')[0],
+            birthTime: this.extractTimeString(client.birthTime),
+            latitude: Number(client.birthLatitude),
+            longitude: Number(client.birthLongitude),
+            timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
+            ayanamsa,
+        };
+
+        // Call astro engine for alternative dasha systems
+        const dashaData = await astroEngineClient.getAlternativeDasha(birthData, dashaType);
+
+        const result = {
+            clientId,
+            clientName: client.fullName,
+            dashaType,
+            level,
+            ayanamsa,
+            data: dashaData.data,
+            cached: dashaData.cached,
+            calculatedAt: dashaData.calculatedAt,
+        };
+
+        // Optionally save to database
+        if (save) {
+            const chart = await this.saveChart(tenantId, clientId, {
+                chartType: 'dasha',
+                chartName: `${client.fullName} - ${dashaType.replace('-', ' ')} (${ayanamsa})`,
+                chartData: result.data,
+                chartConfig: { system: ayanamsa, dashaType },
+                calculatedAt: new Date(),
+            }, metadata);
+
+            logger.info({ tenantId, clientId, dashaType, ayanamsa, chartId: chart.id }, 'Alternative dasha generated and saved');
+
+            return {
+                ...chart,
+                data: chart.chartData,
+                cached: result.cached,
+                clientName: client.fullName,
+            };
+        }
+
+        logger.info({ tenantId, clientId, dashaType, ayanamsa }, 'Alternative dasha calculated');
+
+        return result;
+    }
+
+    /**
      * Generate Exhaustive 5-level Dasha Tree (Maha to Prana)
      * Fetches Level 1 from Engine and calculates the rest recursively.
      */
