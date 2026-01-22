@@ -1,14 +1,16 @@
 // Preferences Repository - Data Access Layer
-import { PrismaClient, UserPreference } from '../generated/prisma';
+import { UserPreference } from '../generated/prisma';
+import { getPrismaClient } from '../config/database';
 
-const prisma = new PrismaClient();
+// LAZY: Prisma accessed via getPrismaClient() inside methods, NOT at module load time
+// NOTE: $transaction replaced with sequential operations for PgBouncer compatibility
 
 export class PreferencesRepository {
     /**
      * Get all preferences for a user
      */
     async findByUserId(userId: string, category?: string): Promise<UserPreference[]> {
-        return prisma.userPreference.findMany({
+        return getPrismaClient().userPreference.findMany({
             where: {
                 userId,
                 ...(category && { category }),
@@ -24,7 +26,7 @@ export class PreferencesRepository {
      * Get a specific preference
      */
     async findOne(userId: string, category: string, key: string): Promise<UserPreference | null> {
-        return prisma.userPreference.findFirst({
+        return getPrismaClient().userPreference.findFirst({
             where: { userId, category, key },
         });
     }
@@ -33,6 +35,7 @@ export class PreferencesRepository {
      * Upsert a single preference
      */
     async upsert(userId: string, category: string, key: string, value: unknown): Promise<UserPreference> {
+        const prisma = getPrismaClient();
         const existing = await prisma.userPreference.findFirst({
             where: { userId, category, key },
         });
@@ -56,39 +59,41 @@ export class PreferencesRepository {
 
     /**
      * Bulk upsert preferences
+     * NOTE: Uses sequential operations instead of $transaction for PgBouncer compatibility
      */
     async bulkUpsert(
         userId: string,
         preferences: Array<{ category: string; key: string; value: unknown }>
     ): Promise<void> {
-        await prisma.$transaction(
-            preferences.map((pref) =>
-                prisma.userPreference.upsert({
-                    where: {
-                        userId_category_key: {
-                            userId,
-                            category: pref.category,
-                            key: pref.key,
-                        },
-                    },
-                    create: {
+        const prisma = getPrismaClient();
+
+        for (const pref of preferences) {
+            await prisma.userPreference.upsert({
+                where: {
+                    userId_category_key: {
                         userId,
                         category: pref.category,
                         key: pref.key,
-                        value: pref.value as any,
                     },
-                    update: {
-                        value: pref.value as any,
-                    },
-                })
-            )
-        );
+                },
+                create: {
+                    userId,
+                    category: pref.category,
+                    key: pref.key,
+                    value: pref.value as any,
+                },
+                update: {
+                    value: pref.value as any,
+                },
+            });
+        }
     }
 
     /**
      * Delete a preference
      */
     async delete(userId: string, category: string, key: string): Promise<void> {
+        const prisma = getPrismaClient();
         const existing = await prisma.userPreference.findFirst({
             where: { userId, category, key },
         });
@@ -104,7 +109,7 @@ export class PreferencesRepository {
      * Delete all preferences for a user
      */
     async deleteAllForUser(userId: string): Promise<void> {
-        await prisma.userPreference.deleteMany({
+        await getPrismaClient().userPreference.deleteMany({
             where: { userId },
         });
     }

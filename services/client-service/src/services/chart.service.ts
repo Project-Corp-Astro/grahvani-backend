@@ -6,7 +6,7 @@ import { activityService } from './activity.service';
 import { RequestMetadata } from './client.service';
 import { astroEngineClient } from '../clients/astro-engine.client';
 import { calculateSubPeriods } from '../utils/vimshottari-calc';
-import { logger, isChartAvailable, getAvailableCharts, AyanamsaSystem, SYSTEM_CAPABILITIES, markEndpointFailed, shouldSkipEndpoint } from '../config';
+import { logger, isChartAvailable, getAvailableCharts, AyanamsaSystem, SYSTEM_CAPABILITIES, markEndpointFailed, shouldSkipEndpoint, clearEndpointFailure } from '../config';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -23,18 +23,14 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
  * Execute promises in batches to avoid connection pool exhaustion
  * Optimized for Supabase free tier (limited connections)
  */
-async function executeBatched<T>(
-    operations: (() => Promise<T>)[],
-    batchSize: number = MAX_CONCURRENT_OPS
-): Promise<T[]> {
+async function executeBatched<T>(tasks: (() => Promise<T>)[], batchSize = MAX_CONCURRENT_OPS, delayMs = 200): Promise<T[]> {
     const results: T[] = [];
-    for (let i = 0; i < operations.length; i += batchSize) {
-        const batch = operations.slice(i, i + batchSize);
-        const batchResults = await Promise.all(batch.map(op => op()));
-        results.push(...batchResults);
-        // Small delay between batches to let connections release
-        if (i + batchSize < operations.length) {
-            await sleep(200); // Increased sleep to let DB "breathe"
+    for (let i = 0; i < tasks.length; i += batchSize) {
+        const batch = tasks.slice(i, i + batchSize);
+        // Execute batch sequentially to be extra safe with connections
+        for (const task of batch) {
+            results.push(await task());
+            await sleep(delayMs);
         }
     }
     return results;
@@ -112,11 +108,6 @@ export class ChartService {
             return true;
         });
 
-        // This is a safety layer to ensure data is updated/assigned correctly
-        if (metadata) {
-            // Pass the already fetched charts to the background audit to avoid redundant DB hits
-            this.ensureFullVedicProfile(tenantId, clientId, metadata, charts);
-        }
         return filteredCharts;
     }
 
@@ -448,7 +439,17 @@ export class ChartService {
                 }
             }
 
-            // 10. Generate Shadbala (if available)
+            // 10. Generate Dashas (if available) - NEW
+            if (capabilities.dashas) {
+                for (const dashaType of capabilities.dashas) {
+                    operations.push(() =>
+                        this.generateAndSaveChart(tenantId, clientId, `dasha:${dashaType}`, sys, metadata)
+                            .catch(err => logger.info({ err, dashaType }, 'Batch dasha generation skip/fail'))
+                    );
+                }
+            }
+
+            // 11. Generate Shadbala (if available)
             if (capabilities.specialCharts.includes('shadbala')) {
                 operations.push(() =>
                     this.generateAndSaveChart(tenantId, clientId, 'shadbala', sys, metadata)
@@ -456,7 +457,7 @@ export class ChartService {
                 );
             }
 
-            // 11. Generate Exhaustive Dasha Tree (Maha to Prana)
+            // 12. Generate Exhaustive Dasha Tree (Maha to Prana)
             // This replaces the experimental Deep Dasha with a production-ready tree
             operations.push(() =>
                 this.generateDeepDasha(tenantId, clientId, sys, metadata)
@@ -511,13 +512,16 @@ export class ChartService {
                 const existing = existingCharts || await chartRepository.findMetadataByClientId(tenantId, clientId);
 
                 // Get all existing chart types grouped by system
-                const existingBySystem: Record<string, Set<string>> = {};
+                // Get all existing chart types grouped by system with timestamps
+                const existingBySystem: Record<string, Map<string, Date>> = {};
                 for (const chart of existing) {
                     const system = (chart as any).system || 'lahiri'; // Metadata or Full both have this
                     if (!existingBySystem[system]) {
-                        existingBySystem[system] = new Set();
+                        existingBySystem[system] = new Map();
                     }
-                    existingBySystem[system].add(chart.chartType!.toLowerCase());
+                    if (chart.chartType) {
+                        existingBySystem[system].set(chart.chartType.toLowerCase(), chart.calculatedAt || new Date(0));
+                    }
                 }
 
                 // Check each system for missing charts using SYSTEM_CAPABILITIES as source of truth
@@ -528,7 +532,9 @@ export class ChartService {
                     const capabilities = SYSTEM_CAPABILITIES[sys];
                     if (!capabilities) continue;
 
-                    const existingForSystem = existingBySystem[sys] || new Set<string>();
+                    if (!capabilities) continue;
+
+                    const existingForSystem = existingBySystem[sys] || new Map<string, Date>();
 
                     // Build expected chart list from capabilities
                     const expectedCharts: string[] = [
@@ -545,9 +551,21 @@ export class ChartService {
                     expectedCharts.push('dasha');
 
                     // Find missing charts for this system
-                    const missingForSystem = expectedCharts.filter(chart =>
-                        !existingForSystem.has(chart.toLowerCase())
-                    );
+                    const missingForSystem = expectedCharts.filter(chart => {
+                        const chartKey = chart.toLowerCase();
+                        const existingDate = existingForSystem.get(chartKey);
+
+                        if (!existingDate) return true; // Completely missing
+
+                        // For transit, regenerate if older than 1 hour to ensure freshness without spamming
+                        if (chartKey === 'transit') {
+                            const age = Date.now() - existingDate.getTime();
+                            // 1 hour = 3600000 ms
+                            return age > 3600000;
+                        }
+
+                        return false;
+                    });
 
                     if (missingForSystem.length > 0) {
                         allMissingCharts.push({ system: sys, charts: missingForSystem });

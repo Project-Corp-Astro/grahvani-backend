@@ -17,6 +17,7 @@ export interface SystemCapabilities {
     doshas?: string[];
     remedies?: string[];
     panchanga?: string[];
+    dashas?: string[];
     hasDivisional: boolean;
     hasAshtakavarga: boolean;
     hasNumerology: boolean;
@@ -75,13 +76,23 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
             'numerology_chaldean', 'numerology_loshu'
         ],
         // Yogas - verified endpoints
-        yogas: ['gaja_kesari', 'guru_mangal', 'budha_aditya', 'chandra_mangal', 'raj_yoga', 'pancha_mahapurusha', 'daridra', 'dhan', 'malefic', 'special', 'spiritual', 'shubh', 'kalpadruma'],
+        yogas: [
+            'gaja_kesari', 'guru_mangal', 'budha_aditya', 'chandra_mangal', 'raj_yoga',
+            'pancha_mahapurusha', 'daridra', 'dhan', 'malefic', 'special', 'spiritual',
+            'shubh', 'viparitha_raja', 'kalpadruma', 'rare'
+        ],
         // Doshas - verified endpoints
         doshas: ['kala_sarpa', 'angarak', 'guru_chandal', 'shrapit', 'sade_sati', 'pitra'],
         // Remedies - verified endpoints
         remedies: ['yantra', 'mantra', 'general', 'gemstone', 'lal_kitab'],
-        // Panchanga - verified endpoints (note: these are root-level, not /lahiri/)
+        // Panchanga - verified endpoints
         panchanga: ['panchanga', 'choghadiya', 'hora', 'lagna_times', 'muhurat'],
+        // Dashas - expanded list
+        dashas: [
+            'vimshottari', 'tribhagi', 'shodashottari', 'dwadashottari', 'panchottari',
+            'chaturshitisama', 'satabdika', 'dwisaptati', 'shastihayani', 'shattrimshatsama',
+            'dasha_3months', 'dasha_6months', 'dasha_report_1year', 'dasha_report_2years', 'dasha_report_3years'
+        ],
         hasDivisional: true,
         hasAshtakavarga: true,
         hasNumerology: true,

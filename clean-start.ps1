@@ -1,7 +1,7 @@
 # Grahvani Backend Clean Start Utility
 # This script kills all processes holding ports 3001, 3002, and 3008
 
-$ports = @(3001, 3002, 3008)
+$ports = @(3001, 3002, 3008, 3014)
 $foundAny = $false
 
 foreach ($port in $ports) {

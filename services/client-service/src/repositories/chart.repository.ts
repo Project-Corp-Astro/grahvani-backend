@@ -182,7 +182,8 @@ export class ChartRepository {
             where: { tenantId, clientId },
             select: {
                 chartType: true,
-                system: true
+                system: true,
+                calculatedAt: true
             }
         });
     }
