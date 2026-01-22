@@ -192,6 +192,7 @@ export class ChartController {
         }
     }
 
+
     /**
      * POST /clients/:id/charts/generate-core
      * Bulk generate core charts (D1, D9) for all systems

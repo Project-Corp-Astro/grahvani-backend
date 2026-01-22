@@ -278,6 +278,16 @@ class AstroEngineClient {
         }
     }
 
+    /**
+     * Get Other Dasha Systems (Tribhagi, Shodashottari, Dwadashottari, etc.)
+     * Routes to /internal/dasha/other?type=<dashaType>
+     */
+    async getOtherDasha(birthData: BirthData, dashaType: string, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        logger.info({ ayanamsa, dashaType }, 'Generating Other Dasha');
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post(`/dasha/other?type=${dashaType}`, payload)).data;
+    }
+
     // =========================================================================
     // ASHTAKAVARGA ENDPOINTS (Ayanamsa-aware)
     // =========================================================================
