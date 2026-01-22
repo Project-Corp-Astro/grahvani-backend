@@ -859,15 +859,17 @@ export class ChartService {
     }
 
     /**
-     * Generate Other Dasha Systems (Tribhagi, Shodashottari, Dwadashottari, etc.)
-     * Available types: tribhagi, shodashottari, dwadashottari, panchottari, 
-     * chaturshitisama, satabdika, dwisaptati, shastihayani, shattrimshatsama, chara
+     * Generate Alternative Dasha Systems
+     * Supports: tribhagi, shodashottari, dwadashottari, panchottari, shattrimshatsama, chaturshitisama, shastihayani, satabdika, dwisaptati
      */
-    async generateOtherDasha(
+    async generateAlternativeDasha(
         tenantId: string,
         clientId: string,
         dashaType: string,
-        ayanamsa: 'lahiri' | 'kp' | 'raman' = 'lahiri'
+        ayanamsa: 'lahiri' | 'kp' | 'raman' = 'lahiri',
+        level: string = 'mahadasha',
+        save: boolean = false,
+        metadata: RequestMetadata
     ) {
         const client = await clientRepository.findById(tenantId, clientId);
         if (!client) throw new ClientNotFoundError(clientId);
@@ -885,19 +887,43 @@ export class ChartService {
             ayanamsa,
         };
 
-        const dashaData = await astroEngineClient.getOtherDasha(birthData, dashaType, ayanamsa);
+        // Call astro engine for alternative dasha systems
+        const dashaData = await astroEngineClient.getAlternativeDasha(birthData, dashaType);
 
-        logger.info({ tenantId, clientId, dashaType, ayanamsa }, 'Other Dasha calculated');
-
-        return {
+        const result = {
             clientId,
             clientName: client.fullName,
             dashaType,
+            level,
             ayanamsa,
             data: dashaData.data,
             cached: dashaData.cached,
             calculatedAt: dashaData.calculatedAt,
         };
+
+        // Optionally save to database
+        if (save) {
+            const chart = await this.saveChart(tenantId, clientId, {
+                chartType: 'dasha',
+                chartName: `${client.fullName} - ${dashaType.replace('-', ' ')} (${ayanamsa})`,
+                chartData: result.data,
+                chartConfig: { system: ayanamsa, dashaType },
+                calculatedAt: new Date(),
+            }, metadata);
+
+            logger.info({ tenantId, clientId, dashaType, ayanamsa, chartId: chart.id }, 'Alternative dasha generated and saved');
+
+            return {
+                ...chart,
+                data: chart.chartData,
+                cached: result.cached,
+                clientName: client.fullName,
+            };
+        }
+
+        logger.info({ tenantId, clientId, dashaType, ayanamsa }, 'Alternative dasha calculated');
+
+        return result;
     }
 
     /**

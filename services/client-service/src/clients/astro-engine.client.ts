@@ -254,6 +254,31 @@ class AstroEngineClient {
     }
 
     /**
+     * Generate alternative Dasha systems (non-Vimshottari)
+     * @param birthData Birth data for the native
+     * @param dashaType Type of dasha system (tribhagi, shodashottari, dwadashottari, etc.)
+     * @returns Dasha calculation result
+     */
+    async getAlternativeDasha(birthData: BirthData, dashaType: string): Promise<AstroResponse> {
+        logger.info({ ayanamsa: birthData.system, dashaType }, 'Generating Alternative Dasha');
+        const payload = { ...birthData };
+
+        // Normalize dasha type name (remove -dasha suffix if present)
+        const normalizedType = dashaType.replace(/-dasha$/, '').toLowerCase();
+
+        // Use URLSearchParams for clean query string construction
+        const params = new URLSearchParams();
+        params.append('type', normalizedType);
+
+        try {
+            return (await this.internalClient.post(`/dasha/other?${params.toString()}`, payload)).data;
+        } catch (error) {
+            logger.error({ dashaType, error }, 'Alternative dasha generation failed');
+            throw new AstroEngineError(`Failed to generate ${dashaType}`, 500);
+        }
+    }
+
+    /**
      * Get Other Dasha Systems (Tribhagi, Shodashottari, Dwadashottari, etc.)
      * Routes to /internal/dasha/other?type=<dashaType>
      */

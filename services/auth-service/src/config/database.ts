@@ -27,6 +27,7 @@ export const getPrismaClient = (): PrismaClient => {
 
         prismaInstance = new PrismaClient({
             log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+            errorFormat: 'pretty',
         });
 
         // Log when first query actually runs

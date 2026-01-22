@@ -144,25 +144,46 @@ export class ChartController {
     }
 
     /**
-     * POST /clients/:id/dasha/other
-     * Generate other dasha systems (Tribhagi, Shodashottari, etc.)
+     * POST /clients/:id/dasha/:system
+     * Generate alternative Dasha systems (tribhagi, shodashottari, dwadashottari, etc)
+     * System param: tribhagi, shodashottari, dwadashottari, panchottari, shattrimshatsama, chaturshitisama, shastihayani, satabdika, dwisaptati
      */
-    async generateOtherDasha(req: AuthRequest, res: Response, next: NextFunction) {
+    async generateAlternativeDasha(req: AuthRequest, res: Response, next: NextFunction) {
         try {
-            const { id } = req.params;
+            const { id, system } = req.params;
             const tenantId = req.user!.tenantId;
-            const { type, ayanamsa } = req.body;
+            const { ayanamsa, save, level } = req.body;
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
 
-            if (!type) {
-                res.status(400).json({ success: false, error: 'Missing dasha type parameter' });
-                return;
-            }
+            // Map system names directly (astro-engine expects: tribhagi, shodashottari, dwadashottari, etc.)
+            const dashaSystemMap: Record<string, string> = {
+                tribhagi: 'tribhagi',
+                tribhagi40: 'tribhagi',
+                shodashottari: 'shodashottari',
+                dwadashottari: 'dwadashottari',
+                panchottari: 'panchottari',
+                shattrimshatsama: 'shattrimshatsama',
+                chaturshitisama: 'chaturshitisama',
+                shastihayani: 'shastihayani',
+                satabdika: 'satabdika',
+                dwisaptati: 'dwisaptati',
+                other: 'tribhagi', // Default for 'other'
+            };
 
-            const dasha = await chartService.generateOtherDasha(
+            const dashaType = dashaSystemMap[system.toLowerCase()] || dashaSystemMap['tribhagi'];
+
+            const dasha = await chartService.generateAlternativeDasha(
                 tenantId,
                 id,
-                type,
-                ayanamsa || 'lahiri'
+                dashaType,
+                ayanamsa || 'lahiri',
+                level || 'mahadasha',
+                save || false,
+                metadata
             );
 
             res.json(dasha);
@@ -170,6 +191,7 @@ export class ChartController {
             next(error);
         }
     }
+
 
     /**
      * POST /clients/:id/charts/generate-core
