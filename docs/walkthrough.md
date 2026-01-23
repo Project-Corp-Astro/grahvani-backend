@@ -18,7 +18,7 @@ This document explains the data flow from the external Python Astro Engine throu
 | Module | Proxy Endpoint | Storage | Caching Type | Description |
 |:---|:---|:---|:---|:---|
 | **Charts** | `/charts/natal` | Database & Redis | Permanent / 24h | Primary Natal (D1) chart used across the app. |
-| **Dasha** | `/dasha/*` | Database & Redis | Permanent / 24h | Hierarchical Vimshottari periods (stored in Supabase). |
+| **Dasha** | `/dasha/*` | Database & Redis | Permanent / 24h | 12 Systems including Vimshottari & Alternative (Tribhagi, etc.). |
 | **Transit** | `/charts/transit`| Database & Redis | 1-Hour TTL | Real-time planetary positions, refreshed hourly. |
 | **KP System** | `/kp/*` | Database & Redis | Permanent / 24h | Krishnamurti Paddhati specific calculations. |
 | **Analysis** | `/yoga/*`, `/dosha/*` | Database & Redis | Permanent / 24h | Astrological observations and remedial measures. |

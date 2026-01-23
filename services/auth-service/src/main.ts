@@ -8,8 +8,16 @@ import { authRoutes } from './interfaces/http/routes/auth.routes';
 import { internalRoutes } from './interfaces/http/routes/internal.routes';
 import { errorMiddleware } from './interfaces/http/middlewares/error.middleware';
 import { logger } from './config/logger';
+import { getDatabaseManager, performHealthCheck, getDBMetrics } from './config/db-pro';
 
 const app = express();
+
+// ============ INITIALIZE DATABASE (PRO PLAN) ============
+const dbManager = getDatabaseManager();
+logger.info('✅ Supabase PRO Plan database manager initialized');
+logger.info('🔋 Connection pooling: 5-20 connections, 100+ max');
+logger.info('🔄 Exponential backoff retries enabled');
+logger.info('💾 Query caching enabled (1-minute TTL)');
 
 // Trust proxy for correct IP capture behind load balancers/Nginx
 app.set('trust proxy', true);
@@ -47,6 +55,45 @@ app.get('/health', (_req: Request, res: Response) => {
         version: '1.0.0',
         timestamp: new Date().toISOString()
     });
+});
+
+// ============ DATABASE HEALTH CHECK (PRO PLAN) ============
+app.get('/api/health/db', async (_req: Request, res: Response) => {
+    try {
+        const health = await performHealthCheck();
+        const metrics = getDBMetrics();
+        
+        res.json({
+            status: 'ok',
+            database: {
+                health,
+                metrics,
+            },
+            timestamp: new Date().toISOString(),
+        });
+    } catch (error) {
+        res.status(503).json({
+            status: 'error',
+            error: (error as Error).message,
+            timestamp: new Date().toISOString(),
+        });
+    }
+});
+
+// ============ METRICS ENDPOINT (PRO PLAN) ============
+app.get('/api/metrics/database', (_req: Request, res: Response) => {
+    try {
+        const metrics = getDBMetrics();
+        res.json({
+            status: 'ok',
+            metrics,
+            timestamp: new Date().toISOString(),
+        });
+    } catch (error) {
+        res.status(500).json({
+            error: (error as Error).message,
+        });
+    }
 });
 
 // ============ PUBLIC ROUTES ============

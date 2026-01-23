@@ -1,13 +1,15 @@
-process.env.TZ = 'Asia/Kolkata';
-import app from './app';
+// IMPORTANT: Load environment variables FIRST, before any other imports
 import dotenv from 'dotenv';
-import { eventSubscriber } from './events/subscriber';
-
 import path from 'path';
 
-// Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') }); // Root .env
 dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true }); // Service .env
+
+process.env.TZ = 'Asia/Kolkata';
+
+// Now import app after env vars are loaded
+import app from './app';
+import { eventSubscriber } from './events/subscriber';
 
 const PORT = process.env.PORT || 3002;
 

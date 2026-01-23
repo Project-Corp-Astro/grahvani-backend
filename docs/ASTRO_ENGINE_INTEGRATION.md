@@ -52,6 +52,12 @@ This document provides a comprehensive technical audit of the integration betwee
 | `/lahiri/calculate_shadbala` | `/internal/shadbala` | ✅ (24h) | ✅ | **Full** | 6-fold planetary strength. |
 | `/lahiri/calculate_antar_dasha` | `/api/dasha/vimshottari`| ✅ (24h) | ✅ | **Full** | Vimshottari Levels 1 & 2. |
 | `/lahiri/prathythar_dasha_lahiri` | `/api/dasha/vimshottari`| ✅ (24h) | ✅ | **Full** | Vimshottari Level 3. |
+| `/lahiri/calculate_tribhagi_dasha` | `/api/dasha/tribhagi` | ✅ (24h) | ✅ | **New** | Tribhagi Dasha (40/120yr). |
+| `/lahiri/shodashottari-dasha` | `/api/dasha/shodashottari`| ✅ (24h) | ✅ | **New** | Shodashottari (116yr). |
+| `/lahiri/dwadashottari-dasha` | `/api/dasha/dwadashottari`| ✅ (24h) | ✅ | **New** | Dwadashottari (112yr). |
+| `/lahiri/calculate-panchottari-dasha`| `/api/dasha/panchottari` | ✅ (24h) | ✅ | **New** | Panchottari (105yr). |
+| `/lahiri/calculate_Shattrimshatsama_dasha`| `/api/dasha/shattrimshatsama`| ✅ (24h) | ✅ | **New** | Shattrimshatsama (36yr). |
+| `/lahiri/calculate_Chaturshitisama_dasha`| `/api/dasha/chaturshitisama`| ✅ (24h) | ✅ | **New** | Chaturshitisama (84yr). |
 
 ---
 
@@ -70,6 +76,20 @@ This document provides a comprehensive technical audit of the integration betwee
 
 ---
 
+## ☀️ 3. Raman Ayanamsa System
+*Traditional system popular in South India and for specific astrological schools.*
+
+| External Endpoint (Python) | Proxy Endpoint (Integrated) | Stored in Redis | Stored in Database | Status | Description |
+|:---|:---|:---:|:---:|:---|:---|
+| `/raman/natal` | `/api/raman/natal` | ✅ (24h) | ✅ | **Full** | Raman Natal Chart (D1). |
+| `/raman/transit` | `/api/raman/transit` | ✅ (1h) | ✅ | **Full** | Raman Transit Chart. |
+| `/raman/arudha-lagna` | `/api/charts/arudha-lagna?system=raman`| ✅ (24h) | ✅ | **Full** | Arudha Lagna (Raman). |
+| `/raman/bhava-lagna` | `/api/charts/bhava-lagna?system=raman`| ✅ (24h) | ✅ | **Full** | Bhava Lagna (Raman). |
+| `/raman/dasha/maha-antar` | `/api/raman/dasha/maha-antar`| ✅ (24h) | ✅ | **Full** | Raman Vimshottari L1/L2. |
+| `/raman/dasha/pratyantar` | `/api/raman/dasha/pratyantar`| ✅ (24h) | ✅ | **Full** | Raman Vimshottari L3. |
+
+---
+
 ## 🔍 4. System-Agnostic Tools (Yoga/Dosha/Remedy)
 *These are integrated across all systems, primarily using Lahiri core endpoints.*
 
@@ -79,6 +99,7 @@ This document provides a comprehensive technical audit of the integration betwee
 | `/lahiri/pancha-mahapurusha-yogas`| `/internal/yoga/pancha_mahapurusha`| ✅ (24h) | ✅ | **Full** | 5 Great Personality Yogas. |
 | `/lahiri/kala-sarpa-fixed` | `/internal/dosha/kala_sarpa`| ✅ (24h) | ✅ | **Full** | Kala Sarpa Dosha analysis. |
 | `/lahiri/calculate-sade-sati` | `/internal/dosha/sade_sati` | ✅ (24h) | ✅ | **Full** | 7.5 years Saturn cycle analysis. |
+| `/lahiri/calculate-manglik-dosha` | `/internal/dosha/manglik` | ✅ (24h) | ✅ | **Full** | Mangal/Mars Dosha analysis. |
 | `/lahiri/vedic_remedies" | `/internal/remedy/general` | ✅ (24h) | ✅ | **Full** | General planetary remedies. |
 | `/lahiri/calculate-gemstone` | `/internal/remedy/gemstone`| ✅ (24h) | ✅ | **Full** | Gemstone recommendations. |
 | `/lahiri/panchanga` | `/internal/panchanga` | ✅ (1h) | ✅ | **Full** | Daily Tithi, Vara, Nakshatra, etc. |
@@ -89,12 +110,13 @@ This document provides a comprehensive technical audit of the integration betwee
 ## 📄 Summary of Storage & Caching Policy
 
 1.  **Redis (Cache Service)**:
-    - **TTL (24h)**: Most static charts (Natal, Divisional, Yoga, Dosha).
+    - **TTL (24h)**: Most static charts (Natal, Divisional, Yoga, Dosha, Alternative Dashas).
     - **TTL (1h)**: Highly variable data (Transit, Panchanga, Choghadiya).
     - **TTL (5m)**: Real-time dynamic data (KP Ruling Planets).
 2.  **Database (Supabase)**:
-    - **Persistent**: Any chart requested via `client-service`'s `generateAndSaveChart` is stored permanently in the `client_saved_charts` table.
+    - **Persistent**: Any chart requested via `client-service`'s `generateAndSaveChart` or `generateAlternativeDasha` (with `save: true`) is stored permanently.
     - **Unique Constraint**: Charts are stored uniquely per ClientID, System, and ChartType.
 3.  **Integration Health**:
-    - **98% Coverage**: Primary Vedic and KP endpoints are fully mapped.
+    - **100% Core Coverage**: All Primary Vedic (Lahiri/Raman) and KP endpoints are fully mapped.
+    - **12 Dasha Systems**: Supported with hierarchical drill-down and selective persistence.
     - **Manual Check Needed**: Western Synastry and Composite are mapped in the client but pending full validation in the UI rendering layer.
