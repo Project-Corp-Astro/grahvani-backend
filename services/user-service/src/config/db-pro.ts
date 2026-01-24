@@ -10,6 +10,7 @@
  */
 
 import { PrismaClient } from '../generated/prisma';
+import { logger } from './logger';
 
 export class DatabaseManager {
     private prismaClient: PrismaClient | null = null;
@@ -28,7 +29,7 @@ export class DatabaseManager {
                 throw new Error('DATABASE_URL not configured in environment');
             }
 
-            console.log('🚀 Initializing standardized Prisma client (Port 6543)...');
+            logger.info('🚀 Initializing standardized Prisma client (Port 6543)...');
 
             this.prismaClient = new PrismaClient({
                 log: process.env.NODE_ENV === 'development'
@@ -42,9 +43,9 @@ export class DatabaseManager {
                 },
             });
 
-            console.log('✅ Database client initialized');
+            logger.info('✅ Database client initialized');
         } catch (error) {
-            console.error('❌ Failed to initialize database client:', error);
+            logger.error({ error }, '❌ Failed to initialize database client');
             throw error;
         }
     }
@@ -75,7 +76,7 @@ export class DatabaseManager {
     async disconnect(): Promise<void> {
         if (this.prismaClient) {
             await this.prismaClient.$disconnect();
-            console.log('🔌 Database disconnected');
+            logger.info('🔌 Database disconnected');
         }
     }
 }
@@ -102,7 +103,7 @@ export const getPrismaClient = async (): Promise<PrismaClient> => {
  */
 const shutdown = async (signal: string) => {
     if (databaseManagerInstance) {
-        console.log(`${signal} received - shutting down database`);
+        logger.info(`${signal} received - shutting down database`);
         await databaseManagerInstance.disconnect();
     }
     process.exit(0);
