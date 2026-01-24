@@ -170,20 +170,7 @@ export class ChartService {
         const client = await clientRepository.findById(tenantId, clientId);
         if (!client) throw new ClientNotFoundError(clientId);
 
-        // Validate birth details exist
-        if (!client.birthDate || !client.birthTime || !client.birthLatitude || !client.birthLongitude) {
-            throw new Error('Client birth details incomplete. Please update birth date, time, and location.');
-        }
-
-        // Prepare birth data for astro-engine
-        const birthData = {
-            birthDate: client.birthDate.toISOString().split('T')[0],
-            birthTime: this.extractTimeString(client.birthTime),
-            latitude: Number(client.birthLatitude),
-            longitude: Number(client.birthLongitude),
-            timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
-            ayanamsa: system,
-        };
+        const birthData = this.prepareBirthData(client, system);
 
         // Call astro-engine service with Ayanamsa-aware routing
         let chartData;
@@ -734,40 +721,53 @@ export class ChartService {
         clientId: string,
         level: string = 'mahadasha',
         ayanamsa: 'lahiri' | 'kp' | 'raman' = 'lahiri',
-        options: { mahaLord?: string; antarLord?: string; pratyantarLord?: string; sookshmaLord?: string } = {}
+        options: any = {}
     ) {
         const client = await clientRepository.findById(tenantId, clientId);
         if (!client) throw new ClientNotFoundError(clientId);
 
-        if (!client.birthDate || !client.birthTime || !client.birthLatitude || !client.birthLongitude) {
-            throw new Error('Client birth details incomplete.');
-        }
+        const drillDownPath = options.drillDownPath || [];
+        const birthData = this.prepareBirthData(client, ayanamsa);
 
-        const birthData = {
-            birthDate: client.birthDate.toISOString().split('T')[0],
-            birthTime: this.extractTimeString(client.birthTime),
-            latitude: Number(client.birthLatitude),
-            longitude: Number(client.birthLongitude),
-            timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
-            ayanamsa, // Ensure ayanamsa is passed for routing
-        };
-
-        // DB-FIRST: Check if this dasha already exists in database
-        const savedCharts = await chartRepository.findByClientId(tenantId, clientId);
-        const matchingDasha = savedCharts.find(c =>
-            c.chartType === 'dasha_vimshottari' &&
-            (c as any).system === ayanamsa &&
-            (c.chartConfig as any)?.level === level
+        // DB-FIRST: Check if this EXACT dasha already exists in database (High Performance)
+        const matchingDasha = await chartRepository.findOneByTypeAndSystem(
+            tenantId,
+            clientId,
+            'dasha_vimshottari',
+            ayanamsa
         );
 
-        if (matchingDasha) {
-            logger.info({ clientId, level, ayanamsa }, 'Dasha found in database - skipping engine call');
+        if (matchingDasha && (matchingDasha.chartConfig as any)?.level === level) {
+            logger.info({ clientId, level, ayanamsa }, 'Dasha found in database - checking for data completeness');
+
+            let dashaData: any = matchingDasha.chartData;
+            const rootList = dashaData.dasha_list || dashaData.mahadashas || [];
+
+            // If it's a 'tree' request, ensure it's at least 3 levels deep, and always get a 5-level active path summary
+            if (level === 'tree' && rootList.length > 0) {
+                const wasExpanded = this.populateSublevelsRecursive(rootList, 1, 3, drillDownPath);
+                const currentPath = this.extractCurrentPathRecursive(rootList); // Fully 5-level path
+
+                if (wasExpanded || !dashaData.curr_path) {
+                    logger.info({ clientId }, 'Updating database record with balanced tree and current path summary');
+                    const updatedData = { ...dashaData, mahadashas: rootList, curr_path: currentPath };
+                    await chartRepository.update(tenantId, matchingDasha.id, {
+                        chartData: updatedData,
+                        calculatedAt: new Date()
+                    });
+                    dashaData = updatedData;
+                } else {
+                    // Just update a local copy for response
+                    dashaData = { ...dashaData, curr_path: currentPath };
+                }
+            }
+
             return {
                 clientId,
                 clientName: client.fullName,
                 level,
                 ayanamsa,
-                data: matchingDasha.chartData,
+                data: dashaData,
                 cached: true,
                 calculatedAt: matchingDasha.calculatedAt,
             };
@@ -874,6 +874,15 @@ export class ChartService {
             );
         }
 
+        // BALANCE TREE POPULATION
+        // If 'tree' is requested, ensure we have at least 3 levels plus a current 5-level path summary
+        if (level === 'tree' && rootList.length > 0) {
+            logger.info({ clientId, ayanamsa }, 'Balancing tree depth with path-aware expansion');
+            this.populateSublevelsRecursive(rootList, 1, 3, drillDownPath);
+            const currentPath = this.extractCurrentPathRecursive(rootList);
+            (dashaData as any).curr_path = currentPath;
+        }
+
         const result = {
             clientId,
             clientName: client.fullName,
@@ -975,14 +984,7 @@ export class ChartService {
         const client = await clientRepository.findById(tenantId, clientId);
         if (!client) throw new ClientNotFoundError(clientId);
 
-        const birthData = {
-            birthDate: client.birthDate!.toISOString().split('T')[0],
-            birthTime: this.extractTimeString(client.birthTime),
-            latitude: Number(client.birthLatitude),
-            longitude: Number(client.birthLongitude),
-            timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
-            ayanamsa,
-        };
+        const birthData = this.prepareBirthData(client, ayanamsa);
 
         const dashaData = await astroEngineClient.getAlternativeDasha(birthData, dashaType);
 
@@ -1007,14 +1009,7 @@ export class ChartService {
         const client = await clientRepository.findById(tenantId, clientId);
         if (!client) throw new ClientNotFoundError(clientId);
 
-        const birthData = {
-            birthDate: client.birthDate!.toISOString().split('T')[0],
-            birthTime: this.extractTimeString(client.birthTime),
-            latitude: Number(client.birthLatitude),
-            longitude: Number(client.birthLongitude),
-            timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
-            system: ayanamsa
-        };
+        const birthData = this.prepareBirthData(client, ayanamsa);
 
         const dashaResult = await astroEngineClient.getPranaDasha(birthData, ayanamsa);
         const finalData = dashaResult.data || dashaResult;
@@ -1128,6 +1123,115 @@ export class ChartService {
     }
 
     /**
+     * Recursively populate dasha sublevels down to a specified max level.
+     * Path-Aware: If the current period is in the targetPath or isActivePath, we expand to level 5.
+     * Returns true if any new levels were calculated.
+     */
+    private populateSublevelsRecursive(periods: any[], currentLevel: number, defaultMax: number = 3, targetPath: string[] = []): boolean {
+        if (currentLevel >= 6 || !Array.isArray(periods)) return false;
+        let anyExpanded = false;
+
+        const now = new Date();
+
+        for (const period of periods) {
+            const planet = (period.planet || period.lord || '').toLowerCase();
+            const targetPlanetAtThisLevel = targetPath[currentLevel - 1]?.toLowerCase();
+
+            // Determine if this specific branch should be deeper
+            const isActive = now >= new Date(period.start_date || period.startDate) && now < new Date(period.end_date || period.endDate);
+            const isTarget = planet === targetPlanetAtThisLevel;
+
+            // DETERMINISTIC DEPTH STRATEGY:
+            // 1. Minimum 3 levels for all branches (allows 2 levels of drill-down).
+            // 2. Active branch always 5 levels.
+            // 3. User target path (the one in the URL) always 5 levels to ensure absolute stability.
+            const effectiveMax = (isActive || isTarget) ? 5 : defaultMax;
+
+            if (currentLevel >= effectiveMax) continue;
+
+            const shouldGoDeeper = currentLevel < effectiveMax;
+
+            if (!shouldGoDeeper) {
+                // Just alias keys for frontend consistency if we are stopping here
+                period.sublevels = period.sublevels || period.antardashas || period.pratyantardashas || period.sookshmadashas || period.pranadashas;
+                continue;
+            }
+
+            // Check if sublevels exist or need calculation
+            let sublevels = period.sublevels ||
+                period.antardashas ||
+                period.pratyantardashas ||
+                period.sookshmadashas ||
+                period.pranadashas;
+
+            if (!sublevels || !Array.isArray(sublevels) || sublevels.length === 0) {
+                // Calculate missing sublevels
+                sublevels = calculateSubPeriods(
+                    period.planet || period.lord,
+                    period.start_date || period.startDate,
+                    period.duration_years,
+                    period.end_date || period.endDate
+                );
+                // Standardize the key to 'sublevels' for consistency
+                period.sublevels = sublevels;
+                anyExpanded = true;
+            } else {
+                // Even if found, move/alias to 'sublevels' to ensure frontend finds it easily
+                period.sublevels = sublevels;
+            }
+
+            // Recurse to next level
+            const nextPathForBranch = isTarget ? targetPath : []; // Only pass path down its OWN branch
+            const childExpanded = this.populateSublevelsRecursive(period.sublevels, currentLevel + 1, defaultMax, nextPathForBranch);
+            if (childExpanded) anyExpanded = true;
+        }
+        return anyExpanded;
+    }
+
+    /**
+     * Specifically extract and fully populate (5 levels) only the CURRENT active path.
+     * This is much more efficient than populating the entire 5-level tree.
+     */
+    private extractCurrentPathRecursive(periods: any[], currentLevelIdx: number = 1): any[] {
+        if (currentLevelIdx > 5 || !Array.isArray(periods) || periods.length === 0) return [];
+
+        const now = new Date();
+        const activeNode = periods.find(p => {
+            const s = new Date(p.start_date || p.startDate);
+            const e = new Date(p.end_date || p.endDate);
+            return now >= s && now < e;
+        });
+
+        if (!activeNode) return [];
+
+        // Ensure this active branch is fully calculated
+        let sublevels = activeNode.sublevels ||
+            activeNode.antardashas ||
+            activeNode.pratyantardashas ||
+            activeNode.sookshmadashas ||
+            activeNode.pranadashas;
+
+        if (!sublevels || sublevels.length === 0) {
+            sublevels = calculateSubPeriods(
+                activeNode.planet || activeNode.lord,
+                activeNode.start_date || activeNode.startDate,
+                activeNode.duration_years,
+                activeNode.end_date || activeNode.endDate
+            );
+            activeNode.sublevels = sublevels;
+        }
+
+        const simplifiedNode = {
+            planet: activeNode.planet || activeNode.lord,
+            startDate: activeNode.start_date || activeNode.startDate,
+            endDate: activeNode.end_date || activeNode.endDate,
+            level: currentLevelIdx
+        };
+
+        return [simplifiedNode, ...this.extractCurrentPathRecursive(sublevels, currentLevelIdx + 1)];
+    }
+
+    /**
      * Generate Ashtakavarga for a client (Lahiri/Raman only)
      * This returns Bhinna Ashtakavarga (individual planet scores)
      */
@@ -1144,18 +1248,7 @@ export class ChartService {
         const client = await clientRepository.findById(tenantId, clientId);
         if (!client) throw new ClientNotFoundError(clientId);
 
-        if (!client.birthDate || !client.birthTime || !client.birthLatitude || !client.birthLongitude) {
-            throw new Error('Client birth details incomplete.');
-        }
-
-        const birthData = {
-            birthDate: client.birthDate.toISOString().split('T')[0],
-            birthTime: this.extractTimeString(client.birthTime),
-            latitude: Number(client.birthLatitude),
-            longitude: Number(client.birthLongitude),
-            timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
-            ayanamsa,
-        };
+        const birthData = this.prepareBirthData(client, ayanamsa);
 
         let result;
         if (type === 'sarva') {
@@ -1230,17 +1323,7 @@ export class ChartService {
         const client = await clientRepository.findById(tenantId, clientId);
         if (!client) throw new ClientNotFoundError(clientId);
 
-        if (!client.birthDate || !client.birthTime || !client.birthLatitude || !client.birthLongitude) {
-            throw new Error('Client birth details incomplete.');
-        }
-
-        const birthData = {
-            birthDate: client.birthDate.toISOString().split('T')[0],
-            birthTime: this.extractTimeString(client.birthTime),
-            latitude: Number(client.birthLatitude),
-            longitude: Number(client.birthLongitude),
-            timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
-        };
+        const birthData = this.prepareBirthData(client, ayanamsa);
 
         const chakraData = await astroEngineClient.getSudarshanChakra(birthData, ayanamsa);
 
@@ -1306,21 +1389,17 @@ export class ChartService {
         if (!timeValue) return '12:00:00';
 
         if (typeof timeValue === 'string') {
-            // Ensure format is HH:MM:SS. If HH:MM, append :00
             const segments = timeValue.split(':');
-            if (segments.length === 2) {
-                return `${timeValue}:00`;
-            }
-            if (segments.length === 1) {
-                return `${timeValue.padStart(2, '0')}:00:00`;
-            }
+            if (segments.length === 2) return `${timeValue}:00`;
+            if (segments.length === 1) return `${timeValue.padStart(2, '0')}:00:00`;
             return timeValue;
         }
 
-        // For Time type stored in DB (Date object), use local time to avoid timezone issues
-        const hours = timeValue.getHours().toString().padStart(2, '0');
-        const mins = timeValue.getMinutes().toString().padStart(2, '0');
-        const secs = timeValue.getSeconds().toString().padStart(2, '0');
+        // CRITICAL FIX: prismaData.birthTime is saved using setUTCHours in ClientService.
+        // We MUST use getUTC* methods to avoid server-local timezone shifts.
+        const hours = timeValue.getUTCHours().toString().padStart(2, '0');
+        const mins = timeValue.getUTCMinutes().toString().padStart(2, '0');
+        const secs = timeValue.getUTCSeconds().toString().padStart(2, '0');
         return `${hours}:${mins}:${secs}`;
     }
 
@@ -1328,20 +1407,64 @@ export class ChartService {
      * Parse timezone string to offset number
      */
     private parseTimezoneOffset(timezone: string | null): number {
-        if (!timezone) return 5.5; // Default to IST
+        if (!timezone) return 5.5; // Default to IST if missing
 
-        // Handle common formats like "Asia/Kolkata", "+05:30", "IST"
-        if (timezone.includes('Kolkata') || timezone === 'IST') return 5.5;
-        if (timezone.startsWith('+') || timezone.startsWith('-')) {
-            const match = timezone.match(/([+-])(\d{2}):(\d{2})/);
-            if (match) {
-                const hours = parseInt(match[2]);
-                const minutes = parseInt(match[3]) / 60;
-                return match[1] === '-' ? -(hours + minutes) : hours + minutes;
-            }
+        // 1. Common Indian Standard Time check (Performance Optimization)
+        if (timezone.includes('Kolkata') || timezone === 'IST' || timezone === 'Asia/Calcutta') {
+            return 5.5;
         }
 
-        return 5.5; // Default fallback
+        // 2. Explicit Offset check (+05:30, -04:00)
+        const offsetMatch = timezone.match(/([+-])(\d{1,2}):(\d{2})/);
+        if (offsetMatch) {
+            const hours = parseInt(offsetMatch[2]);
+            const minutes = parseInt(offsetMatch[3]) / 60;
+            return offsetMatch[1] === '-' ? -(hours + minutes) : hours + minutes;
+        }
+
+        // 3. IANA Timezone Resolution (America/New_York, etc.)
+        // Uses Node's built-in ICU data for accurate historical offsets
+        try {
+            const parts = new Intl.DateTimeFormat('en-US', {
+                timeZone: timezone,
+                timeZoneName: 'longOffset'
+            }).formatToParts(new Date());
+
+            const offsetPart = parts.find(p => p.type === 'timeZoneName')?.value; // e.g., "GMT-04:00"
+            if (offsetPart) {
+                const match = offsetPart.match(/GMT([+-])(\d{2}):(\d{2})/);
+                if (match) {
+                    const hours = parseInt(match[2]);
+                    const minutes = parseInt(match[3]) / 60;
+                    const sign = match[1] === '-' ? -1 : 1;
+                    return sign * (hours + minutes);
+                }
+            }
+        } catch (err) {
+            logger.warn({ timezone, err }, 'Failed to parse IANA timezone name. Falling back to IST 5.5');
+        }
+
+        return 5.5;
+    }
+
+    /**
+     * Centralized builder for Astro Engine birth data.
+     * Ensures all fields (including userName) are consistently mapped.
+     */
+    private prepareBirthData(client: any, ayanamsa: 'lahiri' | 'raman' | 'kp' = 'lahiri'): any {
+        if (!client.birthDate || !client.birthTime) {
+            throw new Error('Incomplete client birth details');
+        }
+
+        return {
+            birthDate: client.birthDate.toISOString().split('T')[0],
+            birthTime: this.extractTimeString(client.birthTime),
+            latitude: Number(client.birthLatitude || 0),
+            longitude: Number(client.birthLongitude || 0),
+            timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
+            userName: client.fullName || client.name || 'Anonymous',
+            system: ayanamsa,
+        };
     }
 }
 
