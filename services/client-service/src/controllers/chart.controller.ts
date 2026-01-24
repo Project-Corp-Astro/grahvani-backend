@@ -329,6 +329,122 @@ export class ChartController {
             next(error);
         }
     }
+
+    // =========================================================================
+    // RAMAN SYSTEM SPECIFIC ENDPOINTS
+    // =========================================================================
+
+    /**
+     * POST /clients/:id/raman/natal
+     */
+    async generateRamanNatal(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = { userId: req.user!.id, ipAddress: req.ip, userAgent: req.get('user-agent') };
+            const chart = await chartService.generateAndSaveChart(tenantId, id, 'D1', 'raman', metadata);
+
+            // Wrap in standard RamanApiResponse structure expected by frontend
+            res.status(201).json({
+                success: true,
+                data: chart.chartData,
+                cached: chart.cached,
+                calculatedAt: chart.calculatedAt,
+                system: 'raman'
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * POST /clients/:id/raman/transit
+     */
+    async generateRamanTransit(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = { userId: req.user!.id, ipAddress: req.ip, userAgent: req.get('user-agent') };
+            const chart = await chartService.generateAndSaveChart(tenantId, id, 'transit', 'raman', metadata);
+
+            res.status(201).json({
+                success: true,
+                data: chart.chartData,
+                cached: chart.cached,
+                calculatedAt: chart.calculatedAt,
+                system: 'raman'
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * POST /clients/:id/raman/divisional/:type
+     */
+    async generateRamanDivisional(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id, type } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = { userId: req.user!.id, ipAddress: req.ip, userAgent: req.get('user-agent') };
+            const chart = await chartService.generateAndSaveChart(tenantId, id, type, 'raman', metadata);
+
+            res.status(201).json({
+                success: true,
+                data: chart.chartData,
+                cached: chart.cached,
+                calculatedAt: chart.calculatedAt,
+                system: 'raman'
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * POST /clients/:id/raman/dasha/:level
+     */
+    async generateRamanDasha(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id, level } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = { userId: req.user!.id, ipAddress: req.ip, userAgent: req.get('user-agent') };
+            const dasha = await chartService.generateAndSaveDasha(tenantId, id, level, 'raman', {}, metadata);
+
+            res.json({
+                success: true,
+                data: dasha.chartData,
+                cached: dasha.cached,
+                calculatedAt: dasha.calculatedAt,
+                system: 'raman'
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * POST /clients/:id/raman/:type
+     * Generic handler for special Raman charts (arudha-lagna, etc)
+     */
+    async generateRamanChart(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id, type } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = { userId: req.user!.id, ipAddress: req.ip, userAgent: req.get('user-agent') };
+            const chart = await chartService.generateAndSaveChart(tenantId, id, type, 'raman', metadata);
+
+            res.status(201).json({
+                success: true,
+                data: chart.chartData,
+                cached: chart.cached,
+                calculatedAt: chart.calculatedAt,
+                system: 'raman'
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export const chartController = new ChartController();

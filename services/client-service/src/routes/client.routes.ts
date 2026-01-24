@@ -48,6 +48,13 @@ router.post('/:id/ashtakavarga', chartController.generateAshtakavarga.bind(chart
 // Sudarshan Chakra
 router.post('/:id/sudarshan-chakra', chartController.generateSudarshanChakra.bind(chartController));
 
+// Raman Ayanamsa Specific Routes
+router.post('/:id/raman/natal', chartController.generateRamanNatal.bind(chartController));
+router.post('/:id/raman/transit', chartController.generateRamanTransit.bind(chartController));
+router.post('/:id/raman/divisional/:type', chartController.generateRamanDivisional.bind(chartController));
+router.post('/:id/raman/dasha/:level', chartController.generateRamanDasha.bind(chartController));
+router.post('/:id/raman/:type', chartController.generateRamanChart.bind(chartController));
+
 // Remedies
 router.post('/:id/remedies', remedyController.prescribeRemedy.bind(remedyController));
 router.get('/:id/remedies', remedyController.getRemedies.bind(remedyController));
