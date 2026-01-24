@@ -342,50 +342,30 @@ export class ChartService {
 
             logger.info({ tenantId, clientId, system: sys }, 'Generating exhaustive profile for system');
 
-            // 1. Generate all Divisional Charts
-            for (const varga of capabilities.charts) {
+            // 1. Core Charts (D1, D9) - ALREADY FIRST
+            for (const varga of capabilities.charts.filter(c => ['D1', 'D9'].includes(c))) {
                 operations.push(() =>
                     this.generateAndSaveChart(tenantId, clientId, varga, sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys, varga }, 'Full profile: Divisional chart failed'))
+                        .catch(err => logger.error({ err, clientId, sys, varga }, 'Full profile: Core varga failed'))
                 );
             }
 
-            // 2. Generate all Special Charts (Arudha, Bhava, Hora, Karkamsha, etc.)
-            for (const special of capabilities.specialCharts) {
-                // Skip those handled by specific methods or already handled
-                if (['sudarshan', 'ashtakavarga', 'dasha', 'sun', 'moon'].includes(special)) continue;
-
-                operations.push(() =>
-                    this.generateAndSaveChart(tenantId, clientId, special, sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys, special }, `Full profile: Special chart ${special} failed`))
-                );
-            }
-
-            // 3. Generate Ashtakavarga (if available)
+            // 2. IMPORTANT ANALYSIS CHARTS (Ashtakavarga & Sudarshan) - MOVED UP
             if (capabilities.hasAshtakavarga) {
                 operations.push(() =>
                     this.generateAndSaveAshtakavarga(tenantId, clientId, 'sarva', sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys }, 'Full profile: SAV failed'))
                 );
-                operations.push(() =>
-                    this.generateAndSaveAshtakavarga(tenantId, clientId, 'bhinna', sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys }, 'Full profile: BAV failed'))
-                );
-                operations.push(() =>
-                    this.generateAndSaveAshtakavarga(tenantId, clientId, 'shodasha', sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Shodasha Varga Summary failed'))
-                );
             }
 
-            // 4. Generate Sudarshan Chakra (if available)
-            if (capabilities.specialCharts.includes('sudarshan')) {
+            if (capabilities.specialCharts.includes('sudarshan') || capabilities.specialCharts.includes('sudarshana')) {
                 operations.push(() =>
                     this.generateAndSaveSudarshanChakra(tenantId, clientId, sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Sudarshan failed'))
                 );
             }
 
-            // 5. Generate Sun and Moon Charts (if available)
+            // 3. SOLAR/LUNAR & TRANSITS - MOVED UP
             if (capabilities.specialCharts.includes('sun')) {
                 operations.push(() =>
                     this.generateAndSaveChart(tenantId, clientId, 'SUN', sys, metadata)
@@ -398,8 +378,40 @@ export class ChartService {
                         .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Moon chart failed'))
                 );
             }
+            if (capabilities.specialCharts.includes('transit')) {
+                operations.push(() =>
+                    this.generateAndSaveChart(tenantId, clientId, 'transit', sys, metadata)
+                        .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Transit chart failed'))
+                );
+            }
 
-            // 6. Generate Yogas (if available)
+            // 4. PRE-CALCULATE DASHA (BASIC) - MOVED UP
+            if (capabilities.dashas) {
+                operations.push(() =>
+                    this.generateAndSaveChart(tenantId, clientId, 'dasha', sys, metadata)
+                        .catch(err => logger.info({ err, sys }, 'Batch dasha generation skip/fail'))
+                );
+            }
+
+            // 5. Remaining Divisional Charts
+            for (const varga of capabilities.charts.filter(c => !['D1', 'D9'].includes(c))) {
+                operations.push(() =>
+                    this.generateAndSaveChart(tenantId, clientId, varga, sys, metadata)
+                        .catch(err => logger.error({ err, clientId, sys, varga }, 'Full profile: Divisional chart failed'))
+                );
+            }
+
+            // 6. Remaining Special Charts & Yogas/Doshas
+            for (const special of capabilities.specialCharts) {
+                if (['sudarshan', 'sudarshana', 'ashtakavarga', 'dasha', 'sun', 'moon', 'transit'].includes(special)) continue;
+                operations.push(() =>
+                    this.generateAndSaveChart(tenantId, clientId, special, sys, metadata)
+                        .catch(err => logger.error({ err, clientId, sys, special }, `Full profile: Special ${special} failed`))
+                );
+            }
+
+            // ... 나머지 (Yogas, Doshas, Remedies, etc.) remains in lower priority
+            // 7. Yogas (if available)
             if (capabilities.yogas) {
                 for (const yoga of capabilities.yogas) {
                     operations.push(() =>
@@ -409,7 +421,7 @@ export class ChartService {
                 }
             }
 
-            // 7. Generate Doshas (if available)
+            // 8. Doshas (if available)
             if (capabilities.doshas) {
                 for (const dosha of capabilities.doshas) {
                     operations.push(() =>
@@ -419,7 +431,7 @@ export class ChartService {
                 }
             }
 
-            // 8. Generate Remedies (if available)
+            // 9. Remedies (if available)
             if (capabilities.remedies) {
                 for (const remedy of capabilities.remedies) {
                     operations.push(() =>
@@ -429,7 +441,7 @@ export class ChartService {
                 }
             }
 
-            // 9. Generate Panchanga & Reports (if available)
+            // 10. Panchanga & Reports (if available)
             if (capabilities.panchanga) {
                 for (const report of capabilities.panchanga) {
                     operations.push(() =>
@@ -439,17 +451,7 @@ export class ChartService {
                 }
             }
 
-            // 10. Generate Dashas (if available) - NEW
-            if (capabilities.dashas) {
-                for (const dashaType of capabilities.dashas) {
-                    operations.push(() =>
-                        this.generateAndSaveChart(tenantId, clientId, `dasha:${dashaType}`, sys, metadata)
-                            .catch(err => logger.info({ err, dashaType }, 'Batch dasha generation skip/fail'))
-                    );
-                }
-            }
-
-            // 11. Generate Shadbala (if available)
+            // 11. Shadbala
             if (capabilities.specialCharts.includes('shadbala')) {
                 operations.push(() =>
                     this.generateAndSaveChart(tenantId, clientId, 'shadbala', sys, metadata)
@@ -457,8 +459,7 @@ export class ChartService {
                 );
             }
 
-            // 12. Generate Exhaustive Dasha Tree (Maha to Prana)
-            // This replaces the experimental Deep Dasha with a production-ready tree
+            // 12. Exhaustive Dasha Tree (Deep)
             operations.push(() =>
                 this.generateDeepDasha(tenantId, clientId, sys, metadata)
                     .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Dasha tree failed'))
