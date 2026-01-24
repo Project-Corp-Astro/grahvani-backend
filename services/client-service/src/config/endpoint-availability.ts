@@ -73,7 +73,11 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
             'moon', 'sun', 'sudarshan', 'transit',
             'arudha_lagna', 'bhava_lagna', 'hora_lagna', 'sripathi_bhava', 'kp_bhava', 'equal_bhava',
             'karkamsha_d1', 'karkamsha_d9',
-            'numerology_chaldean', 'numerology_loshu'
+            'numerology_chaldean', 'numerology_loshu',
+            'dasha_vimshottari', 'dasha_chara', 'dasha_yogini', 'dasha_ashtottari', 'dasha_tribhagi',
+            'dasha_shodashottari', 'dasha_dwadashottari', 'dasha_panchottari', 'dasha_chaturshitisama',
+            'dasha_satabdika', 'dasha_dwisaptati', 'dasha_shastihayani', 'dasha_shattrimshatsama',
+            'dasha_summary'
         ],
         // Yogas - verified endpoints
         yogas: [
@@ -101,13 +105,13 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
     raman: {
         // Divisional Charts - verified from ApiEndPoints.txt lines 13-27
         charts: ['D1', 'D2', 'D3', 'D4', 'D7', 'D9', 'D10', 'D12', 'D16', 'D20', 'D24', 'D27', 'D30', 'D40', 'D45', 'D60'],
-        features: ['natal', 'transit', 'dasha', 'ashtakavarga'],
+        features: ['natal', 'dasha', 'ashtakavarga'],
         // Special Charts - verified from ApiEndPoints.txt
-        // NOTE: transit included as per ApiEndPoints.txt line 7 - if fails, failure tracking will skip it
         specialCharts: [
-            'moon', 'sun', 'sudarshan', 'transit',
+            'moon', 'sun', 'sudarshan',
             'arudha_lagna', 'bhava_lagna', 'hora_lagna', 'sripathi_bhava', 'kp_bhava', 'equal_bhava',
-            'karkamsha_d1', 'karkamsha_d9'
+            'karkamsha_d1', 'karkamsha_d9',
+            'dasha_summary'
         ],
         hasDivisional: true,
         hasAshtakavarga: true,
@@ -141,7 +145,12 @@ export function isChartAvailable(system: AyanamsaSystem, chartType: string): boo
     const upperType = chartType.toUpperCase();
 
     return capabilities.charts.includes(upperType) ||
-        capabilities.specialCharts.some(s => s.toLowerCase() === normalizedType);
+        capabilities.specialCharts.some(s => s.toLowerCase() === normalizedType) ||
+        (capabilities.yogas?.some(s => `yoga:${s}` === normalizedType) ?? false) ||
+        (capabilities.doshas?.some(s => `dosha:${s}` === normalizedType) ?? false) ||
+        (capabilities.remedies?.some(s => `remedy:${s}` === normalizedType) ?? false) ||
+        (capabilities.panchanga?.some(s => `panchanga:${s}` === normalizedType) ?? false) ||
+        (capabilities.dashas?.some(s => `dasha_${s}` === normalizedType) ?? false);
 }
 
 /**

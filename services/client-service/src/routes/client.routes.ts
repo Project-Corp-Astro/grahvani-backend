@@ -55,9 +55,4 @@ router.post('/:id/raman/divisional/:type', chartController.generateRamanDivision
 router.post('/:id/raman/dasha/:level', chartController.generateRamanDasha.bind(chartController));
 router.post('/:id/raman/:type', chartController.generateRamanChart.bind(chartController));
 
-// Remedies
-router.post('/:id/remedies', remedyController.prescribeRemedy.bind(remedyController));
-router.get('/:id/remedies', remedyController.getRemedies.bind(remedyController));
-router.patch('/remedies/:remedyId', remedyController.updateStatus.bind(remedyController));
-
 export default router;
