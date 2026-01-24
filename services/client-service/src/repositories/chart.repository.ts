@@ -98,8 +98,22 @@ export class ChartRepository {
     }
 
     /**
-     * Save a chart
+     * Highly Optimized: Find specific chart for a client by type and system.
+     * Uses the unique constraint [tenantId, clientId, chartType, system] for O(1) DB lookup.
      */
+    async findOneByTypeAndSystem(tenantId: string, clientId: string, type: ChartType, system: string): Promise<ClientSavedChart | null> {
+        return this.prisma.clientSavedChart.findUnique({
+            where: {
+                tenantId_clientId_chartType_system: {
+                    tenantId,
+                    clientId,
+                    chartType: type,
+                    system: system || 'lahiri'
+                }
+            }
+        });
+    }
+
     async create(tenantId: string, data: {
         clientId: string;
         chartType: ChartType;
@@ -136,6 +150,21 @@ export class ChartRepository {
         });
 
         await this.invalidateCache(tenantId, clientId);
+        return result;
+    }
+
+    /**
+     * Update an existing chart by ID
+     */
+    async update(tenantId: string, id: string, data: any) {
+        const result = await this.prisma.clientSavedChart.update({
+            where: { id, tenantId },
+            data
+        });
+
+        if (result.clientId) {
+            await this.invalidateCache(tenantId, result.clientId);
+        }
         return result;
     }
 
