@@ -385,10 +385,10 @@ export class ChartService {
                 );
             }
 
-            // 4. PRE-CALCULATE DASHA (BASIC) - MOVED UP
+            // 4. PRE-CALCULATE DASHA (COMPREHENSIVE) - MOVED UP
             if (capabilities.dashas) {
                 operations.push(() =>
-                    this.generateAndSaveChart(tenantId, clientId, 'dasha', sys, metadata)
+                    this.generateAllApplicableDashas(tenantId, clientId, sys, metadata)
                         .catch(err => logger.info({ err, sys }, 'Batch dasha generation skip/fail'))
                 );
             }
@@ -403,7 +403,7 @@ export class ChartService {
 
             // 6. Remaining Special Charts & Yogas/Doshas
             for (const special of capabilities.specialCharts) {
-                if (['sudarshan', 'sudarshana', 'ashtakavarga', 'dasha', 'sun', 'moon', 'transit'].includes(special)) continue;
+                if (['sudarshan', 'sudarshana', 'ashtakavarga', 'dasha', 'sun', 'moon', 'transit', 'dasha_summary'].includes(special)) continue;
                 operations.push(() =>
                     this.generateAndSaveChart(tenantId, clientId, special, sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys, special }, `Full profile: Special ${special} failed`))
@@ -459,11 +459,14 @@ export class ChartService {
                 );
             }
 
-            // 12. Exhaustive Dasha Tree (Deep)
-            operations.push(() =>
-                this.generateDeepDasha(tenantId, clientId, sys, metadata)
-                    .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Dasha tree failed'))
-            );
+            // 12. Consolidate Dasha Analysis Summary (Covers all generated systems)
+            operations.push(async () => {
+                try {
+                    await this.generateDashaSummary(tenantId, clientId, sys, metadata);
+                } catch (err) {
+                    logger.error({ err, clientId, sys }, 'Full profile: Dasha summary failed');
+                }
+            });
         }
 
         // Execute in batches to avoid Supabase connection pool exhaustion
@@ -548,8 +551,17 @@ export class ChartService {
                         expectedCharts.push('ashtakavarga_sarva', 'ashtakavarga_bhinna', 'ashtakavarga_shodasha');
                     }
 
-                    // Add dasha
-                    expectedCharts.push('dasha');
+                    // Add all supported dashas for this system
+                    if (capabilities.dashas) {
+                        for (const dashaType of capabilities.dashas) {
+                            if (dashaType === 'vimshottari') {
+                                expectedCharts.push('dasha'); // Raw Prana
+                                expectedCharts.push('dasha_vimshottari'); // UI Tree
+                            } else {
+                                expectedCharts.push(`dasha_${dashaType}`);
+                            }
+                        }
+                    }
 
                     // Find missing charts for this system
                     const missingForSystem = expectedCharts.filter(chart => {
@@ -652,13 +664,45 @@ export class ChartService {
                         })
                 );
             } else if (lowerType === 'dasha') {
+                // 'dasha' is specifically for Raw Prana Vimshottari
                 operations.push(() =>
                     this.generateDeepDasha(tenantId, clientId, system, metadata)
                         .catch(err => {
                             if (err?.statusCode === 404 || err?.statusCode === 500) {
                                 markEndpointFailed(system, chartType);
                             }
-                            logger.warn({ clientId, chartType, system }, 'Chart generation failed - endpoint marked');
+                            logger.warn({ clientId, chartType, system }, 'Background deep dasha generation failed');
+                        })
+                );
+            } else if (lowerType === 'dasha_vimshottari') {
+                // 'dasha_vimshottari' is for UI-optimized Tree
+                operations.push(() =>
+                    this.generateDasha(tenantId, clientId, 'tree', system, {})
+                        .catch(err => {
+                            if (err?.statusCode === 404 || err?.statusCode === 500) {
+                                markEndpointFailed(system, chartType);
+                            }
+                            logger.warn({ clientId, chartType, system }, 'Background tree dasha generation failed');
+                        })
+                );
+            } else if (lowerType.startsWith('dasha_')) {
+                // Correctly route dasha_tribhagi etc to generateAlternativeDasha
+                const dashaName = lowerType.replace('dasha_', '');
+                operations.push(() =>
+                    this.generateAlternativeDasha(tenantId, clientId, dashaName, system, 'mahadasha', true, metadata)
+                        .catch(err => {
+                            if (err?.statusCode === 404 || err?.statusCode === 500) {
+                                markEndpointFailed(system, chartType);
+                            }
+                            logger.warn({ clientId, chartType, system }, 'Background alternative dasha generation failed');
+                        })
+                );
+            } else if (lowerType === 'dasha_summary') {
+                // Correctly route dasha_summary to internal logic
+                operations.push(() =>
+                    this.generateDashaSummary(tenantId, clientId, system, metadata)
+                        .catch(err => {
+                            logger.warn({ clientId, system, err: err.message }, 'Background dasha summary failed');
                         })
                 );
             } else {
@@ -707,6 +751,27 @@ export class ChartService {
             timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
             ayanamsa, // Ensure ayanamsa is passed for routing
         };
+
+        // DB-FIRST: Check if this dasha already exists in database
+        const savedCharts = await chartRepository.findByClientId(tenantId, clientId);
+        const matchingDasha = savedCharts.find(c =>
+            c.chartType === 'dasha_vimshottari' &&
+            (c as any).system === ayanamsa &&
+            (c.chartConfig as any)?.level === level
+        );
+
+        if (matchingDasha) {
+            logger.info({ clientId, level, ayanamsa }, 'Dasha found in database - skipping engine call');
+            return {
+                clientId,
+                clientName: client.fullName,
+                level,
+                ayanamsa,
+                data: matchingDasha.chartData,
+                cached: true,
+                calculatedAt: matchingDasha.calculatedAt,
+            };
+        }
 
         const dashaData = await astroEngineClient.getVimshottariDasha(birthData, level, options);
 
@@ -809,10 +874,7 @@ export class ChartService {
             );
         }
 
-
-        logger.info({ tenantId, clientId, level, ayanamsa }, 'Dasha calculated');
-
-        return {
+        const result = {
             clientId,
             clientName: client.fullName,
             level,
@@ -821,6 +883,52 @@ export class ChartService {
             cached: dashaData.cached,
             calculatedAt: dashaData.calculatedAt,
         };
+
+        // AUTO-SAVE: If this was a successful engine call, store the exact data in DB
+        // unless it's a very specific drill-down (to avoid polluting DB with millions of small branches)
+        // However, user wants everything stored, so we save based on 'tree' or top-level.
+        if (level === 'tree' || !options.mahaLord) {
+            await this.saveChart(tenantId, clientId, {
+                chartType: 'dasha_vimshottari',
+                chartName: `${client.fullName} - ${level} Vimshottari (${ayanamsa})`,
+                chartData: dashaData.data,
+                chartConfig: { system: ayanamsa, level, dashaType: 'vimshottari' },
+                calculatedAt: new Date(),
+                system: ayanamsa,
+            }, { userId: 'system' } as any);
+        }
+
+        logger.info({ tenantId, clientId, level, ayanamsa }, 'Dasha calculated and cached in DB');
+
+        return result;
+    }
+
+    /**
+     * Map dasha type string to database enum
+     */
+    private getDashaChartType(dashaType: string): any {
+        const type = dashaType.toLowerCase();
+        const mapping: Record<string, string> = {
+            'vimshottari': 'dasha_vimshottari',
+            'chara': 'dasha_chara',
+            'yogini': 'dasha_yogini',
+            'ashtottari': 'dasha_ashtottari',
+            'tribhagi': 'dasha_tribhagi',
+            'shodashottari': 'dasha_shodashottari',
+            'dwadashottari': 'dasha_dwadashottari',
+            'panchottari': 'dasha_panchottari',
+            'chaturshitisama': 'dasha_chaturshitisama',
+            'satabdika': 'dasha_satabdika',
+            'dwisaptati': 'dasha_dwisaptati',
+            'shastihayani': 'dasha_shastihayani',
+            'shattrimshatsama': 'dasha_shattrimshatsama',
+            'dasha_3months': 'dasha_3months',
+            'dasha_6months': 'dasha_6months',
+            'dasha_report_1year': 'dasha_report_1year',
+            'dasha_report_2years': 'dasha_report_2years',
+            'dasha_report_3years': 'dasha_report_3years',
+        };
+        return mapping[type] || 'dasha';
     }
 
     /**
@@ -837,31 +945,23 @@ export class ChartService {
         const client = await clientRepository.findById(tenantId, clientId);
         if (!client) throw new ClientNotFoundError(clientId);
 
-        // Generate dasha data
         const dashaResult = await this.generateDasha(tenantId, clientId, level, ayanamsa, options);
+        const dbChartType = this.getDashaChartType('vimshottari');
 
-        // Save to database as chart type 'dasha'
         const chart = await this.saveChart(tenantId, clientId, {
-            chartType: 'dasha',
-            chartName: `${client.fullName} - ${level} Dasha (${ayanamsa})`,
+            chartType: 'dasha_vimshottari',
+            chartName: `${client.fullName} - ${level} Vimshottari Dasha (${ayanamsa})`,
             chartData: dashaResult.data,
-            chartConfig: { system: ayanamsa, level },
+            chartConfig: { system: ayanamsa, level, dashaType: 'vimshottari' },
             calculatedAt: new Date(),
+            system: ayanamsa,
         }, metadata);
 
-        logger.info({ tenantId, clientId, level, ayanamsa, chartId: chart.id }, 'Dasha generated and saved');
-
-        return {
-            ...chart,
-            data: chart.chartData, // Map for frontend
-            cached: dashaResult.cached,
-            clientName: client.fullName,
-        };
+        return { ...chart, data: chart.chartData, cached: dashaResult.cached, clientName: client.fullName };
     }
 
     /**
      * Generate Alternative Dasha Systems
-     * Supports: tribhagi, shodashottari, dwadashottari, panchottari, shattrimshatsama, chaturshitisama, shastihayani, satabdika, dwisaptati
      */
     async generateAlternativeDasha(
         tenantId: string,
@@ -875,12 +975,8 @@ export class ChartService {
         const client = await clientRepository.findById(tenantId, clientId);
         if (!client) throw new ClientNotFoundError(clientId);
 
-        if (!client.birthDate || !client.birthTime || !client.birthLatitude || !client.birthLongitude) {
-            throw new Error('Client birth details incomplete.');
-        }
-
         const birthData = {
-            birthDate: client.birthDate.toISOString().split('T')[0],
+            birthDate: client.birthDate!.toISOString().split('T')[0],
             birthTime: this.extractTimeString(client.birthTime),
             latitude: Number(client.birthLatitude),
             longitude: Number(client.birthLongitude),
@@ -888,55 +984,26 @@ export class ChartService {
             ayanamsa,
         };
 
-        // Call astro engine for alternative dasha systems
         const dashaData = await astroEngineClient.getAlternativeDasha(birthData, dashaType);
 
-        const result = {
-            clientId,
-            clientName: client.fullName,
-            dashaType,
-            level,
-            ayanamsa,
-            data: dashaData.data,
-            cached: dashaData.cached,
-            calculatedAt: dashaData.calculatedAt,
-        };
+        // ALWAYS SAVE/OVERWRITE: Store exact data from astro engine as requested
+        const dbChartType = this.getDashaChartType(dashaType);
+        const chart = await this.saveChart(tenantId, clientId, {
+            chartType: dbChartType,
+            chartName: `${client.fullName} - ${dashaType.replace('-', ' ')} (${ayanamsa})`,
+            chartData: dashaData.data,
+            chartConfig: { system: ayanamsa, dashaType, level },
+            calculatedAt: new Date(),
+            system: ayanamsa,
+        }, metadata);
 
-        // Optionally save to database
-        if (save) {
-            const chart = await this.saveChart(tenantId, clientId, {
-                chartType: 'dasha',
-                chartName: `${client.fullName} - ${dashaType.replace('-', ' ')} (${ayanamsa})`,
-                chartData: result.data,
-                chartConfig: { system: ayanamsa, dashaType },
-                calculatedAt: new Date(),
-            }, metadata);
-
-            logger.info({ tenantId, clientId, dashaType, ayanamsa, chartId: chart.id }, 'Alternative dasha generated and saved');
-
-            return {
-                ...chart,
-                data: chart.chartData,
-                cached: result.cached,
-                clientName: client.fullName,
-            };
-        }
-
-        logger.info({ tenantId, clientId, dashaType, ayanamsa }, 'Alternative dasha calculated');
-
-        return result;
+        return { ...chart, data: chart.chartData, clientName: client.fullName, ayanamsa, cached: dashaData.cached };
     }
 
     /**
-     * Generate Exhaustive 5-level Dasha Tree (Maha to Prana)
-     * Fetches Level 1 from Engine and calculates the rest recursively.
+     * Generate Raw 5-level Dasha (Prana) from Astro Engine
      */
-    async generateDeepDasha(
-        tenantId: string,
-        clientId: string,
-        ayanamsa: 'lahiri' | 'kp' | 'raman' = 'lahiri',
-        metadata: RequestMetadata
-    ) {
+    async generateDeepDasha(tenantId: string, clientId: string, ayanamsa: 'lahiri' | 'kp' | 'raman' = 'lahiri', metadata: RequestMetadata) {
         const client = await clientRepository.findById(tenantId, clientId);
         if (!client) throw new ClientNotFoundError(clientId);
 
@@ -946,74 +1013,118 @@ export class ChartService {
             latitude: Number(client.birthLatitude),
             longitude: Number(client.birthLongitude),
             timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
-            userName: client.fullName,
             system: ayanamsa
         };
 
-        // 1. Fetch Mahadashas from Engine (anchors)
-        logger.info({ clientId, ayanamsa }, 'Fetching Dasha Anchors (Level 1)');
-        const mahaResult = await astroEngineClient.getVimshottariDasha(birthData, 'mahadasha');
-        const mahaResData = (mahaResult as any).data || mahaResult;
-        const mahaList = mahaResData.dasha_list || mahaResData.mahadashas || [];
+        const dashaResult = await astroEngineClient.getPranaDasha(birthData, ayanamsa);
+        const finalData = dashaResult.data || dashaResult;
 
-        if (!mahaList.length) {
-            throw new Error('Could not fetch Mahadasha list from engine');
-        }
-
-        // 2. Recursively calculate up to level 5 (Prana)
-        // This ensures the frontend has the full hierarchy pre-loaded
-        logger.info({ clientId }, 'Building 5-level recursive Dasha tree');
-        const fullTree = mahaList.map((maha: any) => ({
-            ...maha,
-            sublevels: this.calculateRecursiveDasha(maha.planet, maha.start_date, maha.duration_years || 0, 2, 5)
-        }));
-
-        const finalData = {
-            dasha_list: fullTree,
-            type: 'exhaustive_vimshottari',
-            system: ayanamsa,
-            levels: 5
-        };
-
-        // 3. Save (Repository handles upsert now)
         const chart = await this.saveChart(tenantId, clientId, {
-            chartType: 'dasha',
-            chartName: `Vimshottari Dasha Tree (${ayanamsa})`,
+            chartType: 'dasha', // Use 'dasha' for Raw Deep Prana
+            chartName: `Raw Prana Dasha (${ayanamsa})`,
             chartData: finalData,
-            chartConfig: { system: ayanamsa, level: 'mahadasha_to_prana' },
+            chartConfig: { system: ayanamsa, level: 'prana_raw', dashaType: 'vimshottari' },
             calculatedAt: new Date(),
-            system: ayanamsa, // Explicitly pass for upsert
+            system: ayanamsa,
         }, metadata);
 
-        return {
-            ...chart,
-            data: finalData
-        };
+        return { ...chart, data: finalData };
     }
 
     /**
-     * Recursive helper for building the dasha tree
+     * Generate all applicable dashas for a system
      */
-    private calculateRecursiveDasha(
-        parentPlanet: string,
-        start: string | Date,
-        duration: number,
-        currentLevel: number,
-        maxLevel: number
-    ): any[] {
-        if (currentLevel > maxLevel || duration <= 0) return [];
+    async generateAllApplicableDashas(tenantId: string, clientId: string, ayanamsa: 'lahiri' | 'raman' | 'kp', metadata: RequestMetadata): Promise<void> {
+        const systems = [
+            'vimshottari', 'tribhagi', 'chara', 'yogini', 'ashtottari',
+            'shodashottari', 'dwadashottari', 'panchottari', 'chaturshitisama',
+            'satabdika', 'dwisaptati', 'shastihayani', 'shattrimshatsama'
+        ];
+        const ops = systems.map(type => async () => {
+            try {
+                if (type === 'vimshottari') {
+                    // Generate both raw prana (deep) and UI-friendly tree
+                    await this.generateDeepDasha(tenantId, clientId, ayanamsa, metadata);
+                    await this.generateDasha(tenantId, clientId, 'tree', ayanamsa, {});
+                } else {
+                    await this.generateAlternativeDasha(tenantId, clientId, type, ayanamsa, 'mahadasha', true, metadata);
+                }
+            } catch (err) { }
+        });
+        await executeBatched(ops);
+    }
 
-        const subPeriods = calculateSubPeriods(parentPlanet, start, duration);
-        return subPeriods.map(sp => ({
-            ...sp,
-            sublevels: this.calculateRecursiveDasha(
-                sp.planet,
-                sp.start_date,
-                sp.duration_years,
-                currentLevel + 1,
-                maxLevel
-            )
-        }));
+    /**
+     * Generate consolidated summary of active periods
+     */
+    async generateDashaSummary(tenantId: string, clientId: string, ayanamsa: 'lahiri' | 'raman' | 'kp', metadata: RequestMetadata): Promise<void> {
+        const charts = await chartRepository.findByClientId(tenantId, clientId);
+        const dashaCharts = charts.filter(c => c.chartType.toString().startsWith('dasha_') && (c as any).system === ayanamsa);
+
+        const analysis: any = { activeDashas: {}, calculatedAt: new Date(), system: ayanamsa };
+
+        for (const chart of dashaCharts) {
+            const data = (chart.chartData as any);
+            const periods = data.dasha_list || (Array.isArray(data) ? data : (data.periods || data.mahadashas || []));
+            const current = this.findCurrentDasha(periods);
+
+            if (current) {
+                const systemName = chart.chartType.toString().replace('dasha_', '');
+                analysis.activeDashas[systemName] = {
+                    period: current.planet || current.lord || current.sign,
+                    fullPath: this.extractDashaPath(periods),
+                    startDate: current.start_date || current.startDate,
+                    endDate: current.end_date || current.endDate,
+                    progress: this.calculateDashaProgress(current)
+                };
+            }
+        }
+
+        await this.saveChart(tenantId, clientId, {
+            chartType: 'dasha_summary',
+            chartName: `Active Dasha Analysis (${ayanamsa})`,
+            chartData: analysis,
+            chartConfig: { system: ayanamsa, analyzed: true },
+            calculatedAt: new Date(),
+            system: ayanamsa,
+        }, metadata);
+    }
+
+    private findCurrentDasha(periods: any[]): any {
+        if (!Array.isArray(periods) || periods.length === 0) return null;
+        const now = new Date();
+        const current = periods.find(p => {
+            const start = new Date(p.start_date || p.startDate);
+            const end = new Date(p.end_date || p.endDate);
+            return now >= start && now <= end;
+        });
+        if (!current) return null;
+        if (current.sublevels && Array.isArray(current.sublevels)) {
+            const activeSub = this.findCurrentDasha(current.sublevels);
+            if (activeSub) return activeSub;
+        }
+        return current;
+    }
+
+    private extractDashaPath(periods: any[]): string[] {
+        const path: string[] = [];
+        let currentLevel = periods;
+        while (currentLevel) {
+            const active = this.findCurrentDasha(currentLevel);
+            if (!active) break;
+            path.push(active.planet || active.lord || active.sign);
+            currentLevel = active.sublevels || null;
+        }
+        return path;
+    }
+
+    private calculateDashaProgress(period: any): number {
+        const start = new Date(period.start_date || period.startDate).getTime();
+        const end = new Date(period.end_date || period.endDate).getTime();
+        const now = Date.now();
+        if (now < start) return 0;
+        if (now > end) return 100;
+        return Math.round(((now - start) / (end - start)) * 100);
     }
 
     /**
