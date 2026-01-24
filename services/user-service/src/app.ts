@@ -5,16 +5,13 @@ import pino from 'pino-http';
 
 import routes from './routes';
 import { errorMiddleware } from './middleware/error.middleware';
-import { getDatabaseManager, performHealthCheck, getDBMetrics } from './config/db-pro';
+import { getDatabaseManager } from './config/db-pro';
 
 const app: Express = express();
 
-// Initialize PRO Plan Database Manager on startup
-const dbManager = getDatabaseManager();
-console.log('✅ Supabase PRO Plan database manager initialized');
-console.log('🔋 Connection pooling: 5-20 connections, 100+ max');
-console.log('🔄 Exponential backoff retries enabled');
-console.log('💾 Query caching enabled (1-minute TTL)');
+// Initialize Database Manager
+getDatabaseManager();
+console.log('✅ Database manager initialized (Standardized Port 6543)');
 
 // Trust proxy for correct IP capture
 app.set('trust proxy', true);
@@ -36,50 +33,6 @@ app.get('/', (req: Request, res: Response) => {
 // Health Check
 app.get('/health', (req: Request, res: Response) => {
     res.status(200).json({ status: 'ok', service: 'user-service' });
-});
-
-// Database Health Check
-app.get('/api/health/db', async (req: Request, res: Response) => {
-    try {
-        const health = await performHealthCheck();
-        const metrics = getDBMetrics();
-        res.status(200).json({
-            status: 'ok',
-            service: 'user-service',
-            database: {
-                health: health.status,
-                metrics,
-            },
-            timestamp: new Date().toISOString(),
-        });
-    } catch (error) {
-        res.status(503).json({
-            status: 'error',
-            service: 'user-service',
-            error: (error as Error).message,
-            timestamp: new Date().toISOString(),
-        });
-    }
-});
-
-// Database Metrics
-app.get('/api/metrics/database', (req: Request, res: Response) => {
-    try {
-        const metrics = getDBMetrics();
-        res.status(200).json({
-            status: 'ok',
-            service: 'user-service',
-            metrics,
-            timestamp: new Date().toISOString(),
-        });
-    } catch (error) {
-        res.status(503).json({
-            status: 'error',
-            service: 'user-service',
-            error: (error as Error).message,
-            timestamp: new Date().toISOString(),
-        });
-    }
 });
 
 // Global Error Handler (must be last)

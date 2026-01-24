@@ -256,11 +256,15 @@ export class AuthService {
             data.rememberMe
         );
 
-        // Update last login (fire and forget to avoid waiting on DB write)
-        this.prisma.user.update({
-            where: { id: user.id },
-            data: { lastLoginAt: new Date() }
-        }).catch(err => logger.error({ err }, 'Failed to update lastLoginAt'));
+        // Update last login (AWAITED to ensure sequential connection usage)
+        try {
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: { lastLoginAt: new Date() }
+            });
+        } catch (err) {
+            logger.error({ err }, 'Failed to update lastLoginAt');
+        }
 
         // Record successful login
         await this.recordLoginAttempt(data.email, metadata, true, undefined, user.id);

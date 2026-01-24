@@ -1,14 +1,14 @@
 generator client {
   provider        = "prisma-client-js"
   output          = "../src/generated/prisma"
-  previewFeatures = ["multiSchema"]
+
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  schemas   = ["app_clients"]
+
 }
 
 // Enums
@@ -16,7 +16,7 @@ enum Gender {
   male
   female
   other
-  @@schema("app_clients")
+
 }
 
 enum MaritalStatus {
@@ -24,7 +24,7 @@ enum MaritalStatus {
   married
   divorced
   widowed
-  @@schema("app_clients")
+
 }
 
 enum ClientSource {
@@ -32,7 +32,7 @@ enum ClientSource {
   website
   import
   ocr
-  @@schema("app_clients")
+
 }
 
 enum BirthTimeAccuracy {
@@ -40,7 +40,7 @@ enum BirthTimeAccuracy {
   approximate
   rectified
   unknown
-  @@schema("app_clients")
+
 }
 
 enum RelationshipType {
@@ -55,7 +55,7 @@ enum RelationshipType {
   nephew_niece
   cousin
   other
-  @@schema("app_clients")
+
 }
 
 enum ConsultationType {
@@ -69,14 +69,14 @@ enum ConsultationType {
   annual
   transit
   other
-  @@schema("app_clients")
+
 }
 
 enum ConsultationStatus {
   completed
   pending_follow_up
   closed
-  @@schema("app_clients")
+
 }
 
 enum ChartType {
@@ -156,7 +156,7 @@ enum ChartType {
   dasha_report_1year
   dasha_report_2years
   dasha_report_3years
-  @@schema("app_clients")
+
 }
 
 enum RemedyType {
@@ -168,7 +168,7 @@ enum RemedyType {
   yantra
   fasting
   other
-  @@schema("app_clients")
+
 }
 
 enum RemedyStatus {
@@ -176,7 +176,7 @@ enum RemedyStatus {
   in_progress
   completed
   discontinued
-  @@schema("app_clients")
+
 }
 
 enum ImportStatus {
@@ -185,14 +185,14 @@ enum ImportStatus {
   completed
   failed
   partially_completed
-  @@schema("app_clients")
+
 }
 
 enum ImportType {
   excel
   csv
   ocr
-  @@schema("app_clients")
+
 }
 
 // Models
@@ -268,7 +268,7 @@ model Client {
   @@index([tenantId, deletedAt])
   
   @@map("clients")
-  @@schema("app_clients")
+
 }
 
 model ClientFamilyLink {
@@ -294,7 +294,7 @@ model ClientFamilyLink {
   @@index([relatedClientId])
   
   @@map("client_family_links")
-  @@schema("app_clients")
+
 }
 
 model ClientConsultation {
@@ -324,7 +324,7 @@ model ClientConsultation {
   @@index([tenantId, consultationDate])
   
   @@map("client_consultations")
-  @@schema("app_clients")
+
 }
 
 model ClientSavedChart {
@@ -351,7 +351,7 @@ model ClientSavedChart {
   @@index([clientId, chartType])
   
   @@map("client_saved_charts")
-  @@schema("app_clients")
+
 }
 
 model ClientNote {
@@ -370,7 +370,7 @@ model ClientNote {
   @@unique([id, tenantId])
   @@index([clientId])
   @@map("client_notes")
-  @@schema("app_clients")
+
 }
 
 model ClientRemedy {
@@ -397,7 +397,7 @@ model ClientRemedy {
   @@unique([id, tenantId])
   @@index([clientId])
   @@map("client_remedies")
-  @@schema("app_clients")
+
 }
 
 model ClientImport {
@@ -420,7 +420,7 @@ model ClientImport {
 
   @@index([tenantId])
   @@map("client_imports")
-  @@schema("app_clients")
+
 }
 
 model ClientActivityLog {
@@ -444,5 +444,5 @@ model ClientActivityLog {
   @@index([userId])
   @@index([timestamp])
   @@map("client_activity_logs")
-  @@schema("app_clients")
+
 }
