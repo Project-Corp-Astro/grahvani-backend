@@ -339,9 +339,18 @@ export class ChartService {
 
             // 2. IMPORTANT ANALYSIS CHARTS (Ashtakavarga & Sudarshan) - MOVED UP
             if (capabilities.hasAshtakavarga) {
+                // Generate ALL Ashtakavarga types (Sarva is summary, Bhinna is detail, Shodasha is 16-varga strength)
                 operations.push(() =>
                     this.generateAndSaveAshtakavarga(tenantId, clientId, 'sarva', sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys }, 'Full profile: SAV failed'))
+                );
+                operations.push(() =>
+                    this.generateAndSaveAshtakavarga(tenantId, clientId, 'bhinna', sys, metadata)
+                        .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Bhinna failed'))
+                );
+                operations.push(() =>
+                    this.generateAndSaveAshtakavarga(tenantId, clientId, 'shodasha', sys, metadata)
+                        .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Shodasha failed'))
                 );
             }
 
