@@ -256,7 +256,7 @@ class AstroEngineClient {
     /**
      * Generate alternative Dasha systems (non-Vimshottari)
      * @param birthData Birth data for the native
-     * @param dashaType Type of dasha system (tribhagi, shodashottari, dwadashottari, etc.)
+     * @param dashaType Type of dasha system (tribhagi, tribhagi-40, shodashottari, dwadashottari, etc.)
      * @returns Dasha calculation result
      */
     async getAlternativeDasha(birthData: BirthData, dashaType: string): Promise<AstroResponse> {

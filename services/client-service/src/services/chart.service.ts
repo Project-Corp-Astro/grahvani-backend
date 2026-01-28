@@ -932,6 +932,7 @@ export class ChartService {
             'yogini': 'dasha_yogini',
             'ashtottari': 'dasha_ashtottari',
             'tribhagi': 'dasha_tribhagi',
+            'tribhagi-40': 'dasha_tribhagi_40',
             'shodashottari': 'dasha_shodashottari',
             'dwadashottari': 'dasha_dwadashottari',
             'panchottari': 'dasha_panchottari',
@@ -1040,7 +1041,7 @@ export class ChartService {
      */
     async generateAllApplicableDashas(tenantId: string, clientId: string, ayanamsa: 'lahiri' | 'raman' | 'kp', metadata: RequestMetadata): Promise<void> {
         const systems = [
-            'vimshottari', 'tribhagi', 'chara', 'yogini', 'ashtottari',
+            'vimshottari', 'tribhagi', 'tribhagi-40', 'chara',
             'shodashottari', 'dwadashottari', 'panchottari', 'chaturshitisama',
             'satabdika', 'dwisaptati', 'shastihayani', 'shattrimshatsama'
         ];

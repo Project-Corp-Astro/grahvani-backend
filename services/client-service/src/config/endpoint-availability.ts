@@ -74,7 +74,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
             'arudha_lagna', 'bhava_lagna', 'hora_lagna', 'sripathi_bhava', 'kp_bhava', 'equal_bhava',
             'karkamsha_d1', 'karkamsha_d9',
             'numerology_chaldean', 'numerology_loshu',
-            'dasha_vimshottari', 'dasha_chara', 'dasha_yogini', 'dasha_ashtottari', 'dasha_tribhagi',
+            'dasha_vimshottari', 'dasha_chara', 'dasha_tribhagi', 'dasha_tribhagi_40',
             'dasha_shodashottari', 'dasha_dwadashottari', 'dasha_panchottari', 'dasha_chaturshitisama',
             'dasha_satabdika', 'dasha_dwisaptati', 'dasha_shastihayani', 'dasha_shattrimshatsama',
             'dasha_summary'
@@ -93,7 +93,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         panchanga: ['panchanga', 'choghadiya', 'hora', 'lagna_times', 'muhurat'],
         // Dashas - expanded list
         dashas: [
-            'vimshottari', 'tribhagi', 'shodashottari', 'dwadashottari', 'panchottari',
+            'vimshottari', 'tribhagi', 'tribhagi-40', 'shodashottari', 'dwadashottari', 'panchottari',
             'chaturshitisama', 'satabdika', 'dwisaptati', 'shastihayani', 'shattrimshatsama',
             'dasha_3months', 'dasha_6months', 'dasha_report_1year', 'dasha_report_2years', 'dasha_report_3years'
         ],

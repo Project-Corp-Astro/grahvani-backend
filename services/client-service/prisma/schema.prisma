@@ -156,6 +156,7 @@ enum ChartType {
   dasha_yogini
   dasha_ashtottari
   dasha_tribhagi
+  dasha_tribhagi_40
   dasha_shodashottari
   dasha_dwadashottari
   dasha_panchottari
