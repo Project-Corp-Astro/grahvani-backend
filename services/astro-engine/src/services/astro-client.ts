@@ -487,7 +487,7 @@ export class AstroEngineClient {
     async getOtherDasha(data: BirthData, dashaType: string): Promise<any> {
         const endpointMap: Record<string, string> = {
             'tribhagi': '/lahiri/calculate_tribhagi_dasha',
-            'tribhagi-40': '/lahiri/lahiri/tribhagi-dasha-40',
+            'tribhagi-40': '/lahiri/tribhagi-dasha-40',
             'shodashottari': '/lahiri/shodashottari-dasha',
             'dwadashottari': '/lahiri/dwadashottari-dasha',
             'panchottari': '/lahiri/calculate-panchottari-dasha',
