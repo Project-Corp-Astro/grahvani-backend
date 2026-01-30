@@ -158,7 +158,7 @@ export class ChartService {
         tenantId: string,
         clientId: string,
         chartType: string,
-        system: 'lahiri' | 'kp' | 'raman',
+        system: 'lahiri' | 'kp' | 'raman' | 'yukteswar' | 'western',
         metadata: RequestMetadata
     ) {
         // Validate chart type is available for this system
@@ -204,6 +204,9 @@ export class ChartService {
         } else if (normalizedType === 'equal_bhava') {
             chartData = await astroEngineClient.getEqualBhava(birthData, system);
             dbChartType = 'equal_bhava';
+        } else if (normalizedType === 'equal_chart') {
+            chartData = await astroEngineClient.getEqualChart(birthData, system);
+            dbChartType = 'equal_chart';
         } else if (normalizedType === 'karkamsha') {
             // Contextual fallback: if just 'karkamsha' requested, default to D1
             chartData = await astroEngineClient.getKarkamshaD1(birthData, system);
@@ -257,21 +260,21 @@ export class ChartService {
             chartData = await astroEngineClient.getShadbala(birthData, system);
             dbChartType = 'shadbala';
         } else if (normalizedType === 'kp_planets_cusps') {
-            // KP-specific: Planets and Cusps with sub-lords -> Save as 'kp_chart'
+            // KP-specific: Planets and Cusps with sub-lords
             chartData = await astroEngineClient.getKpPlanetsCusps(birthData);
-            dbChartType = 'kp_chart';
+            dbChartType = 'kp_planets_cusps';
         } else if (normalizedType === 'kp_ruling_planets') {
-            // KP-specific: Ruling Planets -> Save as 'transit'
+            // KP-specific: Ruling Planets
             chartData = await astroEngineClient.getRulingPlanets(birthData);
-            dbChartType = 'transit';
+            dbChartType = 'kp_ruling_planets';
         } else if (normalizedType === 'kp_bhava_details') {
-            // KP-specific: Bhava (House) Details -> Save as 'kp_bhava'
+            // KP-specific: Bhava (House) Details
             chartData = await astroEngineClient.getBhavaDetails(birthData);
-            dbChartType = 'kp_bhava';
+            dbChartType = 'kp_bhava_details';
         } else if (normalizedType === 'kp_significations') {
-            // KP-specific: Significations -> Save as 'shadbala'
+            // KP-specific: Significations
             chartData = await astroEngineClient.getSignifications(birthData);
-            dbChartType = 'shadbala';
+            dbChartType = 'kp_significations';
         } else {
             // Default to divisional chart generation
             chartData = await astroEngineClient.getDivisionalChart(birthData, chartType, system);
@@ -298,194 +301,24 @@ export class ChartService {
     /**
      * Bulk generate core charts (D1, D9) for all 3 systems
      */
+
+    /**
+     * Bulk generate core charts (D1, D9) for all included systems
+     */
     async generateCoreCharts(tenantId: string, clientId: string, metadata: RequestMetadata) {
-        const systems: ('lahiri' | 'raman' | 'kp')[] = ['lahiri', 'raman', 'kp'];
+        const systems: AyanamsaSystem[] = ['lahiri', 'raman', 'kp'];
         const operations: (() => Promise<any>)[] = [];
 
         for (const sys of systems) {
-            // Systems like KP don't have divisional charts (D9) or Ashtakavarga
             const vargas = sys === 'kp' ? ['D1'] : ['D1', 'D9'];
-
             for (const varga of vargas) {
                 operations.push(() =>
                     this.generateAndSaveChart(tenantId, clientId, varga, sys, metadata)
                         .catch(err => logger.error({ err, clientId, sys, varga }, 'Bulk generation failed for specific chart'))
                 );
             }
-
-            // Also generate Ashtakavarga and Sudarshan Chakra for compatible systems
-            if (sys !== 'kp') {
-                operations.push(() =>
-                    this.generateAndSaveAshtakavarga(tenantId, clientId, 'sarva', sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys }, 'Bulk Ashtakavarga generation failed'))
-                );
-                operations.push(() =>
-                    this.generateAndSaveSudarshanChakra(tenantId, clientId, sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys }, 'Bulk Sudarshan Chakra generation failed'))
-                );
-            }
         }
-
-        // Execute in batches
         return executeBatched(operations);
-    }
-
-    /**
-     * Generate full astrological profile for a client
-     * This is exhaustive: all vargas, dashas, and diagrams for all systems
-     */
-    async generateFullVedicProfile(tenantId: string, clientId: string, metadata: RequestMetadata) {
-        const systems: ('lahiri' | 'raman' | 'kp')[] = ['lahiri', 'raman', 'kp'];
-        // Use thunks (factory functions) for batched execution
-        const operations: (() => Promise<any>)[] = [];
-
-        for (const sys of systems) {
-            const capabilities = SYSTEM_CAPABILITIES[sys];
-            if (!capabilities) continue;
-
-            logger.info({ tenantId, clientId, system: sys }, 'Generating exhaustive profile for system');
-
-            // 1. Core Charts (D1, D9) - ALREADY FIRST
-            for (const varga of capabilities.charts.filter(c => ['D1', 'D9'].includes(c))) {
-                operations.push(() =>
-                    this.generateAndSaveChart(tenantId, clientId, varga, sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys, varga }, 'Full profile: Core varga failed'))
-                );
-            }
-
-            // 2. IMPORTANT ANALYSIS CHARTS (Ashtakavarga & Sudarshan) - MOVED UP
-            if (capabilities.hasAshtakavarga) {
-                // Generate ALL Ashtakavarga types (Sarva is summary, Bhinna is detail, Shodasha is 16-varga strength)
-                operations.push(() =>
-                    this.generateAndSaveAshtakavarga(tenantId, clientId, 'sarva', sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys }, 'Full profile: SAV failed'))
-                );
-                operations.push(() =>
-                    this.generateAndSaveAshtakavarga(tenantId, clientId, 'bhinna', sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Bhinna failed'))
-                );
-                operations.push(() =>
-                    this.generateAndSaveAshtakavarga(tenantId, clientId, 'shodasha', sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Shodasha failed'))
-                );
-            }
-
-            if (capabilities.specialCharts.includes('sudarshan') || capabilities.specialCharts.includes('sudarshana')) {
-                operations.push(() =>
-                    this.generateAndSaveSudarshanChakra(tenantId, clientId, sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Sudarshan failed'))
-                );
-            }
-
-            // 3. SOLAR/LUNAR & TRANSITS - MOVED UP
-            if (capabilities.specialCharts.includes('sun')) {
-                operations.push(() =>
-                    this.generateAndSaveChart(tenantId, clientId, 'SUN', sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Sun chart failed'))
-                );
-            }
-            if (capabilities.specialCharts.includes('moon')) {
-                operations.push(() =>
-                    this.generateAndSaveChart(tenantId, clientId, 'MOON', sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Moon chart failed'))
-                );
-            }
-            if (capabilities.specialCharts.includes('transit')) {
-                operations.push(() =>
-                    this.generateAndSaveChart(tenantId, clientId, 'transit', sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Transit chart failed'))
-                );
-            }
-
-            // 4. PRE-CALCULATE DASHA (COMPREHENSIVE) - MOVED UP
-            if (capabilities.dashas) {
-                operations.push(() =>
-                    this.generateAllApplicableDashas(tenantId, clientId, sys, metadata)
-                        .catch(err => logger.info({ err, sys }, 'Batch dasha generation skip/fail'))
-                );
-            }
-
-            // 5. Remaining Divisional Charts
-            for (const varga of capabilities.charts.filter(c => !['D1', 'D9'].includes(c))) {
-                operations.push(() =>
-                    this.generateAndSaveChart(tenantId, clientId, varga, sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys, varga }, 'Full profile: Divisional chart failed'))
-                );
-            }
-
-            // 6. Remaining Special Charts & Yogas/Doshas
-            for (const special of capabilities.specialCharts) {
-                if (['sudarshan', 'sudarshana', 'ashtakavarga', 'dasha', 'sun', 'moon', 'transit', 'dasha_summary'].includes(special)) continue;
-                operations.push(() =>
-                    this.generateAndSaveChart(tenantId, clientId, special, sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys, special }, `Full profile: Special ${special} failed`))
-                );
-            }
-
-            // ... 나머지 (Yogas, Doshas, Remedies, etc.) remains in lower priority
-            // 7. Yogas (if available)
-            if (capabilities.yogas) {
-                for (const yoga of capabilities.yogas) {
-                    operations.push(() =>
-                        this.generateAndSaveChart(tenantId, clientId, `yoga:${yoga}`, sys, metadata)
-                            .catch(err => logger.error({ err, clientId, sys, yoga }, 'Full profile: Yoga failed'))
-                    );
-                }
-            }
-
-            // 8. Doshas (if available)
-            if (capabilities.doshas) {
-                for (const dosha of capabilities.doshas) {
-                    operations.push(() =>
-                        this.generateAndSaveChart(tenantId, clientId, `dosha:${dosha}`, sys, metadata)
-                            .catch(err => logger.error({ err, clientId, sys, dosha }, 'Full profile: Dosha failed'))
-                    );
-                }
-            }
-
-            // 9. Remedies (if available)
-            if (capabilities.remedies) {
-                for (const remedy of capabilities.remedies) {
-                    operations.push(() =>
-                        this.generateAndSaveChart(tenantId, clientId, `remedy:${remedy}`, sys, metadata)
-                            .catch(err => logger.error({ err, clientId, sys, remedy }, 'Full profile: Remedy failed'))
-                    );
-                }
-            }
-
-            // 10. Panchanga & Reports (if available)
-            if (capabilities.panchanga) {
-                for (const report of capabilities.panchanga) {
-                    operations.push(() =>
-                        this.generateAndSaveChart(tenantId, clientId, `panchanga:${report}`, sys, metadata)
-                            .catch(err => logger.error({ err, clientId, sys, report }, 'Full profile: Panchanga/Report failed'))
-                    );
-                }
-            }
-
-            // 11. Shadbala
-            if (capabilities.specialCharts.includes('shadbala')) {
-                operations.push(() =>
-                    this.generateAndSaveChart(tenantId, clientId, 'shadbala', sys, metadata)
-                        .catch(err => logger.error({ err, clientId, sys }, 'Full profile: Shadbala failed'))
-                );
-            }
-
-            // 12. Consolidate Dasha Analysis Summary (Covers all generated systems)
-            operations.push(async () => {
-                try {
-                    await this.generateDashaSummary(tenantId, clientId, sys, metadata);
-                } catch (err) {
-                    logger.error({ err, clientId, sys }, 'Full profile: Dasha summary failed');
-                }
-            });
-        }
-
-        // Execute in batches to avoid Supabase connection pool exhaustion
-        logger.info({ tenantId, clientId, operationCount: operations.length }, 'Starting batched profile generation');
-        const resolved = await executeBatched(operations);
-        logger.info({ tenantId, clientId, count: resolved.length }, 'Full Vedic Profile generation completed');
-        return { success: true, count: resolved.length };
     }
 
     /**
@@ -493,143 +326,111 @@ export class ChartService {
      */
     async generateBulkCharts(tenantId: string, metadata: RequestMetadata) {
         const clients = await clientRepository.findMany(tenantId, { take: 1000 });
-
-        logger.info({ tenantId, clientCount: clients.length }, 'Starting exhaustive bulk generation for all clients');
-
         const operations = clients
-            .filter(client => client.birthDate && client.birthTime && client.birthLatitude && client.birthLongitude)
+            .filter(client => client.birthDate && client.birthTime)
             .map(client => () =>
                 this.generateFullVedicProfile(tenantId, client.id, metadata)
                     .catch(err => logger.error({ err, clientId: client.id }, 'Bulk complete profile failed for client'))
             );
 
-        return executeBatched(operations, 1); // Only 1 client at a time for bulk operations
+        return executeBatched(operations, 1);
     }
 
+
+
     /**
-     * Ensure a client has a complete Vedic profile
-     * DYNAMICALLY checks SYSTEM_CAPABILITIES against database and generates missing charts
-     * IMPORTANT: Uses setImmediate to be fully non-blocking
+     * Technical Audit: Ensures all charts required by a system are present.
+     * PERFORMANCE: Skips audit if generationStatus is 'completed' and versions match.
      */
-    async ensureFullVedicProfile(tenantId: string, clientId: string, metadata: RequestMetadata, existingCharts?: any[]) {
-        // Defer all checks to next tick to avoid blocking getClient response
-        setImmediate(async () => {
-            try {
-                // Prevent concurrent generation for the same client
-                if (generationLocks.has(clientId)) {
-                    logger.debug({ clientId }, 'Profile generation already in progress, skipping ensure');
-                    return;
-                }
+    async ensureFullVedicProfile(tenantId: string, clientId: string, metadata: RequestMetadata): Promise<void> {
+        // Use a lock to prevent concurrent audits/generations for the same client
+        if (generationLocks.has(clientId)) {
+            logger.warn({ clientId }, '⚠️ AUDIT: Already locked, skipping');
+            return;
+        }
 
-                // Set lock immediately to protect the audit phase too
-                generationLocks.add(clientId);
+        try {
+            // 1. Fetch client with status and version
+            const client = await clientRepository.findById(tenantId, clientId);
+            if (!client) return;
 
-                // Use passed charts if available, otherwise fetch only metadata to save bandwidth
-                const existing = existingCharts || await chartRepository.findMetadataByClientId(tenantId, clientId);
+            const currentStatus = (client as any).generationStatus;
+            logger.info({ clientId, currentStatus }, '🔍 AUDIT: Checking for missing charts');
 
-                // Get all existing chart types grouped by system
-                // Get all existing chart types grouped by system with timestamps
-                const existingBySystem: Record<string, Map<string, Date>> = {};
-                for (const chart of existing) {
-                    const system = (chart as any).system || 'lahiri'; // Metadata or Full both have this
-                    if (!existingBySystem[system]) {
-                        existingBySystem[system] = new Map();
-                    }
-                    if (chart.chartType) {
-                        existingBySystem[system].set(chart.chartType.toLowerCase(), chart.calculatedAt || new Date(0));
-                    }
-                }
-
-                // Check each system for missing charts using SYSTEM_CAPABILITIES as source of truth
-                const systemsToCheck: ('lahiri' | 'raman' | 'kp')[] = ['lahiri', 'raman', 'kp'];
-                const allMissingCharts: { system: 'lahiri' | 'raman' | 'kp'; charts: string[] }[] = [];
-
-                for (const sys of systemsToCheck) {
-                    const capabilities = SYSTEM_CAPABILITIES[sys];
-                    if (!capabilities) continue;
-
-                    if (!capabilities) continue;
-
-                    const existingForSystem = existingBySystem[sys] || new Map<string, Date>();
-
-                    // Build expected chart list from capabilities
-                    const expectedCharts: string[] = [
-                        ...capabilities.charts, // D1, D2, D3, etc.
-                        ...capabilities.specialCharts, // transit, arudha_lagna, bhava_lagna, karkamsha_d9, etc.
-                    ];
-
-                    // Add ashtakavarga types if supported
-                    if (capabilities.hasAshtakavarga) {
-                        expectedCharts.push('ashtakavarga_sarva', 'ashtakavarga_bhinna', 'ashtakavarga_shodasha');
-                    }
-
-                    // Add all supported dashas for this system
-                    if (capabilities.dashas) {
-                        for (const dashaType of capabilities.dashas) {
-                            if (dashaType === 'vimshottari') {
-                                expectedCharts.push('dasha'); // Raw Prana
-                                expectedCharts.push('dasha_vimshottari'); // UI Tree
-                            } else {
-                                expectedCharts.push(`dasha_${dashaType}`);
-                            }
-                        }
-                    }
-
-                    // Find missing charts for this system
-                    const missingForSystem = expectedCharts.filter(chart => {
-                        const chartKey = chart.toLowerCase();
-                        const existingDate = existingForSystem.get(chartKey);
-
-                        if (!existingDate) return true; // Completely missing
-
-                        // For transit, regenerate if older than 1 hour to ensure freshness without spamming
-                        if (chartKey === 'transit') {
-                            const age = Date.now() - existingDate.getTime();
-                            // 1 hour = 3600000 ms
-                            return age > 3600000;
-                        }
-
-                        return false;
-                    });
-
-                    if (missingForSystem.length > 0) {
-                        allMissingCharts.push({ system: sys, charts: missingForSystem });
-                    }
-                }
-
-                // If no missing charts, we're done
-                if (allMissingCharts.length === 0) {
-                    logger.debug({ clientId }, 'All charts present for all systems');
-                    generationLocks.delete(clientId);
-                    return;
-                }
-
-                // Log what's missing
-                const totalMissing = allMissingCharts.reduce((acc, m) => acc + m.charts.length, 0);
-                logger.info({
-                    tenantId,
-                    clientId,
-                    totalMissing,
-                    breakdown: allMissingCharts.map(m => ({ system: m.system, count: m.charts.length, charts: m.charts.slice(0, 5) }))
-                }, 'Generating missing charts');
-
-                // Generate missing charts for each system
-                try {
-                    for (const { system, charts } of allMissingCharts) {
-                        await this.generateMissingCharts(tenantId, clientId, charts, system, metadata);
-                    }
-                    logger.info({ clientId, totalMissing }, 'Missing charts generation completed');
-                } catch (err: any) {
-                    logger.error({ err, clientId }, 'Missing charts generation failed');
-                } finally {
-                    generationLocks.delete(clientId);
-                }
-
-            } catch (err: any) {
-                logger.warn({ err, clientId }, 'Failed to perform automatic profile audit');
-                generationLocks.delete(clientId);
+            // 2. ALWAYS check for missing charts, even if marked as 'completed'
+            // This ensures Ashtakavarga and other previously failed charts get retried
+            if (currentStatus !== 'processing') {
+                logger.info({ clientId }, '🚀 AUDIT: Triggering background generation');
+                this.generateFullVedicProfile(tenantId, clientId, metadata).catch(err => {
+                    logger.error({ err, clientId }, 'Background generation failed');
+                });
+            } else {
+                logger.warn({ clientId }, '⏸️ AUDIT: Already processing, skipping');
             }
-        });
+        } catch (error) {
+            logger.error({ error, clientId }, 'Error during profile audit');
+        }
+    }
+
+    async generateFullVedicProfile(tenantId: string, clientId: string, metadata: RequestMetadata): Promise<any> {
+        if (generationLocks.has(clientId)) {
+            logger.warn({ clientId }, '⚠️ GENERATION: Already locked, exiting');
+            return { status: 'already_processing' };
+        }
+
+        generationLocks.add(clientId);
+        const startTime = Date.now();
+        logger.info({ clientId }, '🔒 GENERATION: Lock acquired, starting full profile generation');
+
+        try {
+            const client = await clientRepository.findById(tenantId, clientId);
+            if (!client) throw new Error('Client not found');
+
+            // 1. Mark as Processing
+            await clientRepository.update(tenantId, clientId, { generationStatus: 'processing' } as any);
+
+            const ayanamsas: AyanamsaSystem[] = ['lahiri', 'kp', 'raman', 'yukteswar'];
+            const results: any = {};
+
+            // 2. Loop through systems and check missing
+            for (const system of ayanamsas) {
+                const missing = await this.getMissingCharts(tenantId, clientId, system);
+                logger.info({ system, missingCount: missing.length, missing: missing.slice(0, 5), clientId }, `📊 MISSING CHARTS [${system.toUpperCase()}]`);
+                if (missing.length > 0) {
+                    logger.info({ system, missingCount: missing.length, clientId }, '🔧 GENERATING missing charts for system');
+                    await this.generateMissingCharts(tenantId, clientId, missing, system, metadata);
+
+                    // Specific specialized generations for each system
+                    if (system === 'lahiri' || system === 'raman') {
+                        await this.generateAllApplicableDashas(tenantId, clientId, system, metadata);
+                    } else if (system === 'kp') {
+                        await this.generateAllApplicableDashas(tenantId, clientId, 'kp', metadata);
+                    }
+                }
+                results[system] = { missingCount: missing.length };
+            }
+
+            // 3. Mark as Completed
+            await clientRepository.update(tenantId, clientId, {
+                generationStatus: 'completed',
+                chartsVersion: 2 // Updated system version
+            } as any);
+
+            const duration = Date.now() - startTime;
+            logger.info({ clientId, duration }, 'Full Vedic Profile generation completed successfully');
+
+            return {
+                status: 'success',
+                duration,
+                results
+            };
+        } catch (error: any) {
+            logger.error({ error: error.message, clientId }, 'Full Vedic Profile generation failed');
+            await clientRepository.update(tenantId, clientId, { generationStatus: 'failed' } as any);
+            throw error;
+        } finally {
+            generationLocks.delete(clientId);
+        }
     }
 
     /**
@@ -640,7 +441,7 @@ export class ChartService {
         tenantId: string,
         clientId: string,
         missingCharts: string[],
-        system: 'lahiri' | 'raman' | 'kp',
+        system: AyanamsaSystem,
         metadata: RequestMetadata
     ) {
         const operations: (() => Promise<any>)[] = [];
@@ -651,6 +452,12 @@ export class ChartService {
             // Skip endpoints that have recently failed
             if (shouldSkipEndpoint(system, chartType)) {
                 logger.debug({ system, chartType }, 'Skipping previously failed endpoint');
+                continue;
+            }
+
+            // DOUBLE CHECK: Validate chart is still applicable (in case of cached old missing list)
+            if (!isChartAvailable(system, chartType)) {
+                logger.debug({ system, chartType }, 'Skipping inapplicable chart for system');
                 continue;
             }
 
@@ -675,8 +482,8 @@ export class ChartService {
                             logger.warn({ clientId, chartType, system }, 'Chart generation failed - endpoint marked');
                         })
                 );
-            } else if (lowerType === 'dasha') {
-                // 'dasha' is specifically for Raw Prana Vimshottari
+            } else if (lowerType === 'dasha' && system !== 'kp') {
+                // 'dasha' is specifically for Raw Prana Vimshottari (Lahiri/Raman)
                 operations.push(() =>
                     this.generateDeepDasha(tenantId, clientId, system, metadata)
                         .catch(err => {
@@ -717,7 +524,32 @@ export class ChartService {
                             logger.warn({ clientId, system, err: err.message }, 'Background dasha summary failed');
                         })
                 );
+            } else if (lowerType.startsWith('kp_')) {
+                // Specialized KP methods
+                const methodMap: Record<string, string> = {
+                    'kp_planets_cusps': 'getKpPlanetsCusps',
+                    'kp_ruling_planets': 'getKpRulingPlanets',
+                    'kp_bhava_details': 'getKpBhavaDetails',
+                    'kp_significations': 'getKpSignifications'
+                };
+                const methodName = methodMap[lowerType];
+                if (methodName && (this as any)[methodName]) {
+                    // CRITICAL FIX: Do NOT swallow errors silently. Log them.
+                    operations.push(() => (this as any)[methodName](tenantId, clientId, metadata)
+                        .catch((err: any) => {
+                            logger.warn({ err: err.message, clientId, chartType }, 'KP chart generation failed');
+                            if (err?.statusCode === 404 || err?.statusCode === 500) markEndpointFailed(system, chartType);
+                        }));
+                }
             } else {
+                // Default CATCH-ALL for:
+                // 1. Divisional Charts (D1...D60)
+                // 2. Special Charts (moon, sun, etc)
+                // 3. Yogas (yoga_*)
+                // 4. Doshas (dosha_*)
+                // 5. Remedies (remedy_*)
+                // 6. Panchanga (panchanga, hora, etc)
+                // The generateAndSaveChart method handles routing based on prefix/type.
                 operations.push(() =>
                     this.generateAndSaveChart(tenantId, clientId, chartType, system, metadata)
                         .catch(err => {
@@ -745,7 +577,7 @@ export class ChartService {
         tenantId: string,
         clientId: string,
         level: string = 'mahadasha',
-        ayanamsa: 'lahiri' | 'kp' | 'raman' = 'lahiri',
+        ayanamsa: AyanamsaSystem = 'lahiri',
         options: any = {}
     ) {
         const client = await clientRepository.findById(tenantId, clientId);
@@ -973,7 +805,7 @@ export class ChartService {
         tenantId: string,
         clientId: string,
         level: string = 'mahadasha',
-        ayanamsa: 'lahiri' | 'kp' | 'raman' = 'lahiri',
+        ayanamsa: AyanamsaSystem = 'lahiri',
         options: { mahaLord?: string; antarLord?: string; pratyantarLord?: string; sookshmaLord?: string } = {},
         metadata: RequestMetadata
     ) {
@@ -1002,7 +834,7 @@ export class ChartService {
         tenantId: string,
         clientId: string,
         dashaType: string,
-        ayanamsa: 'lahiri' | 'kp' | 'raman' = 'lahiri',
+        ayanamsa: AyanamsaSystem = 'lahiri',
         level: string = 'mahadasha',
         save: boolean = false,
         metadata: RequestMetadata
@@ -1031,7 +863,7 @@ export class ChartService {
     /**
      * Generate Raw 5-level Dasha (Prana) from Astro Engine
      */
-    async generateDeepDasha(tenantId: string, clientId: string, ayanamsa: 'lahiri' | 'kp' | 'raman' = 'lahiri', metadata: RequestMetadata) {
+    async generateDeepDasha(tenantId: string, clientId: string, ayanamsa: AyanamsaSystem = 'lahiri', metadata: RequestMetadata) {
         const client = await clientRepository.findById(tenantId, clientId);
         if (!client) throw new ClientNotFoundError(clientId);
 
@@ -1055,22 +887,29 @@ export class ChartService {
     /**
      * Generate all applicable dashas for a system
      */
-    async generateAllApplicableDashas(tenantId: string, clientId: string, ayanamsa: 'lahiri' | 'raman' | 'kp', metadata: RequestMetadata): Promise<void> {
-        const systems = [
-            'vimshottari', 'tribhagi', 'tribhagi-40', 'chara',
-            'shodashottari', 'dwadashottari', 'panchottari', 'chaturshitisama',
-            'satabdika', 'dwisaptati', 'shastihayani', 'shattrimshatsama'
-        ];
-        const ops = systems.map(type => async () => {
+    async generateAllApplicableDashas(tenantId: string, clientId: string, system: AyanamsaSystem, metadata: RequestMetadata): Promise<void> {
+        const capabilities = SYSTEM_CAPABILITIES[system];
+        if (!capabilities || !capabilities.dashas) {
+            logger.warn({ system, clientId }, 'No dasha capabilities found for system');
+            return;
+        }
+
+        const ops = capabilities.dashas.map(type => async () => {
             try {
                 if (type === 'vimshottari') {
                     // Generate both raw prana (deep) and UI-friendly tree
-                    await this.generateDeepDasha(tenantId, clientId, ayanamsa, metadata);
-                    await this.generateDasha(tenantId, clientId, 'tree', ayanamsa, {});
-                } else {
-                    await this.generateAlternativeDasha(tenantId, clientId, type, ayanamsa, 'mahadasha', true, metadata);
+                    await this.generateDeepDasha(tenantId, clientId, system, metadata);
+                    await this.generateDasha(tenantId, clientId, 'tree', system, {});
+                } else if (type === 'chara' && system === 'kp') {
+                    // Specialized KP Chara Dasha handled via Alternative Dasha
+                    await this.generateAlternativeDasha(tenantId, clientId, 'chara', system, 'mahadasha', true, metadata);
+                } else if (!['dasha_3months', 'dasha_6months', 'dasha_report_1year', 'dasha_report_2years', 'dasha_report_3years'].includes(type)) {
+                    // Generic Alternative Dasha Systems
+                    await this.generateAlternativeDasha(tenantId, clientId, type, system, 'mahadasha', true, metadata);
                 }
-            } catch (err) { }
+            } catch (err: any) {
+                logger.debug({ err: err.message, type, system }, 'Skipped optional dasha generation');
+            }
         });
         await executeBatched(ops);
     }
@@ -1078,7 +917,7 @@ export class ChartService {
     /**
      * Generate consolidated summary of active periods
      */
-    async generateDashaSummary(tenantId: string, clientId: string, ayanamsa: 'lahiri' | 'raman' | 'kp', metadata: RequestMetadata): Promise<void> {
+    async generateDashaSummary(tenantId: string, clientId: string, ayanamsa: AyanamsaSystem, metadata: RequestMetadata): Promise<void> {
         const charts = await chartRepository.findByClientId(tenantId, clientId);
         const dashaCharts = charts.filter(c => c.chartType.toString().startsWith('dasha_') && (c as any).system === ayanamsa);
 
@@ -1264,8 +1103,8 @@ export class ChartService {
     async generateAshtakavarga(
         tenantId: string,
         clientId: string,
-        type: 'bhinna' | 'sarva' | 'shodasha' = 'bhinna',
-        ayanamsa: 'lahiri' | 'raman' | 'kp' = 'lahiri'
+        type: 'bhinna' | 'sarva' | 'shodasha' | 'sarva_ashtakavarga_chart' | 'binnashtakvarga_chart' = 'bhinna',
+        ayanamsa: AyanamsaSystem = 'lahiri'
     ) {
         if (ayanamsa === 'kp') {
             throw new Error('Ashtakavarga is not available for KP system');
@@ -1304,8 +1143,8 @@ export class ChartService {
     async generateAndSaveAshtakavarga(
         tenantId: string,
         clientId: string,
-        type: 'bhinna' | 'sarva' | 'shodasha' = 'bhinna',
-        ayanamsa: 'lahiri' | 'raman' | 'kp' = 'lahiri',
+        type: 'bhinna' | 'sarva' | 'shodasha' | 'sarva_ashtakavarga_chart' | 'binnashtakvarga_chart' = 'bhinna',
+        ayanamsa: AyanamsaSystem = 'lahiri',
         metadata: RequestMetadata
     ) {
         const client = await clientRepository.findById(tenantId, clientId);
@@ -1316,7 +1155,9 @@ export class ChartService {
         const chartTypeMap = {
             'bhinna': 'ashtakavarga_bhinna',
             'sarva': 'ashtakavarga_sarva',
-            'shodasha': 'ashtakavarga_shodasha'
+            'shodasha': 'ashtakavarga_shodasha',
+            'sarva_ashtakavarga_chart': 'ashtakavarga_sarva',
+            'binnashtakvarga_chart': 'ashtakavarga_bhinna'
         } as const;
 
         const chart = await this.saveChart(tenantId, clientId, {
@@ -1344,7 +1185,7 @@ export class ChartService {
     async generateSudarshanChakra(
         tenantId: string,
         clientId: string,
-        ayanamsa: 'lahiri' | 'raman' | 'kp' = 'lahiri'
+        ayanamsa: AyanamsaSystem = 'lahiri'
     ) {
         const client = await clientRepository.findById(tenantId, clientId);
         if (!client) throw new ClientNotFoundError(clientId);
@@ -1371,7 +1212,7 @@ export class ChartService {
     async generateAndSaveSudarshanChakra(
         tenantId: string,
         clientId: string,
-        ayanamsa: 'lahiri' | 'raman' | 'kp' = 'lahiri',
+        ayanamsa: AyanamsaSystem = 'lahiri',
         metadata: RequestMetadata
     ) {
         const client = await clientRepository.findById(tenantId, clientId);
@@ -1477,7 +1318,7 @@ export class ChartService {
      * Centralized builder for Astro Engine birth data.
      * Ensures all fields (including userName) are consistently mapped.
      */
-    private prepareBirthData(client: any, ayanamsa: 'lahiri' | 'raman' | 'kp' = 'lahiri'): any {
+    private prepareBirthData(client: any, ayanamsa: 'lahiri' | 'raman' | 'kp' | 'yukteswar' | 'western' = 'lahiri'): any {
         if (!client.birthDate || !client.birthTime) {
             throw new Error('Incomplete client birth details');
         }
@@ -1561,7 +1402,78 @@ export class ChartService {
             system: 'kp'
         };
     }
+    /**
+     * Get list of missing charts for a system by comparing capabilities against database
+     */
+    private async getMissingCharts(tenantId: string, clientId: string, system: AyanamsaSystem): Promise<string[]> {
+        const capabilities = SYSTEM_CAPABILITIES[system];
+        if (!capabilities) return [];
+
+        const existing = await chartRepository.findMetadataByClientId(tenantId, clientId);
+        const existingTypes = new Set(
+            existing
+                .filter(c => (c as any).system === system) // Strict system filtering
+                .map(c => c.chartType!.toString().toLowerCase())
+        );
+
+        const expected: string[] = [
+            ...capabilities.charts,
+            ...capabilities.specialCharts,
+        ];
+
+        // 1. ASHTAKAVARGA
+        if (capabilities.hasAshtakavarga) {
+            expected.push('ashtakavarga_sarva', 'ashtakavarga_bhinna', 'ashtakavarga_shodasha');
+        }
+
+        // 2. DASHAS
+        if (capabilities.dashas) {
+            for (const d of capabilities.dashas) {
+                if (d === 'vimshottari') {
+                    expected.push('dasha_vimshottari'); // 'dasha' is raw depth, 'dasha_vimshottari' is tree
+                    // We check for 'dasha_vimshottari' as the standard marker
+                } else {
+                    expected.push(`dasha_${d}`);
+                }
+            }
+        }
+
+        // 3. YOGAS
+        if (capabilities.yogas) {
+            for (const y of capabilities.yogas) {
+                expected.push(`yoga_${y}`);
+            }
+        }
+
+        // 4. DOSHAS
+        if (capabilities.doshas) {
+            for (const d of capabilities.doshas) {
+                expected.push(`dosha_${d}`);
+            }
+        }
+
+        // 5. REMEDIES
+        if (capabilities.remedies) {
+            for (const r of capabilities.remedies) {
+                expected.push(`remedy_${r}`);
+            }
+        }
+
+        // 6. PANCHANGA
+        if (capabilities.panchanga) {
+            for (const p of capabilities.panchanga) {
+                if (p === 'panchanga') expected.push('panchanga');
+                else expected.push(p); // 'hora', 'choghadiya' etc are direct types
+            }
+        }
+
+        // Filter out what we already have
+        // Normalize expected types to lower case for comparison, but keep original case for return
+        return expected.filter(type => {
+            const normalized = type.toLowerCase();
+            return !existingTypes.has(normalized);
+        });
+    }
 }
 
 export const chartService = new ChartService();
-

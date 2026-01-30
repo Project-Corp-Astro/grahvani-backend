@@ -6,6 +6,8 @@ import ashtakavargaRoutes from './ashtakavarga.routes';
 import ramanRoutes from './raman.routes';
 import compatibilityRoutes from './compatibility.routes';
 import numerologyRoutes from './numerology.routes';
+import analysisRoutes from './analysis.routes';
+import panchangaRoutes from './panchanga.routes';
 
 const router = Router();
 
@@ -34,5 +36,11 @@ router.use('/compatibility', compatibilityRoutes);
 
 // Numerology: /api/numerology/*
 router.use('/numerology', numerologyRoutes);
+
+// Analysis (Yogas, Doshas, Remedies): /api/analysis/*
+router.use('/analysis', analysisRoutes);
+
+// Panchanga: /api/panchanga/*
+router.use('/panchanga', panchangaRoutes);
 
 export default router;

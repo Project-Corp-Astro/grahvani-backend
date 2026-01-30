@@ -7,7 +7,7 @@
  * @version 2.0.0 - Updated 2026-01-21 based on actual API testing
  */
 
-export type AyanamsaSystem = 'lahiri' | 'raman' | 'kp';
+export type AyanamsaSystem = 'lahiri' | 'raman' | 'kp' | 'yukteswar' | 'western';
 
 export interface SystemCapabilities {
     charts: string[];
@@ -29,7 +29,7 @@ export interface SystemCapabilities {
  * Key: "{system}:{chartType}", Value: timestamp of last failure
  */
 const failedEndpoints = new Map<string, number>();
-const FAILURE_RETRY_DELAY = 3600000; // 1 hour before retrying failed endpoint
+const FAILURE_RETRY_DELAY = 30000; // 30 seconds before retrying failed endpoint
 
 /**
  * Check if an endpoint should be skipped due to recent failure
@@ -65,35 +65,35 @@ export function clearEndpointFailure(system: AyanamsaSystem, chartType: string):
  */
 export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
     lahiri: {
-        // Divisional Charts - ALL verified working
-        charts: ['D1', 'D2', 'D3', 'D4', 'D7', 'D9', 'D10', 'D12', 'D16', 'D20', 'D24', 'D27', 'D30', 'D40', 'D45', 'D60'],
+        // Divisional Charts - ALL verified working from ApiEndPoints.txt
+        charts: ['D1', 'D2', 'D3', 'D4', 'D7', 'D9', 'D10', 'D12', 'D16', 'D20', 'D24', 'D27', 'D30', 'D40', 'D45', 'D60', 'D6', 'D150'],
         features: ['natal', 'transit', 'dasha', 'ashtakavarga', 'numerology', 'synastry', 'composite', 'progressed'],
         // Special Charts - verified endpoints
         specialCharts: [
             'moon', 'sun', 'sudarshan', 'transit',
             'arudha_lagna', 'bhava_lagna', 'hora_lagna', 'sripathi_bhava', 'kp_bhava', 'equal_bhava',
             'karkamsha_d1', 'karkamsha_d9',
-            'numerology_chaldean', 'numerology_loshu',
+            'numerology_chaldean', 'numerology_loshu', 'person_numerology',
             'dasha_vimshottari', 'dasha_chara', 'dasha_tribhagi', 'dasha_tribhagi_40',
             'dasha_shodashottari', 'dasha_dwadashottari', 'dasha_panchottari', 'dasha_chaturshitisama',
             'dasha_satabdika', 'dasha_dwisaptati', 'dasha_shastihayani', 'dasha_shattrimshatsama',
             'dasha_summary'
         ],
-        // Yogas - verified endpoints
+        // Yogas - verified endpoints from ApiEndPoints.txt lines 134-150
         yogas: [
             'gaja_kesari', 'guru_mangal', 'budha_aditya', 'chandra_mangal', 'raj_yoga',
             'pancha_mahapurusha', 'daridra', 'dhan', 'malefic', 'special', 'spiritual',
             'shubh', 'viparitha_raja', 'kalpadruma', 'rare'
         ],
-        // Doshas - verified endpoints
+        // Doshas - verified endpoints lines 152-157
         doshas: ['kala_sarpa', 'angarak', 'guru_chandal', 'shrapit', 'sade_sati', 'pitra'],
-        // Remedies - verified endpoints
+        // Remedies - verified endpoints lines 159-164
         remedies: ['yantra', 'mantra', 'general', 'gemstone', 'lal_kitab'],
-        // Panchanga - verified endpoints
+        // Panchanga - verified endpoints lines 166-173
         panchanga: ['panchanga', 'choghadiya', 'hora', 'lagna_times', 'muhurat'],
-        // Dashas - expanded list
+        // Dashas - verified endpoints
         dashas: [
-            'vimshottari', 'tribhagi', 'tribhagi-40', 'shodashottari', 'dwadashottari', 'panchottari',
+            'vimshottari', 'tribhagi', 'tribhagi-40', 'ashtottari', 'shodashottari', 'dwadashottari', 'panchottari',
             'chaturshitisama', 'satabdika', 'dwisaptati', 'shastihayani', 'shattrimshatsama',
             'dasha_3months', 'dasha_6months', 'dasha_report_1year', 'dasha_report_2years', 'dasha_report_3years'
         ],
@@ -103,33 +103,64 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         hasHorary: false,
     },
     raman: {
-        // Divisional Charts - verified from ApiEndPoints.txt lines 13-27
+        // Divisional Charts - ApiEndPoints.txt lines 13-27
         charts: ['D1', 'D2', 'D3', 'D4', 'D7', 'D9', 'D10', 'D12', 'D16', 'D20', 'D24', 'D27', 'D30', 'D40', 'D45', 'D60'],
-        features: ['natal', 'dasha', 'ashtakavarga'],
-        // Special Charts - verified from ApiEndPoints.txt
+        features: ['natal', 'transit', 'dasha', 'ashtakavarga'],
+        // Special Charts - verified from ApiEndPoints.txt lines 6-36
         specialCharts: [
-            'moon', 'sun', 'sudarshan',
-            'arudha_lagna', 'bhava_lagna', 'hora_lagna', 'sripathi_bhava', 'kp_bhava', 'equal_bhava',
-            'karkamsha_d1', 'karkamsha_d9',
-            'dasha_summary'
+            'moon', 'sun', 'sripathi_bhava', 'sudarshan',
+            'arudha_lagna', 'kp_bhava', 'equal_bhava_lagna',
+            'karkamsha_d1', 'karkamsha_d9', 'bhava_lagna', 'hora_lagna'
         ],
+        dashas: ['vimshottari'], // Lines 44-47
         hasDivisional: true,
         hasAshtakavarga: true,
         hasNumerology: false,
         hasHorary: false,
     },
     kp: {
-        // KP System - verified from ApiEndPoints.txt lines 181-194
-        // Specialized for prediction, NO divisional charts
+        // KP System - ApiEndPoints.txt lines 183-196
         charts: ['D1'],
         features: ['natal', 'dasha', 'horary', 'significations', 'ruling_planets', 'bhava_details'],
-        // KP-specific charts to be auto-generated
-        specialCharts: ['kp_chart', 'transit', 'kp_bhava', 'shadbala', 'muhurat'],
+        // KP-specific charts
+        specialCharts: [
+            'kp_planets_cusps', 'kp_ruling_planets', 'kp_bhava_details', 'kp_significations',
+            'kp_horary', 'chara_dasha', 'shodasha_varga_signs', 'muhurat'
+        ],
+        // Dashas listed in KP section lines 188-192
+        dashas: ['vimshottari', 'chara'],
         hasDivisional: false,
         hasAshtakavarga: false,
         hasNumerology: false,
         hasHorary: true,
     },
+    yukteswar: {
+        charts: ['D1', 'D2', 'D3', 'D4', 'D7', 'D9', 'D10', 'D12', 'D16', 'D20', 'D24', 'D27', 'D30', 'D40', 'D45', 'D60'],
+        features: ['natal', 'dasha', 'ashtakavarga'],
+        specialCharts: [
+            'sun_chart', 'moon_chart', 'equal_chart', 'sripathi_bhava', 'kp_bhava',
+            'arudha_lagna', 'karakamsha_birth', 'karkamsha_d9', 'bhava_lagna', 'hora_lagna', 'gl_chart'
+        ],
+        dashas: [
+            'mahaantar', 'pratyantar', 'sookshma', 'prana',
+            'ashtottari_antar', 'ashtottari_pratyantardasha', 'tribhagi', 'tribhagi_40',
+            'shodashottari', 'dwisaptatisama', 'shastihayani', 'shattrimshatsama',
+            'panchottari', 'satabdika', 'chaturshitisama'
+        ],
+        hasDivisional: true,
+        hasAshtakavarga: true,
+        hasNumerology: false,
+        hasHorary: false,
+    },
+    western: {
+        charts: ['progressed', 'synastry', 'composite'],
+        features: ['progressed', 'synastry', 'composite'],
+        specialCharts: [],
+        hasDivisional: false,
+        hasAshtakavarga: false,
+        hasNumerology: false,
+        hasHorary: false,
+    }
 };
 
 /**

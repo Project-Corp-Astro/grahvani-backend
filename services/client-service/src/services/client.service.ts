@@ -237,6 +237,9 @@ export class ClientService {
             try {
                 logger.info({ tenantId, clientId: id }, 'Critical details updated - Performing clean chart regeneration');
 
+                // Update status to pending immediately so UI shows "Generatin..." state
+                await clientRepository.update(tenantId, id, { generationStatus: 'pending' } as any);
+
                 // CRITICAL: Delete old charts first to ensure data consistency
                 // We lock briefly to ensure no parallel generation is happening right now
                 const { generationLocks } = require('./chart.service');

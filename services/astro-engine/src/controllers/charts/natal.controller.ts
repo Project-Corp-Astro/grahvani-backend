@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { lahiriClient, ramanClient, BirthData, AyanamsaType } from '../../clients';
+import { lahiriClient, ramanClient, yukteswarClient, BirthData, AyanamsaType } from '../../clients';
 import { cacheService } from '../../services/cache.service';
 import { logger } from '../../config/logger';
 
@@ -45,6 +45,7 @@ export class NatalController {
     private getClient(ayanamsa: AyanamsaType) {
         switch (ayanamsa) {
             case 'raman': return ramanClient;
+            case 'yukteswar': return yukteswarClient;
             case 'kp': return lahiriClient; // KP uses Lahiri for natal
             default: return lahiriClient;
         }

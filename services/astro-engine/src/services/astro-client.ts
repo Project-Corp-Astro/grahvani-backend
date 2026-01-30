@@ -2,6 +2,7 @@ import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResp
 import { config } from '../config';
 import { logger } from '../config/logger';
 import { cacheService } from './cache.service';
+import { LAHIRI_ENDPOINTS, KP_ENDPOINTS, RAMAN_ENDPOINTS, YUKTESWAR_ENDPOINTS } from '../constants/endpoints';
 
 // =============================================================================
 // Types & Interfaces
@@ -14,8 +15,8 @@ export interface BirthData {
     longitude: number;
     timezoneOffset: number;
     userName?: string;      // Optional user identifier
-    system?: 'lahiri' | 'kp' | 'raman';
-    ayanamsa?: 'lahiri' | 'kp' | 'raman'; // Alias for compatibility
+    system?: 'lahiri' | 'kp' | 'raman' | 'yukteswar' | 'western';
+    ayanamsa?: 'lahiri' | 'kp' | 'raman' | 'yukteswar' | 'western'; // Alias for compatibility
 }
 
 export interface HoraryData extends BirthData {
@@ -81,9 +82,9 @@ export class AstroEngineClient {
     /**
      * Get the resolved ayanamsa system from birth data (handles aliases)
      */
-    private getSystem(data: BirthData): 'lahiri' | 'kp' | 'raman' {
+    private getSystem(data: BirthData): 'lahiri' | 'kp' | 'raman' | 'yukteswar' | 'western' {
         const sys = data.system || data.ayanamsa || 'lahiri';
-        return sys.toLowerCase() as 'lahiri' | 'kp' | 'raman';
+        return sys.toLowerCase() as 'lahiri' | 'kp' | 'raman' | 'yukteswar' | 'western';
     }
 
     /**
@@ -111,7 +112,11 @@ export class AstroEngineClient {
      */
     async getNatalChart(data: BirthData): Promise<any> {
         const system = this.getSystem(data);
-        const endpoint = system === 'kp' ? '/kp/cusps_chart' : `/${system}/natal`;
+        let endpoint: string = `/${system}/natal`;
+        if (system === 'kp') endpoint = KP_ENDPOINTS.PLANETS_CUSPS;
+        if (system === 'yukteswar') endpoint = YUKTESWAR_ENDPOINTS.NATAL;
+        if (system === 'raman') endpoint = RAMAN_ENDPOINTS.NATAL;
+        if (system === 'lahiri') endpoint = LAHIRI_ENDPOINTS.NATAL;
 
         // Cache for 24 hours (86400 seconds)
         const cached = await cacheService.get<any>(`natal:${system}`, data);
@@ -349,6 +354,23 @@ export class AstroEngineClient {
                 'd40': 'calculate_d40',
                 'd45': 'calculate_d45',
                 'd60': 'calculate_d60',
+            },
+            'yukteswar': {
+                'd2': 'calculate_d2',
+                'd3': 'calculate_d3',
+                'd4': 'calculate_d4',
+                'd7': 'calculate_d7',
+                'd9': 'calculate_d9',
+                'd10': 'calculate_d10',
+                'd12': 'calculate_d12',
+                'd16': 'calculate_d16',
+                'd20': 'calculate_d20',
+                'd24': 'calculate_d24',
+                'd27': 'calculate_d27',
+                'd30': 'calculate_d30',
+                'd40': 'calculate_d40',
+                'd45': 'calculate_d45',
+                'd60': 'calculate_d60',
             }
         };
 
@@ -369,7 +391,7 @@ export class AstroEngineClient {
      * Get KP Planets and Cusps with sub-lords
      */
     async getKpPlanetsCusps(data: BirthData): Promise<any> {
-        const endpoint = '/kp/cusps_chart';
+        const endpoint = '/kp/calculate_kp_planets_cusps';
         const response = await this.client.post(endpoint, this.buildPayload(data));
         return response.data;
     }
@@ -378,7 +400,7 @@ export class AstroEngineClient {
      * Get Ruling Planets
      */
     async getRulingPlanets(data: BirthData): Promise<any> {
-        const endpoint = '/kp/ruling-planets';
+        const endpoint = '/kp/calculate_ruling_planets';
         const response = await this.client.post(endpoint, this.buildPayload(data));
         return response.data;
     }
@@ -527,9 +549,12 @@ export class AstroEngineClient {
      */
     async getBhinnaAshtakavarga(data: BirthData): Promise<any> {
         const system = this.getSystem(data);
-        const endpoint = system === 'raman'
-            ? '/raman/calculate_bhinnashtakavarga'
-            : '/lahiri/calculate_binnatakvarga';
+        let endpoint: string = LAHIRI_ENDPOINTS.BHINNA_ASHTAKAVARGA;
+
+        if (system === 'raman') endpoint = RAMAN_ENDPOINTS.BHINNA_ASHTAKAVARGA;
+        if (system === 'yukteswar') endpoint = YUKTESWAR_ENDPOINTS.BHINNA_ASHTAKAVARGA;
+        if (system === 'kp') endpoint = '/lahiri/calculate_binnatakvarga'; // Fallback for KP
+
         const response = await this.client.post(endpoint, this.buildPayload(data));
         return response.data;
     }
@@ -539,9 +564,12 @@ export class AstroEngineClient {
      */
     async getSarvaAshtakavarga(data: BirthData): Promise<any> {
         const system = this.getSystem(data);
-        const endpoint = system === 'raman'
-            ? '/raman/calculate_sarvashtakavarga'
-            : '/lahiri/calculate_sarvashtakavarga';
+        let endpoint: string = LAHIRI_ENDPOINTS.SARVA_ASHTAKAVARGA;
+
+        if (system === 'raman') endpoint = RAMAN_ENDPOINTS.SARVA_ASHTAKAVARGA;
+        if (system === 'yukteswar') endpoint = YUKTESWAR_ENDPOINTS.SARVA_ASHTAKAVARGA;
+        if (system === 'kp') endpoint = '/lahiri/calculate_sarvashtakavarga'; // Fallback for KP
+
         const response = await this.client.post(endpoint, this.buildPayload(data));
         return response.data;
     }
@@ -551,9 +579,12 @@ export class AstroEngineClient {
      */
     async getShodashaVargaSummary(data: BirthData): Promise<any> {
         const system = this.getSystem(data);
-        const endpoint = system === 'raman'
-            ? '/raman/shodasha_varga_signs'
-            : '/lahiri/shodasha_varga_summary';
+        let endpoint: string = LAHIRI_ENDPOINTS.SHODASHA_VARGA_SUMMARY;
+
+        if (system === 'raman') endpoint = RAMAN_ENDPOINTS.SHODASHA_VARGA;
+        if (system === 'kp') endpoint = KP_ENDPOINTS.SHODASHA_VARGA;
+        if (system === 'yukteswar') endpoint = LAHIRI_ENDPOINTS.SHODASHA_VARGA_SUMMARY; // Fallback for Yukteswar
+
         const response = await this.client.post(endpoint, this.buildPayload(data));
         return response.data;
     }

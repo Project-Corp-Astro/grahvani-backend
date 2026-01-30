@@ -76,6 +76,10 @@ export class KpClient extends BaseAstroClient {
         return this.post(KP_ENDPOINTS.PRANA_DASHA, data);
     }
 
+    async getCharaDasha(data: BirthData) {
+        return this.post(KP_ENDPOINTS.CHARA_DASHA, data);
+    }
+
     // =========================================================================
     // HORARY (Prashna)
     // =========================================================================
@@ -107,6 +111,15 @@ export class KpClient extends BaseAstroClient {
      */
     async getShodashaVarga(data: BirthData) {
         return this.post(KP_ENDPOINTS.SHODASHA_VARGA, data);
+    }
+
+    // Ashtakavarga (Fallback to Lahiri if KP-specific not available)
+    async getBhinnaAshtakavarga(data: BirthData) {
+        return this.post('/lahiri/calculate_binnatakvarga', data);
+    }
+
+    async getSarvaAshtakavarga(data: BirthData) {
+        return this.post('/lahiri/calculate_sarvashtakavarga', data);
     }
 }
 

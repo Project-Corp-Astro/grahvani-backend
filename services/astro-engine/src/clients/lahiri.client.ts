@@ -60,6 +60,8 @@ export class LahiriClient extends BaseAstroClient {
     async getD40Khavedamsa(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.D40_KHAVEDAMSA, data); }
     async getD45Akshavedamsa(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.D45_AKSHAVEDAMSA, data); }
     async getD60Shashtiamsa(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.D60_SHASHTIAMSA, data); }
+    async getD6Shashtamsha(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.D6_SHASHTAMSHA, data); }
+    async getD150Nadiamsha(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.D150_NADIAMSHA, data); }
 
     // =========================================================================
     // LAGNA CHARTS (Special Ascendants)
@@ -84,6 +86,10 @@ export class LahiriClient extends BaseAstroClient {
 
     async getSarvaAshtakavarga(data: BirthData) {
         return this.post(LAHIRI_ENDPOINTS.SARVA_ASHTAKAVARGA, data);
+    }
+
+    async getShodashaVarga(data: BirthData) {
+        return this.post(LAHIRI_ENDPOINTS.SHODASHA_VARGA_SUMMARY, data);
     }
 
     // =========================================================================
@@ -139,6 +145,87 @@ export class LahiriClient extends BaseAstroClient {
     async getLoShuGrid(data: BirthData) {
         return this.post(LAHIRI_ENDPOINTS.LO_SHU_GRID, data);
     }
+
+    async getPersonNumerology(data: BirthData) {
+        return this.post(LAHIRI_ENDPOINTS.PERSON_NUMEROLOGY, data);
+    }
+
+    async getGunaMilan(data: SynastryData) {
+        const payload = {
+            person1: this.buildPayload(data.person1),
+            person2: this.buildPayload(data.person2),
+        };
+        return this.client.post(LAHIRI_ENDPOINTS.GUNA_MILAN, payload).then(res => res.data);
+    }
+
+    // =========================================================================
+    // YOGAS
+    // =========================================================================
+
+    async getGajaKesariYoga(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.GAJA_KESARI_YOGA, data); }
+    async getGuruMangalYoga(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.GURU_MANGAL_YOGA, data); }
+    async getBudhaAdityaYoga(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.BUDHA_ADITYA_YOGA, data); }
+    async getChandraMangalYoga(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.CHANDRA_MANGAL_YOGA, data); }
+    async getRajYoga(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.RAJ_YOGA, data); }
+    async getPanchaMahapurushaYoga(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.PANCHA_MAHAPURUSHA_YOGA, data); }
+    async getDaridraYoga(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.DARIDRA_YOGA, data); }
+    async getDhanYoga(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.DHAN_YOGA, data); }
+    async getMaleficYogas(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.MALEFIC_YOGAS, data); }
+    async getYogaAnalysis(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.YOGA_ANALYSIS, data); }
+    async getSpecialYogas(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.SPECIAL_YOGAS, data); }
+    async getSpiritualYogas(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.SPIRITUAL_YOGAS, data); }
+    async getShubhYogas(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.SHUBH_YOGAS, data); }
+    async getKalpadrumaYoga(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.KALPADRUMA_YOGA, data); }
+    async getKalaSarpaDosha(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.KALA_SARPA_DOSHA, data); }
+
+    // =========================================================================
+    // DOSHAS & REMEDIES
+    // =========================================================================
+
+    async getAngarakDosha(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.ANGARAK_DOSHA, data); }
+    async getGuruChandalDosha(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.GURU_CHANDAL_DOSHA, data); }
+    async getShrapitDosha(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.SHRAPIT_DOSHA, data); }
+    async getSadeSati(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.SADE_SATI, data); }
+    async getPitraDosha(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.PITRA_DOSHA, data); }
+
+    async getYantraRemedies(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.YANTRA_REMEDIES, data); }
+    async getMantraRemedies(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.MANTRA_REMEDIES, data); }
+    async getVedicRemedies(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.VEDIC_REMEDIES, data); }
+    async getGemstoneRemedies(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.GEMSTONE_REMEDIES, data); }
+    async getLalKitabRemedies(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.LAL_KITAB_REMEDIES, data); }
+
+    // =========================================================================
+    // PANCHANGA
+    // =========================================================================
+
+    async getPanchanga(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.PANCHANGA, data); }
+    async getChoghadiya(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.CHOGHADIYA, data); }
+    async getHoraTimes(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.HORA_TIMES, data); }
+    async getLagnaTimes(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.LAGNA_TIMES, data); }
+    async getMuhurat(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.MUHURAT, data); }
+
+    // =========================================================================
+    // EXTENDED DASHAS
+    // =========================================================================
+
+    async getAshtottariAntar(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.ASHTOTTARI_ANTAR, data); }
+    async getAshtottariPratyantar(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.ASHTOTTARI_PRATYANTAR, data); }
+    async getTribhagi(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.TRIBHAGI, data); }
+    async getTribhagi40(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.TRIBHAGI_40, data); }
+    async getShodashottari(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.SHODASHOTTARI, data); }
+    async getDwadashottari(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.DWADASHOTTARI, data); }
+    async getChaturshitisama(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.CHATURSHITISAMA, data); }
+    async getSatabdika(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.SATABDIKA, data); }
+    async getPanchottari(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.PANCHOTTARI, data); }
+    async getDwisaptati(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.DWISAPTATI, data); }
+    async getShastihayani(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.SHASTIHAYANI, data); }
+    async getShattrimshatsama(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.SHATTRIMSHATSAMA, data); }
+
+    async getDasha3Months(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.DASHA_3MONTHS, data); }
+    async getDasha6Months(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.DASHA_6MONTHS, data); }
+    async getDashaReport1Year(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.DASHA_REPORT_1YEAR, data); }
+    async getDashaReport2Years(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.DASHA_REPORT_2YEARS, data); }
+    async getDashaReport3Years(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.DASHA_REPORT_3YEARS, data); }
 }
 
 export const lahiriClient = new LahiriClient();

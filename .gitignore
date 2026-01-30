@@ -30,6 +30,12 @@ yarn-error.log*
 
 # Prisma Generated Client (regenerate with: npm run prisma:generate)
 **/src/generated/prisma/
+**/src/generated/
+
+# Temporary verification scripts (not part of production code)
+**/src/scripts/verify_*.ts
+**/src/scripts/check-recent-clients.ts
+**/src/scripts/reset-generation-status.ts
 
 # Temporary files
 *.tmp
