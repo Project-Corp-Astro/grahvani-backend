@@ -256,6 +256,22 @@ export class ChartService {
         } else if (normalizedType === 'shadbala') {
             chartData = await astroEngineClient.getShadbala(birthData, system);
             dbChartType = 'shadbala';
+        } else if (normalizedType === 'kp_planets_cusps') {
+            // KP-specific: Planets and Cusps with sub-lords -> Save as 'kp_chart'
+            chartData = await astroEngineClient.getKpPlanetsCusps(birthData);
+            dbChartType = 'kp_chart';
+        } else if (normalizedType === 'kp_ruling_planets') {
+            // KP-specific: Ruling Planets -> Save as 'transit'
+            chartData = await astroEngineClient.getRulingPlanets(birthData);
+            dbChartType = 'transit';
+        } else if (normalizedType === 'kp_bhava_details') {
+            // KP-specific: Bhava (House) Details -> Save as 'kp_bhava'
+            chartData = await astroEngineClient.getBhavaDetails(birthData);
+            dbChartType = 'kp_bhava';
+        } else if (normalizedType === 'kp_significations') {
+            // KP-specific: Significations -> Save as 'shadbala'
+            chartData = await astroEngineClient.getSignifications(birthData);
+            dbChartType = 'shadbala';
         } else {
             // Default to divisional chart generation
             chartData = await astroEngineClient.getDivisionalChart(birthData, chartType, system);
@@ -1474,6 +1490,75 @@ export class ChartService {
             timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
             userName: client.fullName || client.name || 'Anonymous',
             system: ayanamsa,
+        };
+    }
+
+    // =========================================================================
+    // KP (KRISHNAMURTI PADDHATI) SYSTEM METHODS
+    // =========================================================================
+
+    /**
+     * Get KP Planets and Cusps with sub-lords
+     */
+    async getKpPlanetsCusps(tenantId: string, clientId: string, metadata: RequestMetadata) {
+        return this.generateAndSaveChart(tenantId, clientId, 'kp_planets_cusps', 'kp', metadata);
+    }
+
+    /**
+     * Get KP Ruling Planets
+     */
+    async getKpRulingPlanets(tenantId: string, clientId: string, metadata: RequestMetadata) {
+        return this.generateAndSaveChart(tenantId, clientId, 'kp_ruling_planets', 'kp', metadata);
+    }
+
+    /**
+     * Get KP Bhava Details
+     */
+    async getKpBhavaDetails(tenantId: string, clientId: string, metadata: RequestMetadata) {
+        return this.generateAndSaveChart(tenantId, clientId, 'kp_bhava_details', 'kp', metadata);
+    }
+
+    /**
+     * Get KP Significations
+     */
+    async getKpSignifications(tenantId: string, clientId: string, metadata: RequestMetadata) {
+        return this.generateAndSaveChart(tenantId, clientId, 'kp_significations', 'kp', metadata);
+    }
+
+    /**
+     * Get KP Horary (Prashna) Analysis
+     */
+    async getKpHorary(tenantId: string, clientId: string, horaryNumber: number, question: string, metadata: RequestMetadata) {
+        const client = await clientRepository.findById(tenantId, clientId);
+        if (!client) throw new ClientNotFoundError(clientId);
+
+        // Horary is unique per question/time. 
+        // Mapped to 'muhurat' (System: kp) - Semantically "Time Selection / Query"
+
+        const birthData = this.prepareBirthData(client, 'kp');
+        const result = await astroEngineClient.getKpHorary({
+            ...birthData,
+            horaryNumber,
+            question
+        });
+
+        // Save Horary Result. Warning: 'muhurat' (system 'kp') will be overwritten if we don't handle uniqueness.
+        // But since this API replaces the single chart, it's consistent with "Last Generated Horary".
+        // Use 'muhurat' type
+        const chart = await this.saveChart(tenantId, clientId, {
+            chartType: 'muhurat',
+            chartName: `${client.fullName} - Horary #${horaryNumber}`,
+            chartData: result,
+            chartConfig: { system: 'kp', horaryNumber, question },
+            calculatedAt: new Date(),
+            system: 'kp'
+        }, metadata);
+
+        return {
+            success: true,
+            data: result,
+            calculatedAt: chart.calculatedAt.toISOString(),
+            system: 'kp'
         };
     }
 }

@@ -445,6 +445,112 @@ export class ChartController {
             next(error);
         }
     }
+
+    // =========================================================================
+    // KP (KRISHNAMURTI PADDHATI) SYSTEM ENDPOINTS
+    // These proxy to astro-engine's KP routes
+    // =========================================================================
+
+    /**
+     * POST /clients/:id/kp/planets-cusps
+     * Get KP planets and cusps with sub-lords
+     */
+    async getKpPlanetsCusps(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
+            const result = await chartService.getKpPlanetsCusps(tenantId, id, metadata);
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * POST /clients/:id/kp/ruling-planets
+     * Get current ruling planets for timing analysis
+     */
+    async getKpRulingPlanets(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
+            const result = await chartService.getKpRulingPlanets(tenantId, id, metadata);
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * POST /clients/:id/kp/bhava-details
+     * Get KP Bhava (House) details
+     */
+    async getKpBhavaDetails(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
+            const result = await chartService.getKpBhavaDetails(tenantId, id, metadata);
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * POST /clients/:id/kp/significations
+     * Get KP significations
+     */
+    async getKpSignifications(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
+            const result = await chartService.getKpSignifications(tenantId, id, metadata);
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * POST /clients/:id/kp/horary
+     * Get KP Horary (Prashna) analysis
+     */
+    async getKpHorary(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const { horaryNumber, question } = req.body;
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
+            const result = await chartService.getKpHorary(tenantId, id, horaryNumber, question, metadata);
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export const chartController = new ChartController();

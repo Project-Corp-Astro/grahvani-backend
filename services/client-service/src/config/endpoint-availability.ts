@@ -123,7 +123,8 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         // Specialized for prediction, NO divisional charts
         charts: ['D1'],
         features: ['natal', 'dasha', 'horary', 'significations', 'ruling_planets', 'bhava_details'],
-        specialCharts: [], // planets_cusps and shodasha_varga confirmed failing
+        // KP-specific charts to be auto-generated
+        specialCharts: ['kp_chart', 'transit', 'kp_bhava', 'shadbala', 'muhurat'],
         hasDivisional: false,
         hasAshtakavarga: false,
         hasNumerology: false,

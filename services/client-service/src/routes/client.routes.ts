@@ -55,4 +55,12 @@ router.post('/:id/raman/divisional/:type', chartController.generateRamanDivision
 router.post('/:id/raman/dasha/:level', chartController.generateRamanDasha.bind(chartController));
 router.post('/:id/raman/:type', chartController.generateRamanChart.bind(chartController));
 
+// KP (Krishnamurti Paddhati) System Routes
+router.post('/:id/kp/planets-cusps', chartController.getKpPlanetsCusps.bind(chartController));
+router.post('/:id/kp/ruling-planets', chartController.getKpRulingPlanets.bind(chartController));
+router.post('/:id/kp/bhava-details', chartController.getKpBhavaDetails.bind(chartController));
+router.post('/:id/kp/significations', chartController.getKpSignifications.bind(chartController));
+router.post('/:id/kp/horary', chartController.getKpHorary.bind(chartController));
+
 export default router;
+
