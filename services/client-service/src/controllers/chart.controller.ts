@@ -34,6 +34,10 @@ export class ChartController {
                 ipAddress: req.ip,
                 userAgent: req.get('user-agent'),
             };
+
+            // Trigger background audit for missing charts
+            chartService.ensureFullVedicProfile(tenantId, id, metadata);
+
             const charts = await chartService.getClientCharts(tenantId, id, metadata);
             res.json(charts);
         } catch (error) {

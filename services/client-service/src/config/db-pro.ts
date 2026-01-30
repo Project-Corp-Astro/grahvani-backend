@@ -29,7 +29,10 @@ export class DatabaseManager {
                 throw new Error('DATABASE_URL not configured in environment');
             }
 
-            logger.info('🚀 Initializing standardized Prisma client (Port 6543)...');
+            logger.info({
+                url: url.replace(/:[^:@]+@/, ':****@'), // Mask password
+                pooler: url.includes('6543') ? 'Transaction Mode' : 'Session Mode'
+            }, '🚀 Initializing standardized Prisma client');
 
             this.prismaClient = new PrismaClient({
                 log: process.env.NODE_ENV === 'development'

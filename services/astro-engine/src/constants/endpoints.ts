@@ -30,6 +30,8 @@ export const LAHIRI_ENDPOINTS = {
     D40_KHAVEDAMSA: '/lahiri/calculate_d40',
     D45_AKSHAVEDAMSA: '/lahiri/calculate_d45',
     D60_SHASHTIAMSA: '/lahiri/calculate_d60',
+    D6_SHASHTAMSHA: '/lahiri/d6_shashtamsha',
+    D150_NADIAMSHA: '/lahiri/d150-nadiamsha',
 
     // Lagna Charts
     ARUDHA_LAGNA: '/lahiri/calculate_arudha_lagna',
@@ -44,7 +46,7 @@ export const LAHIRI_ENDPOINTS = {
     // Ashtakavarga
     BHINNA_ASHTAKAVARGA: '/lahiri/calculate_binnatakvarga',
     SARVA_ASHTAKAVARGA: '/lahiri/calculate_sarvashtakavarga',
-    SHODASHA_VARGA_SUMMARY: '/lahiri/lahiri/shodasha_varga_summary',
+    SHODASHA_VARGA_SUMMARY: '/lahiri/shodasha_varga_summary',
 
     // Dasha
     ANTAR_DASHA: '/lahiri/calculate_antar_dasha',
@@ -52,12 +54,81 @@ export const LAHIRI_ENDPOINTS = {
     SOOKSHMA_DASHA: '/lahiri/calculate_antar_pratyantar_sookshma_dasha',
     PRANA_DASHA: '/lahiri/calculate_sookshma_prana_dashas',
 
+    // Extended Dashas
+    ASHTOTTARI_ANTAR: '/lahiri/calculate_ashtottari_antar',
+    ASHTOTTARI_PRATYANTAR: '/lahiri/calculate_ashtottari_prathyantar',
+    TRIBHAGI: '/lahiri/calculate_tribhagi_dasha',
+    TRIBHAGI_40: '/lahiri/tribhagi-dasha-40',
+    SHODASHOTTARI: '/lahiri/shodashottari-dasha',
+    DWADASHOTTARI: '/lahiri/dwadashottari-dasha',
+    CHATURSHITISAMA: '/lahiri/calculate_Chaturshitisama_dasha',
+    SATABDIKA: '/lahiri/calculate_satabdika',
+    PANCHOTTARI: '/lahiri/calculate-panchottari-dasha',
+    DWISAPTATI: '/lahiri/calculate_dwisaptati',
+    SHASTIHAYANI: '/lahiri/calculate_shastihayani',
+    SHATTRIMSHATSAMA: '/lahiri/calculate_Shattrimshatsama_dasha',
+
+    // Dasha Reports
+    DASHA_3MONTHS: '/lahiri/calculate_vimshottari_dasha_3months',
+    DASHA_6MONTHS: '/lahiri/calculate_vimshottari_dasha_6months',
+    DASHA_REPORT_1YEAR: '/lahiri/dasha_report_1year',
+    DASHA_REPORT_2YEARS: '/lahiri/dasha_report_2years',
+    DASHA_REPORT_3YEARS: '/lahiri/dasha_report_3years',
+
+    // Panchanga
+    PANCHANGA: '/panchanga',
+    CHOGHADIYA: '/choghadiya_times',
+    HORA_TIMES: '/hora_times',
+    LAGNA_TIMES: '/lagna_times',
+    MUHURAT: '/muhurat',
+    PANCHANGA_MONTH: '/panchanga/month',
+
     // Compatibility & Numerology
     SYNASTRY: '/lahiri/synastry',
     COMPOSITE: '/lahiri/composite',
     PROGRESSED: '/lahiri/progressed',
     CHALDEAN_NUMEROLOGY: '/lahiri/chaldean_numerology',
     LO_SHU_GRID: '/lahiri/lo_shu_grid_numerology',
+    PERSON_NUMEROLOGY: '/lahiri/person_numerology',
+    GUNA_MILAN: '/lahiri/guna-milan',
+
+    // Yogas
+    GAJA_KESARI_YOGA: '/lahiri/comprehensive_gaja_kesari',
+    GURU_MANGAL_YOGA: '/lahiri/comprehensive_guru_mangal',
+    GURU_MANGAL_ONLY: '/lahiri/guru-mangal-only',
+    BUDHA_ADITYA_YOGA: '/lahiri/budha-aditya-yoga',
+    CHANDRA_MANGAL_YOGA: '/lahiri/chandra-mangal-yoga',
+    RAJ_YOGA: '/lahiri/raj-yoga',
+    PANCHA_MAHAPURUSHA_YOGA: '/lahiri/pancha-mahapurusha-yogas',
+    DARIDRA_YOGA: '/lahiri/daridra-analysis',
+    DHAN_YOGA: '/lahiri/dhan-yoga-analysis',
+    MALEFIC_YOGAS: '/lahiri/malefic_yogas',
+    YOGA_ANALYSIS: '/lahiri/yoga-analysis',
+    SPECIAL_YOGAS: '/lahiri/special-yogas',
+    SPIRITUAL_YOGAS: '/lahiri/spiritual_prosperity_yogas',
+    SHUBH_YOGAS: '/lahiri/shubh-yogas',
+    VIPARITHA_RAJ_YOGA: '/lahiri/viparitha-raja-yoga',
+    KALPADRUMA_YOGA: '/lahiri/kalpadruma-yoga',
+    KALA_SARPA_DOSHA: '/lahiri/kala-sarpa-fixed',
+
+    // Doshas
+    ANGARAK_DOSHA: '/lahiri/calculate-angarak-dosha',
+    GURU_CHANDAL_DOSHA: '/lahiri/guru-chandal-analysis',
+    SHRAPIT_DOSHA: '/lahiri/calculate-shrapit-dosha',
+    SADE_SATI: '/lahiri/calculate-sade-sati',
+    PITRA_DOSHA: '/lahiri/pitra-dosha',
+
+    // Remedies & Charts
+    YANTRA_REMEDIES: '/lahiri/yantra-recommendations',
+    MANTRA_REMEDIES: '/lahiri/mantra-analysis',
+    VEDIC_REMEDIES: '/lahiri/vedic_remedies',
+    GEMSTONE_REMEDIES: '/lahiri/calculate-gemstone',
+    CALCULATE_CHART: '/lahiri/calculate-chart',
+    LAL_KITAB_REMEDIES: '/lahiri/lal-kitab-remedies',
+    CHART_WITH_REMEDIES: '/lahiri/chart-with-remedies',
+
+    // Shadbala
+    SHADBALA: '/lahiri/calculate_shadbala',
 } as const;
 
 /**
@@ -65,16 +136,18 @@ export const LAHIRI_ENDPOINTS = {
  */
 export const KP_ENDPOINTS = {
     // Planets & Cusps
-    PLANETS_CUSPS: '/kp/calculate_kp_planets_cusps',
-    RULING_PLANETS: '/kp/calculate_ruling_planets',
+    PLANETS_CUSPS: '/kp/cusps_chart',
+    RULING_PLANETS: '/kp/ruling-planets',
     BHAVA_DETAILS: '/kp/calculate_bhava_details',
     SIGNIFICATIONS: '/kp/calculate_significations',
+    PLANET_SIGNIFICATORS: '/kp/planets-significators',
 
     // Dasha (Vimshottari)
     MAHA_ANTAR_DASHA: '/kp/calculate_maha_antar_dasha',
     PRATYANTAR_DASHA: '/kp/calculate_maha_antar_pratyantar_dasha',
     SOOKSHMA_DASHA: '/kp/calculate_maha_antar_pratyantar_sooksha_dasha',
     PRANA_DASHA: '/kp/calculate_maha_antar_pratyantar_pran_dasha',
+    CHARA_DASHA: '/kp/chara-dasha',
 
     // Horary & Varga
     HORARY: '/kp/kp_horary',
@@ -138,6 +211,69 @@ export const WESTERN_ENDPOINTS = {
     PROGRESSED: '/western/progressed',
     SYNASTRY: '/western/synastry',
     COMPOSITE: '/western/composite',
+} as const;
+
+/**
+ * Sri Yukteswar Ayanamsa System Endpoints
+ */
+export const YUKTESWAR_ENDPOINTS = {
+    // Natal & Transit
+    NATAL: '/yukteswar/calculate_d1',
+    TRANSIT: '/yukteswar/calculate_d1',
+    MOON_CHART: '/yukteswar/calculate_moon_chart',
+    SUN_CHART: '/yukteswar/calculate_sun_chart',
+    EQUAL_CHART: '/yukteswar/calculate_equal_chart',
+
+    // Divisional Charts
+    D2_HORA: '/yukteswar/calculate_d2',
+    D3_DREKKANA: '/yukteswar/calculate_d3',
+    D4_CHATURTHAMSHA: '/yukteswar/calculate_d4',
+    D7_SAPTAMSHA: '/yukteswar/calculate_d7',
+    D9_NAVAMSA: '/yukteswar/calculate_d9',
+    D10_DASAMSA: '/yukteswar/calculate_d10',
+    D12_DWADASAMSA: '/yukteswar/calculate_d12',
+    D16_SHODASAMSA: '/yukteswar/calculate_d16',
+    D20_VIMSHAMSA: '/yukteswar/calculate_d20',
+    D24_CHATURVIMSHAMSA: '/yukteswar/calculate_d24',
+    D27_SAPTAVIMSHAMSA: '/yukteswar/calculate_d27',
+    D30_TRIMSHAMSA: '/yukteswar/calculate_d30',
+    D40_KHAVEDAMSA: '/yukteswar/calculate_d40',
+    D45_AKSHAVEDAMSA: '/yukteswar/calculate_d45',
+    D60_SHASHTIAMSA: '/yukteswar/calculate_d60',
+
+    // Lagna & Bhava
+    ARUDHA_LAGNA: '/yukteswar/calculate_arudha_lagna',
+    BHAVA_LAGNA: '/yukteswar/calculate_bhava_lagna',
+    HORA_LAGNA: '/yukteswar/calculate_hora_lagna',
+    SRIPATHI_BHAVA: '/yukteswar/calculate_Sripati_Bhava',
+    KP_BHAVA: '/yukteswar/calculate_kp_bhava',
+    GL_CHART: '/yukteswar/calculate_gl_chart',
+    KARKAMSHA_D1: '/yukteswar/calculate_karakamsha_birth',
+    KARKAMSHA_D9: '/yukteswar/calculate_karkamsha_d9',
+
+    // Ashtakavarga
+    BHINNA_ASHTAKAVARGA: '/yukteswar/calculate_binnashtakvarga_chart',
+    SARVA_ASHTAKAVARGA: '/yukteswar/calculate_sarvashtakvarga_chart',
+
+    // Dashas
+    MAHA_ANTAR_DASHA: '/yukteswar/calculate_mahaantar_dasha',
+    PRATYANTAR_DASHA: '/yukteswar/calculate_pratyantar_dasha',
+    SOOKSHMA_DASHA: '/yukteswar/calculate_sookshma_dasha',
+    PRANA_DASHA: '/yukteswar/calculate_prana_dasha',
+
+    // Other Dashas
+    ASHTOTTARI_ANTAR: '/yukteswar/calculate_ashtottari_antar',
+    ASHTOTTARI_PRATYANTAR: '/yukteswar/calculate_ashtottari_pratyantardasha',
+    TRIBHAGI: '/yukteswar/calculate_tribhgi_dasha',
+    TRIBHAGI_40: '/yukteswar/calculate_tribhgi_40',
+    SHODASHOTTARI: '/yukteswar/calculate_shodashottari_dasha',
+    DWADASHOTTARI: '/yukteswar/calculate_dwadashottari',
+    DWISAPTATISAMA: '/yukteswar/calculate_dwisaptatisama',
+    SHASTIHAYANI: '/yukteswar/calculate_shastihayani',
+    SHATTRIMSHATSAMA: '/yukteswar/calculate_shattrimshatsama',
+    PANCHOTTARI: '/yukteswar/calculate_panchottari',
+    SATABDIKA: '/yukteswar/calculate_satabdika',
+    CHATURSHITISAMA: '/yukteswar/calculate_chaturshitisama_dasha',
 } as const;
 
 /**

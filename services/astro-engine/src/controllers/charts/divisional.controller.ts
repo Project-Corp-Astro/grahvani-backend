@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { lahiriClient, ramanClient, BirthData, AyanamsaType } from '../../clients';
+import { lahiriClient, ramanClient, yukteswarClient, BirthData, AyanamsaType } from '../../clients';
 import { cacheService } from '../../services/cache.service';
 import { logger } from '../../config/logger';
 
@@ -56,7 +56,9 @@ export class DivisionalController {
     }
 
     private getClient(ayanamsa: AyanamsaType) {
-        return ayanamsa === 'raman' ? ramanClient : lahiriClient;
+        if (ayanamsa === 'raman') return ramanClient;
+        if (ayanamsa === 'yukteswar') return yukteswarClient;
+        return lahiriClient;
     }
 
     private validateBirthData(data: BirthData, res: Response): boolean {

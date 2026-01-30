@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { lahiriClient, kpClient, ramanClient, BirthData, AyanamsaType } from '../../clients';
+import { lahiriClient, kpClient, ramanClient, yukteswarClient, BirthData, AyanamsaType } from '../../clients';
 import { cacheService } from '../../services/cache.service';
 import { logger } from '../../config/logger';
 
@@ -87,7 +87,9 @@ export class AshtakavargaController {
                 return;
             }
 
-            const data = await kpClient.getShodashaVarga(birthData);
+            const ayanamsa: AyanamsaType = birthData.ayanamsa || 'lahiri';
+            const client = this.getClient(ayanamsa);
+            const data = await client.getShodashaVarga(birthData);
             await cacheService.set('shodasha-varga', cacheKey, data);
 
             res.json({ success: true, data, cached: false, calculatedAt: new Date().toISOString() });
@@ -98,7 +100,13 @@ export class AshtakavargaController {
     }
 
     private getClient(ayanamsa: AyanamsaType) {
-        return ayanamsa === 'raman' ? ramanClient : lahiriClient;
+        switch (ayanamsa.toLowerCase()) {
+            case 'raman': return ramanClient;
+            case 'kp': return kpClient;
+            case 'yukteswar': return yukteswarClient;
+            case 'lahiri':
+            default: return lahiriClient;
+        }
     }
 
     private validateBirthData(data: BirthData, res: Response): boolean {
