@@ -6,7 +6,7 @@ import { BaseError } from '../errors/client.errors';
 // Types & Interfaces
 // =============================================================================
 
-export type Ayanamsa = 'lahiri' | 'raman' | 'kp';
+export type Ayanamsa = 'lahiri' | 'raman' | 'kp' | 'yukteswar' | 'western';
 
 export interface BirthData {
     birthDate: string;      // YYYY-MM-DD
@@ -293,18 +293,39 @@ class AstroEngineClient {
     // =========================================================================
 
     async getAshtakavarga(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
-        const payload = { ...birthData, system: ayanamsa };
-        return (await this.internalClient.post('/ashtakavarga', payload)).data;
+        if (ayanamsa === 'kp') {
+            throw new Error('Ashtakavarga is not available for KP system');
+        }
+
+        const endpoint = ayanamsa === 'raman'
+            ? '/raman/calculate_binnatakvarga'
+            : '/lahiri/calculate_binnatakvarga';
+
+        return (await this.internalClient.post(endpoint, birthData)).data;
     }
 
     async getSarvaAshtakavarga(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
-        const payload = { ...birthData, system: ayanamsa };
-        return (await this.internalClient.post('/sarva-ashtakavarga', payload)).data;
+        if (ayanamsa === 'kp') {
+            throw new Error('Sarva Ashtakavarga is not available for KP system');
+        }
+
+        const endpoint = ayanamsa === 'raman'
+            ? '/raman/calculate_sarvashtakavarga'
+            : '/lahiri/calculate_sarvashtakavarga';
+
+        return (await this.internalClient.post(endpoint, birthData)).data;
     }
 
     async getShodashaVarga(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
-        const payload = { ...birthData, system: ayanamsa };
-        return (await this.internalClient.post('/shodasha-varga', payload)).data;
+        if (ayanamsa === 'kp') {
+            throw new Error('Shodasha Varga is not available for KP system');
+        }
+
+        const endpoint = ayanamsa === 'raman'
+            ? '/raman/shodasha_varga_summary'
+            : '/lahiri/shodasha_varga_summary';
+
+        return (await this.internalClient.post(endpoint, birthData)).data;
     }
 
     // =========================================================================
@@ -376,6 +397,10 @@ class AstroEngineClient {
             return (await this.apiClient.post('/raman/equal-bhava', birthData)).data;
         }
         return (await this.apiClient.post('/charts/equal-bhava', birthData)).data;
+    }
+
+    async getEqualChart(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        return (await this.internalClient.post(`/special/equal_chart`, { ...birthData, system: ayanamsa })).data;
     }
 
     async getKarkamshaD1(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {

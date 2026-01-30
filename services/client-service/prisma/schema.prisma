@@ -1,6 +1,6 @@
 generator client {
   provider      = "prisma-client-js"
-  output        = "../src/generated/prisma"
+  output        = "../src/generated/prisma_temp"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
@@ -16,6 +16,7 @@ enum Gender {
   male
   female
   other
+  prefer_not_to_say
 
 }
 
@@ -119,6 +120,7 @@ enum ChartType {
   karkamsha_d9
   numerology_chaldean
   numerology_loshu
+  person_numerology
   yoga_gaja_kesari
   yoga_guru_mangal
   yoga_budha_aditya
@@ -171,6 +173,11 @@ enum ChartType {
   dasha_report_1year
   dasha_report_2years
   dasha_report_3years
+  kp_planets_cusps
+  kp_ruling_planets
+  kp_bhava_details
+  kp_significations
+  kp_horary
 }
 
 enum RemedyType {
@@ -200,6 +207,13 @@ enum ImportStatus {
   failed
   partially_completed
 
+}
+
+enum ChartGenerationStatus {
+  pending
+  processing
+  completed
+  failed
 }
 
 enum ImportType {
@@ -251,6 +265,10 @@ model Client {
   // Organization
   tags          Json?     @default("[]") @db.JsonB
   metadata      Json?     @default("{}") @db.JsonB
+  
+  // Generation Status Tracking
+  generationStatus ChartGenerationStatus @default(pending) @map("generation_status")
+  chartsVersion Int @default(1) @map("charts_version")
   
   // Source & Audit
   source        ClientSource @default(manual)
