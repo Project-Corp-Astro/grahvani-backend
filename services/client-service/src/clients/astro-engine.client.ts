@@ -297,11 +297,8 @@ class AstroEngineClient {
             throw new Error('Ashtakavarga is not available for KP system');
         }
 
-        const endpoint = ayanamsa === 'raman'
-            ? '/raman/calculate_binnatakvarga'
-            : '/lahiri/calculate_binnatakvarga';
-
-        return (await this.internalClient.post(endpoint, birthData)).data;
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post('/ashtakavarga', payload)).data;
     }
 
     async getSarvaAshtakavarga(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
@@ -309,11 +306,8 @@ class AstroEngineClient {
             throw new Error('Sarva Ashtakavarga is not available for KP system');
         }
 
-        const endpoint = ayanamsa === 'raman'
-            ? '/raman/calculate_sarvashtakavarga'
-            : '/lahiri/calculate_sarvashtakavarga';
-
-        return (await this.internalClient.post(endpoint, birthData)).data;
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post('/sarva-ashtakavarga', payload)).data;
     }
 
     async getShodashaVarga(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
@@ -321,11 +315,8 @@ class AstroEngineClient {
             throw new Error('Shodasha Varga is not available for KP system');
         }
 
-        const endpoint = ayanamsa === 'raman'
-            ? '/raman/shodasha_varga_summary'
-            : '/lahiri/shodasha_varga_summary';
-
-        return (await this.internalClient.post(endpoint, birthData)).data;
+        const payload = { ...birthData, system: ayanamsa };
+        return (await this.internalClient.post('/shodasha-varga', payload)).data;
     }
 
     // =========================================================================

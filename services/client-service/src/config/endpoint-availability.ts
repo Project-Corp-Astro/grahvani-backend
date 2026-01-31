@@ -71,6 +71,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         // Special Charts - verified endpoints
         specialCharts: [
             'moon', 'sun', 'sudarshan', 'transit',
+            'ashtakavarga_sarva', 'ashtakavarga_bhinna', 'ashtakavarga_shodasha',
             'arudha_lagna', 'bhava_lagna', 'hora_lagna', 'sripathi_bhava', 'kp_bhava', 'equal_bhava',
             'karkamsha_d1', 'karkamsha_d9',
             'numerology_chaldean', 'numerology_loshu', 'person_numerology',
@@ -109,6 +110,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         // Special Charts - verified from ApiEndPoints.txt lines 6-36
         specialCharts: [
             'moon', 'sun', 'sripathi_bhava', 'sudarshan',
+            'ashtakavarga_sarva', 'ashtakavarga_bhinna', 'ashtakavarga_shodasha',
             'arudha_lagna', 'kp_bhava', 'equal_bhava_lagna',
             'karkamsha_d1', 'karkamsha_d9', 'bhava_lagna', 'hora_lagna'
         ],
