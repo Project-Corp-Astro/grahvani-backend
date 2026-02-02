@@ -22,13 +22,13 @@ export class RamanController {
             const cacheKey = { ...birthData, type: 'raman-natal' };
             const cached = await cacheService.get<any>('raman-natal', cacheKey);
             if (cached) {
-                res.json({ success: true, data: cached, cached: true, system: 'raman', calculatedAt: new Date().toISOString() });
+                res.json({ success: true, data: cached, cached: true, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
                 return;
             }
 
             const data = await ramanClient.getNatalChart(birthData);
             await cacheService.set('raman-natal', cacheKey, data);
-            res.json({ success: true, data, cached: false, system: 'raman', calculatedAt: new Date().toISOString() });
+            res.json({ success: true, data, cached: false, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
         } catch (error: any) {
             logger.error({ error: error.message }, 'Raman Natal chart failed');
             res.status(500).json({ success: false, error: error.message });
@@ -43,13 +43,13 @@ export class RamanController {
             const cacheKey = { ...birthData, type: 'raman-transit' };
             const cached = await cacheService.get<any>('raman-transit', cacheKey);
             if (cached) {
-                res.json({ success: true, data: cached, cached: true, system: 'raman', calculatedAt: new Date().toISOString() });
+                res.json({ success: true, data: cached, cached: true, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
                 return;
             }
 
             const data = await ramanClient.getTransitChart(birthData);
             await cacheService.set('raman-transit', cacheKey, data, 3600);
-            res.json({ success: true, data, cached: false, system: 'raman', calculatedAt: new Date().toISOString() });
+            res.json({ success: true, data, cached: false, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
         } catch (error: any) {
             logger.error({ error: error.message }, 'Raman Transit chart failed');
             res.status(500).json({ success: false, error: error.message });
@@ -64,13 +64,13 @@ export class RamanController {
             const cacheKey = { ...birthData, type: 'raman-moon' };
             const cached = await cacheService.get<any>('raman-moon', cacheKey);
             if (cached) {
-                res.json({ success: true, data: cached, cached: true, system: 'raman', calculatedAt: new Date().toISOString() });
+                res.json({ success: true, data: cached, cached: true, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
                 return;
             }
 
             const data = await ramanClient.getMoonChart(birthData);
             await cacheService.set('raman-moon', cacheKey, data);
-            res.json({ success: true, data, cached: false, system: 'raman', calculatedAt: new Date().toISOString() });
+            res.json({ success: true, data, cached: false, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
         } catch (error: any) {
             logger.error({ error: error.message }, 'Raman Moon chart failed');
             res.status(500).json({ success: false, error: error.message });
@@ -85,13 +85,13 @@ export class RamanController {
             const cacheKey = { ...birthData, type: 'raman-sun' };
             const cached = await cacheService.get<any>('raman-sun', cacheKey);
             if (cached) {
-                res.json({ success: true, data: cached, cached: true, system: 'raman', calculatedAt: new Date().toISOString() });
+                res.json({ success: true, data: cached, cached: true, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
                 return;
             }
 
             const data = await ramanClient.getSunChart(birthData);
             await cacheService.set('raman-sun', cacheKey, data);
-            res.json({ success: true, data, cached: false, system: 'raman', calculatedAt: new Date().toISOString() });
+            res.json({ success: true, data, cached: false, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
         } catch (error: any) {
             logger.error({ error: error.message }, 'Raman Sun chart failed');
             res.status(500).json({ success: false, error: error.message });
@@ -106,13 +106,13 @@ export class RamanController {
             const cacheKey = { ...birthData, type: 'raman-sudarshan' };
             const cached = await cacheService.get<any>('raman-sudarshan', cacheKey);
             if (cached) {
-                res.json({ success: true, data: cached, cached: true, system: 'raman', calculatedAt: new Date().toISOString() });
+                res.json({ success: true, data: cached, cached: true, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
                 return;
             }
 
             const data = await ramanClient.getSudarshanChakra(birthData);
             await cacheService.set('raman-sudarshan', cacheKey, data);
-            res.json({ success: true, data, cached: false, system: 'raman', calculatedAt: new Date().toISOString() });
+            res.json({ success: true, data, cached: false, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
         } catch (error: any) {
             logger.error({ error: error.message }, 'Raman Sudarshan Chakra failed');
             res.status(500).json({ success: false, error: error.message });
@@ -132,13 +132,13 @@ export class RamanController {
             const cacheKey = { ...birthData, type: `raman-divisional:${type}` };
             const cached = await cacheService.get<any>(`raman-divisional:${type}`, cacheKey);
             if (cached) {
-                res.json({ success: true, data: cached, cached: true, system: 'raman', chartType: type, calculatedAt: new Date().toISOString() });
+                res.json({ success: true, data: cached, cached: true, ayanamsa: 'raman', chartType: type, calculatedAt: new Date().toISOString() });
                 return;
             }
 
             const data = await ramanClient.getDivisionalChart(birthData, type);
             await cacheService.set(`raman-divisional:${type}`, cacheKey, data);
-            res.json({ success: true, data, cached: false, system: 'raman', chartType: type, calculatedAt: new Date().toISOString() });
+            res.json({ success: true, data, cached: false, ayanamsa: 'raman', chartType: type, calculatedAt: new Date().toISOString() });
         } catch (error: any) {
             logger.error({ error: error.message, type: req.params.type }, 'Raman Divisional chart failed');
             res.status(500).json({ success: false, error: error.message });
@@ -194,13 +194,13 @@ export class RamanController {
             const cacheKey = { ...birthData, type: `raman-${chartName}` };
             const cached = await cacheService.get<any>(`raman-${chartName}`, cacheKey);
             if (cached) {
-                res.json({ success: true, data: cached, cached: true, system: 'raman', calculatedAt: new Date().toISOString() });
+                res.json({ success: true, data: cached, cached: true, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
                 return;
             }
 
             const data = await clientFn(birthData);
             await cacheService.set(`raman-${chartName}`, cacheKey, data);
-            res.json({ success: true, data, cached: false, system: 'raman', calculatedAt: new Date().toISOString() });
+            res.json({ success: true, data, cached: false, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
         } catch (error: any) {
             logger.error({ error: error.message }, `Raman ${chartName} failed`);
             res.status(500).json({ success: false, error: error.message });
@@ -219,13 +219,13 @@ export class RamanController {
             const cacheKey = { ...birthData, type: 'raman-bhinna-ashtakavarga' };
             const cached = await cacheService.get<any>('raman-bhinna-ashtakavarga', cacheKey);
             if (cached) {
-                res.json({ success: true, data: cached, cached: true, system: 'raman', calculatedAt: new Date().toISOString() });
+                res.json({ success: true, data: cached, cached: true, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
                 return;
             }
 
             const data = await ramanClient.getBhinnaAshtakavarga(birthData);
             await cacheService.set('raman-bhinna-ashtakavarga', cacheKey, data);
-            res.json({ success: true, data, cached: false, system: 'raman', calculatedAt: new Date().toISOString() });
+            res.json({ success: true, data, cached: false, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
         } catch (error: any) {
             logger.error({ error: error.message }, 'Raman Bhinna Ashtakavarga failed');
             res.status(500).json({ success: false, error: error.message });
@@ -240,13 +240,13 @@ export class RamanController {
             const cacheKey = { ...birthData, type: 'raman-sarva-ashtakavarga' };
             const cached = await cacheService.get<any>('raman-sarva-ashtakavarga', cacheKey);
             if (cached) {
-                res.json({ success: true, data: cached, cached: true, system: 'raman', calculatedAt: new Date().toISOString() });
+                res.json({ success: true, data: cached, cached: true, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
                 return;
             }
 
             const data = await ramanClient.getSarvaAshtakavarga(birthData);
             await cacheService.set('raman-sarva-ashtakavarga', cacheKey, data);
-            res.json({ success: true, data, cached: false, system: 'raman', calculatedAt: new Date().toISOString() });
+            res.json({ success: true, data, cached: false, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
         } catch (error: any) {
             logger.error({ error: error.message }, 'Raman Sarva Ashtakavarga failed');
             res.status(500).json({ success: false, error: error.message });
@@ -261,13 +261,13 @@ export class RamanController {
             const cacheKey = { ...birthData, type: 'raman-shodasha-varga' };
             const cached = await cacheService.get<any>('raman-shodasha-varga', cacheKey);
             if (cached) {
-                res.json({ success: true, data: cached, cached: true, system: 'raman', calculatedAt: new Date().toISOString() });
+                res.json({ success: true, data: cached, cached: true, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
                 return;
             }
 
             const data = await ramanClient.getShodashaVarga(birthData);
             await cacheService.set('raman-shodasha-varga', cacheKey, data);
-            res.json({ success: true, data, cached: false, system: 'raman', calculatedAt: new Date().toISOString() });
+            res.json({ success: true, data, cached: false, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
         } catch (error: any) {
             logger.error({ error: error.message }, 'Raman Shodasha Varga failed');
             res.status(500).json({ success: false, error: error.message });
@@ -307,13 +307,13 @@ export class RamanController {
             const cacheKey = { ...birthData, type: `raman-dasha:${level}` };
             const cached = await cacheService.get<any>(`raman-dasha:${level}`, cacheKey);
             if (cached) {
-                res.json({ success: true, data: cached, cached: true, system: 'raman', level, calculatedAt: new Date().toISOString() });
+                res.json({ success: true, data: cached, cached: true, ayanamsa: 'raman', level, calculatedAt: new Date().toISOString() });
                 return;
             }
 
             const data = await clientFn(birthData);
             await cacheService.set(`raman-dasha:${level}`, cacheKey, data);
-            res.json({ success: true, data, cached: false, system: 'raman', level, calculatedAt: new Date().toISOString() });
+            res.json({ success: true, data, cached: false, ayanamsa: 'raman', level, calculatedAt: new Date().toISOString() });
         } catch (error: any) {
             logger.error({ error: error.message }, `Raman ${level} dasha failed`);
             res.status(500).json({ success: false, error: error.message });

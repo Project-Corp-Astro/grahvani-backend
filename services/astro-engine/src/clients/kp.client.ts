@@ -44,7 +44,7 @@ export class KpClient extends BaseAstroClient {
      * Which planets signify which houses
      */
     async getSignifications(data: BirthData) {
-        return this.post(KP_ENDPOINTS.SIGNIFICATIONS, data);
+        return this.post(KP_ENDPOINTS.PLANET_SIGNIFICATORS, data);
     }
 
     // =========================================================================

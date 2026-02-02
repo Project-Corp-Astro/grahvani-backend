@@ -354,7 +354,7 @@ export class ChartController {
                 data: chart.chartData,
                 cached: chart.cached,
                 calculatedAt: chart.calculatedAt,
-                system: 'raman'
+                ayanamsa: 'raman'
             });
         } catch (error) {
             next(error);
@@ -376,7 +376,7 @@ export class ChartController {
                 data: chart.chartData,
                 cached: chart.cached,
                 calculatedAt: chart.calculatedAt,
-                system: 'raman'
+                ayanamsa: 'raman'
             });
         } catch (error) {
             next(error);
@@ -398,7 +398,7 @@ export class ChartController {
                 data: chart.chartData,
                 cached: chart.cached,
                 calculatedAt: chart.calculatedAt,
-                system: 'raman'
+                ayanamsa: 'raman'
             });
         } catch (error) {
             next(error);
@@ -420,7 +420,7 @@ export class ChartController {
                 data: dasha.chartData,
                 cached: dasha.cached,
                 calculatedAt: dasha.calculatedAt,
-                system: 'raman'
+                ayanamsa: 'raman'
             });
         } catch (error) {
             next(error);
@@ -443,7 +443,7 @@ export class ChartController {
                 data: chart.chartData,
                 cached: chart.cached,
                 calculatedAt: chart.calculatedAt,
-                system: 'raman'
+                ayanamsa: 'raman'
             });
         } catch (error) {
             next(error);

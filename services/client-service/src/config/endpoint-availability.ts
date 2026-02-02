@@ -109,7 +109,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         features: ['natal', 'transit', 'dasha', 'ashtakavarga'],
         // Special Charts - verified from ApiEndPoints.txt lines 6-36
         specialCharts: [
-            'moon', 'sun', 'sripathi_bhava', 'sudarshan',
+            'moon', 'sun', 'sripathi_bhava', 'sudarshan', 'transit',
             'ashtakavarga_sarva', 'ashtakavarga_bhinna', 'ashtakavarga_shodasha',
             'arudha_lagna', 'kp_bhava', 'equal_bhava_lagna',
             'karkamsha_d1', 'karkamsha_d9', 'bhava_lagna', 'hora_lagna'
