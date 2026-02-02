@@ -60,6 +60,8 @@ router.post('/:id/kp/planets-cusps', chartController.getKpPlanetsCusps.bind(char
 router.post('/:id/kp/ruling-planets', chartController.getKpRulingPlanets.bind(chartController));
 router.post('/:id/kp/bhava-details', chartController.getKpBhavaDetails.bind(chartController));
 router.post('/:id/kp/significations', chartController.getKpSignifications.bind(chartController));
+router.post('/:id/kp/house-significations', chartController.getKpHouseSignifications.bind(chartController));
+router.post('/:id/kp/planets-significators', chartController.getKpPlanetSignificators.bind(chartController));
 router.post('/:id/kp/horary', chartController.getKpHorary.bind(chartController));
 
 export default router;

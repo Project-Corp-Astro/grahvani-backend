@@ -127,6 +127,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         // KP-specific charts
         specialCharts: [
             'kp_planets_cusps', 'kp_ruling_planets', 'kp_bhava_details', 'kp_significations',
+            'kp_house_significations', 'kp_planet_significators',
             'kp_horary', 'chara_dasha', 'shodasha_varga_signs', 'muhurat'
         ],
         // Dashas listed in KP section lines 188-192

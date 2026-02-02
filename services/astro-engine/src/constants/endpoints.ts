@@ -140,7 +140,7 @@ export const KP_ENDPOINTS = {
     PLANETS_CUSPS: '/kp/cusps_chart',
     RULING_PLANETS: '/kp/ruling-planets',
     BHAVA_DETAILS: '/kp/calculate_bhava_details',
-    SIGNIFICATIONS: '/kp/calculate_significations',
+    SIGNIFICATIONS: '/kp/calculate_house_significations',
     PLANET_SIGNIFICATORS: '/kp/planets-significators',
 
     // Dasha (Vimshottari)

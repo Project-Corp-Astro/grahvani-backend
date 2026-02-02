@@ -275,6 +275,14 @@ export class ChartService {
             // KP-specific: Significations
             chartData = await astroEngineClient.getSignifications(birthData);
             dbChartType = 'kp_significations';
+        } else if (normalizedType === 'kp_house_significations') {
+            // KP-specific: House Significations (Table 1)
+            chartData = await astroEngineClient.getKpHouseSignifications(birthData);
+            dbChartType = 'kp_house_significations';
+        } else if (normalizedType === 'kp_planet_significators') {
+            // KP-specific: Planet Significators (Table 2 - Matrix)
+            chartData = await astroEngineClient.getKpPlanetSignificators(birthData);
+            dbChartType = 'kp_planet_significators';
         } else {
             // Default to divisional chart generation
             chartData = await astroEngineClient.getDivisionalChart(birthData, chartType, system);
@@ -1382,6 +1390,20 @@ export class ChartService {
      */
     async getKpSignifications(tenantId: string, clientId: string, metadata: RequestMetadata) {
         return this.generateAndSaveChart(tenantId, clientId, 'kp_significations', 'kp', metadata);
+    }
+
+    /**
+     * Get KP House Significations
+     */
+    async getKpHouseSignifications(tenantId: string, clientId: string, metadata: RequestMetadata) {
+        return this.generateAndSaveChart(tenantId, clientId, 'kp_house_significations', 'kp', metadata);
+    }
+
+    /**
+     * Get KP Planet Significators
+     */
+    async getKpPlanetSignificators(tenantId: string, clientId: string, metadata: RequestMetadata) {
+        return this.generateAndSaveChart(tenantId, clientId, 'kp_planet_significators', 'kp', metadata);
     }
 
     /**

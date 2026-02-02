@@ -556,6 +556,56 @@ export class ChartController {
     }
 
     /**
+     * POST /clients/:id/kp/house-significations
+     * Get KP House Significations (Table 1)
+     */
+    async getKpHouseSignifications(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
+            const result = await chartService.getKpHouseSignifications(tenantId, id, metadata);
+            res.json({
+                success: true,
+                data: result.chartData,
+                cached: result.cached,
+                calculatedAt: result.calculatedAt
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * POST /clients/:id/kp/planets-significators
+     * Get KP Planet Significators (Table 2 - Matrix)
+     */
+    async getKpPlanetSignificators(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = {
+                userId: req.user!.id,
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            };
+            const result = await chartService.getKpPlanetSignificators(tenantId, id, metadata);
+            res.json({
+                success: true,
+                data: result.chartData,
+                cached: result.cached,
+                calculatedAt: result.calculatedAt
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
      * POST /clients/:id/kp/horary
      * Get KP Horary (Prashna) analysis
      */

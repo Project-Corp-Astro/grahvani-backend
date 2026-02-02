@@ -103,6 +103,30 @@ export class KpController {
     }
 
     /**
+     * POST /internal/kp/planet-significators
+     */
+    async getPlanetSignificators(req: Request, res: Response): Promise<void> {
+        try {
+            const birthData: BirthData = req.body;
+            if (!this.validateBirthData(birthData, res)) return;
+
+            const cacheKey = { ...birthData, type: 'planet-significators' };
+            const cached = await cacheService.get<any>('planet-significators', cacheKey);
+            if (cached) {
+                res.json({ success: true, data: cached, cached: true, calculatedAt: new Date().toISOString() });
+                return;
+            }
+
+            const data = await astroEngineClient.getPlanetSignificators(birthData);
+            await cacheService.set('planet-significators', cacheKey, data);
+            res.json({ success: true, data, cached: false, calculatedAt: new Date().toISOString() });
+        } catch (error: any) {
+            logger.error({ error: error.message }, 'Planet Significators failed');
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    /**
      * POST /internal/kp/horary
      */
     async getHorary(req: Request, res: Response): Promise<void> {

@@ -40,10 +40,18 @@ export class KpClient extends BaseAstroClient {
     }
 
     /**
-     * Get house significations
+     * Get house significations (House View - First Table)
      * Which planets signify which houses
      */
     async getSignifications(data: BirthData) {
+        return this.post(KP_ENDPOINTS.SIGNIFICATIONS, data);
+    }
+
+    /**
+     * Get planet significators (Planet View - Second Table)
+     * Which houses are signified by each planet
+     */
+    async getPlanetSignificators(data: BirthData) {
         return this.post(KP_ENDPOINTS.PLANET_SIGNIFICATORS, data);
     }
 

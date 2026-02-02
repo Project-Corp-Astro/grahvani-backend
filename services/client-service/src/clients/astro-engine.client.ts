@@ -428,6 +428,14 @@ class AstroEngineClient {
         return (await this.apiClient.post('/kp/significations', birthData)).data;
     }
 
+    async getKpHouseSignifications(birthData: BirthData): Promise<AstroResponse> {
+        return (await this.apiClient.post('/kp/calculate_house_significations', birthData)).data;
+    }
+
+    async getKpPlanetSignificators(birthData: BirthData): Promise<AstroResponse> {
+        return (await this.apiClient.post('/kp/planets-significators', birthData)).data;
+    }
+
     async getKpHorary(birthData: BirthData & { horaryNumber: number; question: string }): Promise<AstroResponse> {
         return (await this.apiClient.post('/kp/horary', birthData)).data;
     }

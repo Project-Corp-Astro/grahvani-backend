@@ -3,6 +3,7 @@ import { config } from '../config';
 import { logger } from '../config/logger';
 import { cacheService } from './cache.service';
 import { LAHIRI_ENDPOINTS, KP_ENDPOINTS, RAMAN_ENDPOINTS, YUKTESWAR_ENDPOINTS } from '../constants/endpoints';
+import { kpClient } from '../clients/kp.client';
 
 // =============================================================================
 // Types & Interfaces
@@ -420,6 +421,13 @@ export class AstroEngineClient {
         const endpoint = '/kp/calculate_significations';
         const response = await this.client.post(endpoint, this.buildPayload(data));
         return response.data;
+    }
+
+    /**
+     * Get Planet Significators (Planet View - Second Table)
+     */
+    async getPlanetSignificators(data: BirthData): Promise<any> {
+        return kpClient.getPlanetSignificators(data);
     }
 
     /**
