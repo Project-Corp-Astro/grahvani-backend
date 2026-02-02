@@ -156,7 +156,7 @@ export class ChartController {
         try {
             const { id, system } = req.params;
             const tenantId = req.user!.tenantId;
-            const { ayanamsa, save, level } = req.body;
+            const { ayanamsa, save, level, mahaLord, antarLord, pratyantarLord } = req.body;
             const metadata = {
                 userId: req.user!.id,
                 ipAddress: req.ip,
@@ -166,7 +166,10 @@ export class ChartController {
             // Map system names directly (astro-engine expects: tribhagi, shodashottari, dwadashottari, etc.)
             const dashaSystemMap: Record<string, string> = {
                 tribhagi: 'tribhagi',
-                tribhagi40: 'tribhagi',
+                'tribhagi-40': 'tribhagi-40', // Explicit mapping
+                tribhagi40: 'tribhagi-40', // Handle potential alias
+                ashtottari: 'ashtottari',
+                'ashtottari_antar': 'ashtottari_antar',
                 shodashottari: 'shodashottari',
                 dwadashottari: 'dwadashottari',
                 panchottari: 'panchottari',
@@ -178,7 +181,14 @@ export class ChartController {
                 other: 'tribhagi', // Default for 'other'
             };
 
-            const dashaType = dashaSystemMap[system.toLowerCase()] || dashaSystemMap['tribhagi'];
+            let dashaType = dashaSystemMap[system.toLowerCase()] || dashaSystemMap['tribhagi'];
+
+            // Logic to handle Ashtottari 3rd level which has a distinct endpoint
+            if ((dashaType === 'ashtottari' || dashaType === 'ashtottari_antar') && level === 'pratyantardasha') {
+                dashaType = 'ashtottari_pratyantardasha';
+            }
+
+            const options = { mahaLord, antarLord, pratyantarLord };
 
             const dasha = await chartService.generateAlternativeDasha(
                 tenantId,
@@ -186,6 +196,7 @@ export class ChartController {
                 dashaType,
                 ayanamsa || 'lahiri',
                 level || 'mahadasha',
+                options,
                 save || false,
                 metadata
             );

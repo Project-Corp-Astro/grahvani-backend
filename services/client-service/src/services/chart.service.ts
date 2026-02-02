@@ -516,7 +516,7 @@ export class ChartService {
                 // Correctly route dasha_tribhagi etc to generateAlternativeDasha
                 const dashaName = lowerType.replace('dasha_', '');
                 operations.push(() =>
-                    this.generateAlternativeDasha(tenantId, clientId, dashaName, system, 'mahadasha', true, metadata)
+                    this.generateAlternativeDasha(tenantId, clientId, dashaName, system, 'mahadasha', {}, true, metadata)
                         .catch(err => {
                             if (err?.statusCode === 404 || err?.statusCode === 500) {
                                 markEndpointFailed(system, chartType);
@@ -844,6 +844,7 @@ export class ChartService {
         dashaType: string,
         ayanamsa: AyanamsaSystem = 'lahiri',
         level: string = 'mahadasha',
+        options: { mahaLord?: string; antarLord?: string; pratyantarLord?: string } = {},
         save: boolean = false,
         metadata: RequestMetadata
     ) {
@@ -870,7 +871,7 @@ export class ChartService {
 
         const birthData = this.prepareBirthData(client, ayanamsa);
 
-        const dashaData = await astroEngineClient.getAlternativeDasha(birthData, dashaType);
+        const dashaData = await astroEngineClient.getOtherDasha(birthData, dashaType, ayanamsa, options);
 
         // ALWAYS SAVE/OVERWRITE: Store exact data from astro engine as requested
         const dbChartType = this.getDashaChartType(dashaType);
@@ -928,10 +929,10 @@ export class ChartService {
                     await this.generateDasha(tenantId, clientId, 'tree', system, {});
                 } else if (type === 'chara' && system === 'kp') {
                     // Specialized KP Chara Dasha handled via Alternative Dasha
-                    await this.generateAlternativeDasha(tenantId, clientId, 'chara', system, 'mahadasha', true, metadata);
+                    await this.generateAlternativeDasha(tenantId, clientId, 'chara', system, 'mahadasha', {}, true, metadata);
                 } else if (!['dasha_3months', 'dasha_6months', 'dasha_report_1year', 'dasha_report_2years', 'dasha_report_3years'].includes(type)) {
                     // Generic Alternative Dasha Systems
-                    await this.generateAlternativeDasha(tenantId, clientId, type, system, 'mahadasha', true, metadata);
+                    await this.generateAlternativeDasha(tenantId, clientId, type, system, 'mahadasha', {}, true, metadata);
                 }
             } catch (err: any) {
                 logger.debug({ err: err.message, type, system }, 'Skipped optional dasha generation');

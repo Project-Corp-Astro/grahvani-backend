@@ -282,10 +282,25 @@ class AstroEngineClient {
      * Get Other Dasha Systems (Tribhagi, Shodashottari, Dwadashottari, etc.)
      * Routes to /internal/dasha/other?type=<dashaType>
      */
-    async getOtherDasha(birthData: BirthData, dashaType: string, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
-        logger.info({ ayanamsa, dashaType }, 'Generating Other Dasha');
-        const payload = { ...birthData, ayanamsa: ayanamsa };
-        return (await this.internalClient.post(`/dasha/other?type=${dashaType}`, payload)).data;
+    async getOtherDasha(
+        birthData: BirthData,
+        dashaType: string,
+        ayanamsa: Ayanamsa = 'lahiri',
+        options: { mahaLord?: string; antarLord?: string; pratyantarLord?: string } = {}
+    ): Promise<AstroResponse> {
+        logger.info({ ayanamsa, dashaType, options }, 'Generating Other Dasha');
+
+        // Use URLSearchParams for clean query string construction
+        const params = new URLSearchParams();
+        params.append('type', dashaType);
+
+        // Add context lords if present
+        if (options.mahaLord) params.append('mahaLord', options.mahaLord);
+        if (options.antarLord) params.append('antarLord', options.antarLord);
+        if (options.pratyantarLord) params.append('pratyantarLord', options.pratyantarLord);
+
+        const payload = { ...birthData, ayanamsa: ayanamsa, ...options };
+        return (await this.internalClient.post(`/dasha/other?${params.toString()}`, payload)).data;
     }
 
     // =========================================================================

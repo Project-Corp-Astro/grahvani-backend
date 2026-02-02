@@ -161,6 +161,8 @@ export class AstroEngineClient {
         return { data: response.data, cached: false };
     }
 
+
+
     /**
      * Get Sun Chart
      */
@@ -513,7 +515,7 @@ export class AstroEngineClient {
     /**
      * Get Other Dasha Systems (Tribhagi, Shodashottari, Dwadashottari, etc.)
      */
-    async getOtherDasha(data: BirthData, dashaType: string): Promise<any> {
+    async getOtherDasha(data: BirthData, dashaType: string, context: Record<string, any> = {}): Promise<any> {
         const endpointMap: Record<string, string> = {
             'tribhagi': '/lahiri/calculate_tribhagi_dasha',
             'tribhagi-40': '/lahiri/tribhagi-dasha-40',
@@ -526,6 +528,9 @@ export class AstroEngineClient {
             'shastihayani': '/lahiri/calculate_shastihayani',
             'shattrimshatsama': '/lahiri/calculate_Shattrimshatsama_dasha',
             'chara': '/kp/chara-dasha',
+            'ashtottari': '/lahiri/calculate_ashtottari_antar',
+            'ashtottari_antar': '/lahiri/calculate_ashtottari_antar',
+            'ashtottari_pratyantardasha': '/lahiri/calculate_ashtottari_prathyantar',
             'dasha_3months': '/lahiri/calculate_vimshottari_dasha_3months',
             'dasha_6months': '/lahiri/calculate_vimshottari_dasha_6months',
             'dasha_report_1year': '/lahiri/dasha_report_1year',
@@ -538,11 +543,17 @@ export class AstroEngineClient {
             throw new Error(`Unknown dasha type: ${dashaType}`);
         }
 
-        const cached = await cacheService.get<any>(`dasha_other:${dashaType}`, data);
+        // Map frontend camelCase context to backend snake_case if they exist
+        const extras: Record<string, any> = {};
+        if (context.mahaLord) extras.maha_lord = context.mahaLord;
+        if (context.antarLord) extras.antar_lord = context.antarLord;
+        if (context.pratyantarLord) extras.pratyantar_lord = context.pratyantarLord;
+
+        const cached = await cacheService.get<any>(`dasha_other:${dashaType}:${JSON.stringify(extras)}`, data);
         if (cached) return { data: cached, cached: true };
 
-        const response = await this.client.post(endpoint, this.buildPayload(data));
-        await cacheService.set(`dasha_other:${dashaType}`, data, response.data);
+        const response = await this.client.post(endpoint, this.buildPayload(data, extras));
+        await cacheService.set(`dasha_other:${dashaType}:${JSON.stringify(extras)}`, data, response.data);
 
         return { data: response.data, cached: false };
     }

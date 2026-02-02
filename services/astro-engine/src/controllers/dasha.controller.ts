@@ -86,7 +86,7 @@ export class DashaController {
                 return;
             }
 
-            const cacheKey = { ...birthData, type: `dasha:${dashaType}` };
+            const cacheKey = { ...birthData, type: `dasha:${dashaType}`, query: req.query };
             const cached = await cacheService.get<any>(`dasha:${dashaType}`, cacheKey);
 
             if (cached) {
@@ -94,7 +94,13 @@ export class DashaController {
                 return;
             }
 
-            const data = await astroEngineClient.getOtherDasha(birthData, dashaType);
+            const context = {
+                mahaLord: (req.query.mahaLord as string) || (req.body.mahaLord as string),
+                antarLord: (req.query.antarLord as string) || (req.body.antarLord as string),
+                pratyantarLord: (req.query.pratyantarLord as string) || (req.body.pratyantarLord as string)
+            };
+
+            const data = await astroEngineClient.getOtherDasha(birthData, dashaType, context);
             await cacheService.set(`dasha:${dashaType}`, cacheKey, data);
 
             res.json({ success: true, data, cached: false, dashaType, calculatedAt: new Date().toISOString() });
