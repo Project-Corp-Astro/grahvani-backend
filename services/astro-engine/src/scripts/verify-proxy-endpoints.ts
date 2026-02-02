@@ -9,13 +9,23 @@ const BIRTH_DATA = {
     latitude: 28.6139,
     longitude: 77.2090,
     timezoneOffset: 5.5,
-    ayanamsa: 'lahiri'
+    ayanamsa: 'lahiri' // Default, will override in loop
 };
 
-async function verifyProxy() {
-    console.log('--- Verifying Node.js Proxy Endpoints ---');
-    console.log(`Target: ${PROXY_URL}`);
+interface EndpointResult {
+    name: string;
+    path: string;
+    status: 'stored' | 'missed';
+    error?: string;
+}
 
+interface SystemResult {
+    system: string;
+    stored: string[];
+    missed: { name: string; error: string }[];
+}
+
+async function verifyProxy() {
     const systems = ['lahiri', 'kp', 'raman'];
     const endpoints = [
         { path: '/ashtakavarga/bhinna', name: 'Bhinna Ashtakavarga' },
@@ -23,31 +33,48 @@ async function verifyProxy() {
         { path: '/ashtakavarga/shodasha', name: 'Shodasha Varga Summary' }
     ];
 
+    const results: Record<string, SystemResult> = {};
+
     for (const system of systems) {
-        console.log(`\nTesting System: ${system.toUpperCase()}`);
+        results[system] = {
+            system: system,
+            stored: [],
+            missed: []
+        };
+
         for (const ep of endpoints) {
             try {
-                process.stdout.write(`  - ${ep.name}... `);
-                const res = await axios.post(`${PROXY_URL}${ep.path}`, {
+                await axios.post(`${PROXY_URL}${ep.path}`, {
                     ...BIRTH_DATA,
                     ayanamsa: system
                 });
-                console.log(`✅ Success (200)`);
-                // Sample check for data structure
-                if (ep.path.includes('shodasha')) {
-                    const keys = Object.keys(res.data.data);
-                    process.stdout.write(`    (Data sample: ${keys.slice(0, 3).join(', ')}...)\n`);
-                }
+                results[system].stored.push(ep.name);
             } catch (error: any) {
-                console.log(`❌ Failed: ${error.response?.status || error.message}`);
-                if (error.response?.data) {
-                    console.log('    Error Detail:', JSON.stringify(error.response.data).substring(0, 200));
-                }
+                const errorMsg = error.response?.status
+                    ? `Status ${error.response.status}`
+                    : error.message;
+                results[system].missed.push({
+                    name: ep.name,
+                    error: errorMsg
+                });
             }
         }
     }
 
-    console.log('\n--- Proxy Verification Finished ---');
+    for (const system of systems) {
+        const data = results[system];
+        console.log(`\nSystem: ${system.toUpperCase()}`);
+
+        if (data.stored.length > 0) {
+            console.log('  Stored:');
+            data.stored.forEach(name => console.log(`   - ${name}`));
+        }
+
+        if (data.missed.length > 0) {
+            console.log('  Missed:');
+            data.missed.forEach(item => console.log(`   - ${item.name} [${item.error}]`));
+        }
+    }
 }
 
 verifyProxy();
