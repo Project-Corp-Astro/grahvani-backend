@@ -2,8 +2,9 @@
 // EXTERNAL ASTRO ENGINE ENDPOINT MAPPINGS
 // =============================================================================
 
-/**
- * Lahiri Ayanamsa System Endpoints
+
+
+/***********************************Lahiri Ayanamsa System Endpoints******************************************
  * Base: /{system}/ where system = 'lahiri'
  */
 export const LAHIRI_ENDPOINTS = {
@@ -131,9 +132,9 @@ export const LAHIRI_ENDPOINTS = {
     SHADBALA: '/lahiri/calculate_shadbala',
 } as const;
 
-/**
- * KP (Krishnamurti Paddhati) System Endpoints
- */
+
+
+/********************************************* KP (Krishnamurti Paddhati) System Endpoints ******************************************/
 export const KP_ENDPOINTS = {
     // Planets & Cusps
     PLANETS_CUSPS: '/kp/cusps_chart',
@@ -154,9 +155,11 @@ export const KP_ENDPOINTS = {
     SHODASHA_VARGA: '/kp/shodasha_varga_signs',
 } as const;
 
-/**
- * Raman Ayanamsa System Endpoints
- */
+
+
+
+
+/*****************************************Raman Ayanamsa System Endpoints ***************/
 export const RAMAN_ENDPOINTS = {
     // Natal & Transit
     NATAL: '/raman/natal',
@@ -204,18 +207,21 @@ export const RAMAN_ENDPOINTS = {
     PRANA_DASHA: '/raman/calculate_raman_prana_dasha',
 } as const;
 
-/**
- * Western Astrology Endpoints
- */
+
+
+
+/****************************************************** Western Astrology Endpoints*******************************************/
 export const WESTERN_ENDPOINTS = {
     PROGRESSED: '/western/progressed',
     SYNASTRY: '/western/synastry',
     COMPOSITE: '/western/composite',
 } as const;
 
-/**
- * Sri Yukteswar Ayanamsa System Endpoints
- */
+
+
+
+
+/****************************************************** Sri Yukteswar Ayanamsa System Endpoints*******************************************/
 export const YUKTESWAR_ENDPOINTS = {
     // Natal & Transit
     NATAL: '/yukteswar/calculate_d1',
@@ -276,9 +282,7 @@ export const YUKTESWAR_ENDPOINTS = {
     CHATURSHITISAMA: '/yukteswar/calculate_chaturshitisama_dasha',
 } as const;
 
-/**
- * Divisional chart type to endpoint mapping
- */
+/************************************************Divisional chart type to endpoint mapping*******************************************/
 export const DIVISIONAL_CHART_MAP: Record<string, string> = {
     'd2': 'calculate_d2_hora',
     'd3': 'calculate_d3',
@@ -297,9 +301,7 @@ export const DIVISIONAL_CHART_MAP: Record<string, string> = {
     'd60': 'calculate_d60',
 };
 
-/**
- * Dasha level to endpoint mapping
- */
+/************************************************Dasha level to endpoint mapping*******************************************/
 export const DASHA_LEVEL_MAP: Record<string, string> = {
     'mahadasha': '/kp/calculate_maha_antar_dasha',
     'antardasha': '/kp/calculate_maha_antar_dasha',

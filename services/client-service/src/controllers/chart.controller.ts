@@ -469,7 +469,12 @@ export class ChartController {
                 userAgent: req.get('user-agent'),
             };
             const result = await chartService.getKpPlanetsCusps(tenantId, id, metadata);
-            res.json(result);
+            res.json({
+                success: true,
+                data: result.chartData,
+                cached: result.cached,
+                calculatedAt: result.calculatedAt
+            });
         } catch (error) {
             next(error);
         }
@@ -489,7 +494,12 @@ export class ChartController {
                 userAgent: req.get('user-agent'),
             };
             const result = await chartService.getKpRulingPlanets(tenantId, id, metadata);
-            res.json(result);
+            res.json({
+                success: true,
+                data: result.chartData,
+                cached: result.cached,
+                calculatedAt: result.calculatedAt
+            });
         } catch (error) {
             next(error);
         }
@@ -509,7 +519,12 @@ export class ChartController {
                 userAgent: req.get('user-agent'),
             };
             const result = await chartService.getKpBhavaDetails(tenantId, id, metadata);
-            res.json(result);
+            res.json({
+                success: true,
+                data: result.chartData,
+                cached: result.cached,
+                calculatedAt: result.calculatedAt
+            });
         } catch (error) {
             next(error);
         }
@@ -529,7 +544,12 @@ export class ChartController {
                 userAgent: req.get('user-agent'),
             };
             const result = await chartService.getKpSignifications(tenantId, id, metadata);
-            res.json(result);
+            res.json({
+                success: true,
+                data: result.chartData,
+                cached: result.cached,
+                calculatedAt: result.calculatedAt
+            });
         } catch (error) {
             next(error);
         }
@@ -549,6 +569,11 @@ export class ChartController {
                 ipAddress: req.ip,
                 userAgent: req.get('user-agent'),
             };
+            // Horary returns a custom object { success, data, calculatedAt } from service
+            // Just pass it through as it's already formatted in service or needs minor adjustment?
+            // Checking chart.service.ts getKpHorary:
+            // returns { success: true, data: result, calculatedAt: ..., system: 'kp' }
+            // So this one is actually already formatted correctly!
             const result = await chartService.getKpHorary(tenantId, id, horaryNumber, question, metadata);
             res.json(result);
         } catch (error) {
