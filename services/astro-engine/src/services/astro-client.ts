@@ -15,8 +15,7 @@ export interface BirthData {
     longitude: number;
     timezoneOffset: number;
     userName?: string;      // Optional user identifier
-    system?: 'lahiri' | 'kp' | 'raman' | 'yukteswar' | 'western';
-    ayanamsa?: 'lahiri' | 'kp' | 'raman' | 'yukteswar' | 'western'; // Alias for compatibility
+    ayanamsa?: 'lahiri' | 'kp' | 'raman' | 'yukteswar' | 'western'; // Standardized field
 }
 
 export interface HoraryData extends BirthData {
@@ -80,11 +79,11 @@ export class AstroEngineClient {
     }
 
     /**
-     * Get the resolved ayanamsa system from birth data (handles aliases)
+     * Get the resolved ayanamsa system from birth data
      */
-    private getSystem(data: BirthData): 'lahiri' | 'kp' | 'raman' | 'yukteswar' | 'western' {
-        const sys = data.system || data.ayanamsa || 'lahiri';
-        return sys.toLowerCase() as 'lahiri' | 'kp' | 'raman' | 'yukteswar' | 'western';
+    private getAyanamsa(data: BirthData): 'lahiri' | 'kp' | 'raman' | 'yukteswar' | 'western' {
+        const ayanamsa = data.ayanamsa || 'lahiri';
+        return ayanamsa.toLowerCase() as 'lahiri' | 'kp' | 'raman' | 'yukteswar' | 'western';
     }
 
     /**
@@ -98,7 +97,7 @@ export class AstroEngineClient {
             latitude: String(data.latitude),
             longitude: String(data.longitude),
             timezone_offset: data.timezoneOffset,
-            system: this.getSystem(data), // Explicitly pass resolved system to Python
+            system: this.getAyanamsa(data), // Explicitly pass resolved system to Python
             ...extras,
         };
     }
@@ -111,7 +110,7 @@ export class AstroEngineClient {
      * Generate Natal Chart (D1)
      */
     async getNatalChart(data: BirthData): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         let endpoint: string = `/${system}/natal`;
         if (system === 'kp') endpoint = KP_ENDPOINTS.PLANETS_CUSPS;
         if (system === 'yukteswar') endpoint = YUKTESWAR_ENDPOINTS.NATAL;
@@ -132,7 +131,7 @@ export class AstroEngineClient {
      * Generate Transit Chart
      */
     async getTransitChart(data: BirthData): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         const endpoint = `/${system}/transit`;
 
         // Cache for 1 hour (3600 seconds)
@@ -149,7 +148,7 @@ export class AstroEngineClient {
      * Get Moon Chart
      */
     async getMoonChart(data: BirthData): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         const endpoint = `/${system}/calculate_moon_chart`;
 
         const cached = await cacheService.get<any>(`moon:${system}`, data);
@@ -165,7 +164,7 @@ export class AstroEngineClient {
      * Get Sun Chart
      */
     async getSunChart(data: BirthData): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         const endpoint = `/${system}/calculate_sun_chart`;
 
         const cached = await cacheService.get<any>(`sun:${system}`, data);
@@ -181,7 +180,7 @@ export class AstroEngineClient {
      * Get Sudarshan Chakra
      */
     async getSudarshanChakra(data: BirthData): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         const endpoint = `/${system}/calculate_sudarshan_chakra`;
         const response = await this.client.post(endpoint, this.buildPayload(data));
         return response.data;
@@ -191,7 +190,7 @@ export class AstroEngineClient {
      * Get Yoga Analysis (Generic)
      */
     async getYoga(data: BirthData, yogaType: string): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         // Map common names to specific Lahiri endpoints
         const endpointMap: Record<string, string> = {
             'gaja_kesari': 'comprehensive_gaja_kesari',
@@ -225,7 +224,7 @@ export class AstroEngineClient {
      * Get Dosha Analysis (Generic)
      */
     async getDosha(data: BirthData, doshaType: string): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         const endpointMap: Record<string, string> = {
             'kala_sarpa': 'kala-sarpa-fixed',
             'angarak': 'calculate-angarak-dosha',
@@ -249,7 +248,7 @@ export class AstroEngineClient {
      * Get Remedial Recommendations (Generic)
      */
     async getRemedy(data: BirthData, remedyType: string): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         const endpointMap: Record<string, string> = {
             'yantra': 'yantra-recommendations',
             'mantra': 'mantra-analysis',
@@ -267,7 +266,7 @@ export class AstroEngineClient {
      * Get Panchanga & Muhurat Elements (Generic)
      */
     async getPanchanga(data: BirthData, type: string = 'panchanga'): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         const endpointMap: Record<string, string> = {
             'panchanga': 'panchanga',
             'choghadiya': 'choghadiya_times',
@@ -284,7 +283,7 @@ export class AstroEngineClient {
      * Get Specialized Charts (Generic)
      */
     async getSpecialChart(data: BirthData, type: string): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         const endpointMap: Record<string, string> = {
             'arudha_lagna': 'calculate_arudha_lagna',
             'bhava_lagna': 'calculate_bhava_lagna',
@@ -308,7 +307,7 @@ export class AstroEngineClient {
      * Generate Divisional Chart
      */
     async getDivisionalChart(data: BirthData, chartType: string): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         const type = chartType.toLowerCase();
 
         // KP divisional routing (not supported, fallback or error)
@@ -451,7 +450,7 @@ export class AstroEngineClient {
      * Get Vimshottari Dasha at specified level
      */
     async getVimshottariDasha(data: BirthData, level: string = 'mahadasha', context: Record<string, string> = {}): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         let endpoint = '';
 
         if (system === 'raman') {
@@ -548,7 +547,7 @@ export class AstroEngineClient {
      * Get Bhinna Ashtakavarga (individual planets)
      */
     async getBhinnaAshtakavarga(data: BirthData): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         let endpoint: string = LAHIRI_ENDPOINTS.BHINNA_ASHTAKAVARGA;
 
         if (system === 'raman') endpoint = RAMAN_ENDPOINTS.BHINNA_ASHTAKAVARGA;
@@ -563,7 +562,7 @@ export class AstroEngineClient {
      * Get Sarva Ashtakavarga (combined)
      */
     async getSarvaAshtakavarga(data: BirthData): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         let endpoint: string = LAHIRI_ENDPOINTS.SARVA_ASHTAKAVARGA;
 
         if (system === 'raman') endpoint = RAMAN_ENDPOINTS.SARVA_ASHTAKAVARGA;
@@ -578,7 +577,7 @@ export class AstroEngineClient {
      * Get Shodasha Varga Summary (16 divisional chart signs)
      */
     async getShodashaVargaSummary(data: BirthData): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         let endpoint: string = LAHIRI_ENDPOINTS.SHODASHA_VARGA_SUMMARY;
 
         if (system === 'raman') endpoint = RAMAN_ENDPOINTS.SHODASHA_VARGA;
@@ -602,7 +601,7 @@ export class AstroEngineClient {
      * Get Arudha Lagna
      */
     async getArudhaLagna(data: BirthData): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         const endpoint = `/${system}/calculate_arudha_lagna`;
         const response = await this.client.post(endpoint, this.buildPayload(data));
         return response.data;
@@ -612,7 +611,7 @@ export class AstroEngineClient {
      * Get Bhava Lagna
      */
     async getBhavaLagna(data: BirthData): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         const endpoint = `/${system}/calculate_bhava_lagna`;
         const response = await this.client.post(endpoint, this.buildPayload(data));
         return response.data;
@@ -622,7 +621,7 @@ export class AstroEngineClient {
      * Get Hora Lagna
      */
     async getHoraLagna(data: BirthData): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         const endpoint = `/${system}/calculate_hora_lagna`;
         const response = await this.client.post(endpoint, this.buildPayload(data));
         return response.data;
@@ -632,7 +631,7 @@ export class AstroEngineClient {
      * Get Sripathi Bhava
      */
     async getSripathiBhava(data: BirthData): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         const endpoint = `/${system}/calculate_sripathi_bhava`;
         const response = await this.client.post(endpoint, this.buildPayload(data));
         return response.data;
@@ -673,7 +672,7 @@ export class AstroEngineClient {
      * Secondary progressions for predictive analysis
      */
     async getProgressedChart(data: BirthData, progressedDate: string): Promise<any> {
-        const system = this.getSystem(data);
+        const system = this.getAyanamsa(data);
         const endpoint = `/${system}/progressed`;
         const response = await this.client.post(endpoint, {
             ...this.buildPayload(data),

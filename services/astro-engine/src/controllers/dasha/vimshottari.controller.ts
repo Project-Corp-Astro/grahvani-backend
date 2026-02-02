@@ -25,19 +25,19 @@ export class VimshottariController {
             if (!this.validateBirthData(birthData, res)) return;
             if (!this.validateLevel(level, res)) return;
 
-            // Route to correct client based on system
-            const system = (birthData.system || birthData.ayanamsa || 'lahiri').toLowerCase();
+            // Route to correct client based on ayanamsa
+            const ayanamsa = (birthData.ayanamsa || 'lahiri').toLowerCase();
             let client;
-            if (system === 'kp') {
+            if (ayanamsa === 'kp') {
                 client = require('../../clients').kpClient;
-            } else if (system === 'raman') {
+            } else if (ayanamsa === 'raman') {
                 client = require('../../clients').ramanClient;
             } else {
                 client = require('../../clients').lahiriClient;
             }
 
             const context = { mahaLord, antarLord, pratyantarLord };
-            const cacheKey = { ...birthData, ...context, type: `dasha:${level}`, system };
+            const cacheKey = { ...birthData, ...context, type: `dasha:${level}`, ayanamsa };
             const cached = await cacheService.get<any>(`dasha:${level}`, cacheKey);
 
             if (cached) {

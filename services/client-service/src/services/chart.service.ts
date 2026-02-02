@@ -842,6 +842,24 @@ export class ChartService {
         const client = await clientRepository.findById(tenantId, clientId);
         if (!client) throw new ClientNotFoundError(clientId);
 
+        // VALIDATION: Ensure dasha type is actually supported for this system
+        // This prevents invalid calls (like Tribhagi for Raman) from reaching Astro Engine
+        const capabilities = SYSTEM_CAPABILITIES[ayanamsa];
+        const normalizedType = dashaType.toLowerCase().replace(/-dasha$/, '');
+
+        const isSupported = capabilities?.dashas?.some(d => d.toLowerCase() === normalizedType || d.toLowerCase() === dashaType.toLowerCase());
+
+        if (!isSupported) {
+            logger.warn({
+                clientId,
+                ayanamsa,
+                dashaType,
+                supported: capabilities?.dashas
+            }, '🛑 Blocked unsupported dasha generation attempt');
+
+            throw new FeatureNotSupportedError(dashaType, ayanamsa);
+        }
+
         const birthData = this.prepareBirthData(client, ayanamsa);
 
         const dashaData = await astroEngineClient.getAlternativeDasha(birthData, dashaType);
@@ -1330,7 +1348,7 @@ export class ChartService {
             longitude: Number(client.birthLongitude || 0),
             timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
             userName: client.fullName || client.name || 'Anonymous',
-            system: ayanamsa,
+            ayanamsa: ayanamsa,  // FIXED: Use 'ayanamsa' field, not 'system'
         };
     }
 

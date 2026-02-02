@@ -17,8 +17,7 @@ export interface BirthData {
     longitude: number;      // -180 to 180
     timezoneOffset: number; // Hours offset from UTC (e.g., 5.5 for IST)
     userName?: string;      // Optional identifier
-    ayanamsa?: AyanamsaType;
-    system?: AyanamsaType;
+    ayanamsa?: AyanamsaType; // Standardized field for ayanamsa system
 }
 
 /**
