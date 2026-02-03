@@ -448,6 +448,16 @@ class AstroEngineClient {
         return (await this.internalClient.post('/divisional/d150', payload)).data;
     }
 
+    async getShodashaVargaSummary(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        // Explicitly map systems
+        if (ayanamsa === 'kp') {
+            return (await this.apiClient.post('/kp/shodasha_varga_signs', birthData)).data;
+        } else if (ayanamsa === 'raman') {
+            return (await this.apiClient.post('/raman/shodasha_varga_signs', birthData)).data;
+        }
+        return (await this.internalClient.post('/charts/shodasha-varga', { ...birthData, ayanamsa })).data;
+    }
+
     // =========================================================================
     // KP SYSTEM SPECIFIC ENDPOINTS
     // =========================================================================

@@ -115,6 +115,32 @@ export class KpPlanetsCuspsController {
         }
     }
 
+    /**
+     * POST /internal/kp/shodasha-varga-signs
+     */
+    async getShodashaVargaSummary(req: Request, res: Response): Promise<void> {
+        try {
+            const birthData: BirthData = req.body;
+            if (!this.validateBirthData(birthData, res)) return;
+
+            const cacheKey = { ...birthData, type: 'kp-shodasha-varga' };
+            const cached = await cacheService.get<any>('kp-shodasha-varga', cacheKey);
+
+            if (cached) {
+                res.json({ success: true, data: cached, cached: true, calculatedAt: new Date().toISOString() });
+                return;
+            }
+
+            const data = await kpClient.getShodashaVarga(birthData);
+            await cacheService.set('kp-shodasha-varga', cacheKey, data);
+
+            res.json({ success: true, data, cached: false, calculatedAt: new Date().toISOString() });
+        } catch (error: any) {
+            logger.error({ error: error.message }, 'KP Shodasha Varga failed');
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
     private validateBirthData(data: BirthData, res: Response): boolean {
         if (!data.birthDate || !data.birthTime || !data.latitude || !data.longitude) {
             res.status(400).json({ success: false, error: 'Missing required fields' });
