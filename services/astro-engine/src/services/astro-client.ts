@@ -551,52 +551,56 @@ export class AstroEngineClient {
      */
     async getOtherDasha(data: BirthData, dashaType: string, context: Record<string, any> = {}): Promise<any> {
         const system = this.getAyanamsa(data);
+        const lowerType = dashaType.toLowerCase();
+        let endpoint = '';
 
-        // Define system-specific maps
-        const lahiriMap: Record<string, string> = {
-            'tribhagi': '/lahiri/calculate_tribhagi_dasha',
-            'tribhagi-40': '/lahiri/tribhagi-dasha-40',
-            'shodashottari': '/lahiri/shodashottari-dasha',
-            'dwadashottari': '/lahiri/dwadashottari-dasha',
-            'panchottari': '/lahiri/calculate-panchottari-dasha',
-            'chaturshitisama': '/lahiri/calculate_Chaturshitisama_dasha',
-            'satabdika': '/lahiri/calculate_satabdika',
-            'dwisaptati': '/lahiri/calculate_dwisaptati',
-            'shastihayani': '/lahiri/calculate_shastihayani',
-            'shattrimshatsama': '/lahiri/calculate_Shattrimshatsama_dasha',
-            'chara': '/kp/chara-dasha', // Chara usually shared or KP
-            'ashtottari': '/lahiri/calculate_ashtottari_antar',
-            'ashtottari_antar': '/lahiri/calculate_ashtottari_antar',
-            'ashtottari_pratyantardasha': '/lahiri/calculate_ashtottari_prathyantar',
-            'dasha_3months': '/lahiri/calculate_vimshottari_dasha_3months',
-            'dasha_6months': '/lahiri/calculate_vimshottari_dasha_6months',
-            'dasha_report_1year': '/lahiri/dasha_report_1year',
-            'dasha_report_2years': '/lahiri/dasha_report_2years',
-            'dasha_report_3years': '/lahiri/dasha_report_3years',
-        };
-
-        const yukteswarMap: Record<string, string> = {
-            'tribhagi': '/yukteswar/calculate_tribhgi_dasha',
-            'tribhagi-40': '/yukteswar/calculate_tribhgi_40',
-            'shodashottari': '/yukteswar/calculate_shodashottari_dasha',
-            'dwadashottari': '/yukteswar/calculate_dwadashottari',
-            'panchottari': '/yukteswar/calculate_panchottari',
-            'chaturshitisama': '/yukteswar/calculate_chaturshitisama_dasha',
-            'satabdika': '/yukteswar/calculate_satabdika',
-            'dwisaptati': '/yukteswar/calculate_dwisaptatisama', // Note naming diff
-            'shastihayani': '/yukteswar/calculate_shastihayani',
-            'shattrimshatsama': '/yukteswar/calculate_shattrimshatsama',
-            'ashtottari': '/yukteswar/calculate_ashtottari_antar',
-            'ashtottari_antar': '/yukteswar/calculate_ashtottari_antar',
-            'ashtottari_pratyantardasha': '/yukteswar/calculate_ashtottari_pratyantardasha',
-            // Reports not yet verified for Yukteswar, falling back to Lahiri if needed or throwing error
-        };
-
-        // Select map based on system
-        const activeMap = system === 'yukteswar' ? yukteswarMap : lahiriMap;
-
-        const endpoint = activeMap[dashaType.toLowerCase()] || lahiriMap[dashaType.toLowerCase()];
-
+        if (system === 'yukteswar') {
+            const yukteswarMap: Record<string, string> = {
+                'mahaantar': YUKTESWAR_ENDPOINTS.MAHA_ANTAR_DASHA,
+                'pratyantar': YUKTESWAR_ENDPOINTS.PRATYANTAR_DASHA,
+                'sookshma': YUKTESWAR_ENDPOINTS.SOOKSHMA_DASHA,
+                'prana': YUKTESWAR_ENDPOINTS.PRANA_DASHA,
+                'ashtottari': YUKTESWAR_ENDPOINTS.ASHTOTTARI_ANTAR,
+                'ashtottari_antar': YUKTESWAR_ENDPOINTS.ASHTOTTARI_ANTAR,
+                'ashtottari_pratyantardasha': YUKTESWAR_ENDPOINTS.ASHTOTTARI_PRATYANTAR,
+                'tribhagi': YUKTESWAR_ENDPOINTS.TRIBHAGI,
+                'tribhagi-40': YUKTESWAR_ENDPOINTS.TRIBHAGI_40,
+                'shodashottari': YUKTESWAR_ENDPOINTS.SHODASHOTTARI,
+                'dwadashottari': YUKTESWAR_ENDPOINTS.DWADASHOTTARI,
+                'dwisaptati': YUKTESWAR_ENDPOINTS.DWISAPTATISAMA,
+                'dwisaptatisama': YUKTESWAR_ENDPOINTS.DWISAPTATISAMA,
+                'shastihayani': YUKTESWAR_ENDPOINTS.SHASTIHAYANI,
+                'shattrimshatsama': YUKTESWAR_ENDPOINTS.SHATTRIMSHATSAMA,
+                'panchottari': YUKTESWAR_ENDPOINTS.PANCHOTTARI,
+                'satabdika': YUKTESWAR_ENDPOINTS.SATABDIKA,
+                'chaturshitisama': YUKTESWAR_ENDPOINTS.CHATURSHITISAMA,
+            };
+            endpoint = yukteswarMap[lowerType];
+        } else {
+            // Default to Lahiri map (existing logic)
+            const endpointMap: Record<string, string> = {
+                'tribhagi': '/lahiri/calculate_tribhagi_dasha',
+                'tribhagi-40': '/lahiri/tribhagi-dasha-40',
+                'shodashottari': '/lahiri/shodashottari-dasha',
+                'dwadashottari': '/lahiri/dwadashottari-dasha',
+                'panchottari': '/lahiri/calculate-panchottari-dasha',
+                'chaturshitisama': '/lahiri/calculate_Chaturshitisama_dasha',
+                'satabdika': '/lahiri/calculate_satabdika',
+                'dwisaptati': '/lahiri/calculate_dwisaptati',
+                'shastihayani': '/lahiri/calculate_shastihayani',
+                'shattrimshatsama': '/lahiri/calculate_Shattrimshatsama_dasha',
+                'chara': '/kp/chara-dasha',
+                'ashtottari': '/lahiri/calculate_ashtottari_antar',
+                'ashtottari_antar': '/lahiri/calculate_ashtottari_antar',
+                'ashtottari_pratyantardasha': '/lahiri/calculate_ashtottari_prathyantar',
+                'dasha_3months': '/lahiri/calculate_vimshottari_dasha_3months',
+                'dasha_6months': '/lahiri/calculate_vimshottari_dasha_6months',
+                'dasha_report_1year': '/lahiri/dasha_report_1year',
+                'dasha_report_2years': '/lahiri/dasha_report_2years',
+                'dasha_report_3years': '/lahiri/dasha_report_3years',
+            };
+            endpoint = endpointMap[lowerType];
+        }
         if (!endpoint) {
             throw new Error(`Unknown dasha type: ${dashaType} for system ${system}`);
         }
