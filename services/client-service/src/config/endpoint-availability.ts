@@ -142,7 +142,8 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         features: ['natal', 'dasha', 'ashtakavarga'],
         specialCharts: [
             'sun_chart', 'moon_chart', 'equal_chart', 'sripathi_bhava', 'kp_bhava',
-            'arudha_lagna', 'karakamsha_birth', 'karkamsha_d9', 'bhava_lagna', 'hora_lagna', 'gl_chart'
+            'arudha_lagna', 'karakamsha_birth', 'karkamsha_d9', 'bhava_lagna', 'hora_lagna', 'gl_chart',
+            'ashtakavarga_sarva', 'ashtakavarga_bhinna'
         ],
         dashas: [
             'mahaantar', 'pratyantar', 'sookshma', 'prana',
