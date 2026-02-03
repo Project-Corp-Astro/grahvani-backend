@@ -43,6 +43,8 @@ export const LAHIRI_ENDPOINTS = {
     EQUAL_BHAVA: '/lahiri/calculate_equal_bhava_lagna',
     KARKAMSHA_D1: '/lahiri/calculate_d1_karkamsha',
     KARKAMSHA_D9: '/lahiri/calculate_karkamsha_d9',
+    MANDI: '/lahiri/calculate_mandi', // NEW
+    GULIKA: '/lahiri/calculate_gulika', // NEW
 
     // Ashtakavarga
     BHINNA_ASHTAKAVARGA: '/lahiri/calculate_binnatakvarga',
@@ -130,6 +132,9 @@ export const LAHIRI_ENDPOINTS = {
 
     // Shadbala
     SHADBALA: '/lahiri/calculate_shadbala',
+
+    // Extra Charts
+    D40_CHART: '/lahiri/d40-chart', // NEW
 } as const;
 
 
@@ -141,7 +146,14 @@ export const KP_ENDPOINTS = {
     RULING_PLANETS: '/kp/ruling-planets',
     BHAVA_DETAILS: '/kp/calculate_bhava_details',
     SIGNIFICATIONS: '/kp/calculate_house_significations',
-    PLANET_SIGNIFICATORS: '/kp/planets-significators',
+    PLANET_SIGNIFICATORS: '/kp/calculate_kp_significators', // UPDATED - Renamed from planets-significators to match Python
+
+    // Advanced Interlinks & Nadi
+    CUSPAL_INTERLINK_ADV: '/kp/cuspal_interlink_advanced_ssl', // NEW
+    CUSPAL_INTERLINK: '/kp/calculate_kp_cuspal_interlink', // NEW
+    CUSPAL_INTERLINK_SL: '/kp/cuspal_interl_SL', // NEW
+    NAKSHATRA_NADI: '/kp/nakshatra_nadi', // NEW
+    FORTUNA: '/kp/fortuna', // NEW
 
     // Dasha (Vimshottari)
     MAHA_ANTAR_DASHA: '/kp/calculate_maha_antar_dasha',

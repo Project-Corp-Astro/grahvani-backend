@@ -259,6 +259,18 @@ export class ChartService {
         } else if (normalizedType === 'shadbala') {
             chartData = await astroEngineClient.getShadbala(birthData, system);
             dbChartType = 'shadbala';
+        } else if (normalizedType === 'mandi') {
+            chartData = await astroEngineClient.getMandi(birthData, system);
+            dbChartType = 'mandi';
+        } else if (normalizedType === 'gulika') {
+            chartData = await astroEngineClient.getGulika(birthData, system);
+            dbChartType = 'gulika';
+        } else if (normalizedType === 'd40') {
+            chartData = await astroEngineClient.getD40(birthData, system);
+            dbChartType = 'D40';
+        } else if (normalizedType === 'd150' || normalizedType === 'nadiamsha') {
+            chartData = await astroEngineClient.getD150(birthData, system);
+            dbChartType = 'D150';
         } else if (normalizedType === 'kp_planets_cusps') {
             // KP-specific: Planets and Cusps with sub-lords
             chartData = await astroEngineClient.getKpPlanetsCusps(birthData);
@@ -283,6 +295,21 @@ export class ChartService {
             // KP-specific: Planet Significators (Table 2 - Matrix)
             chartData = await astroEngineClient.getKpPlanetSignificators(birthData);
             dbChartType = 'kp_planet_significators';
+        } else if (normalizedType === 'kp_interlinks') {
+            chartData = await astroEngineClient.getKpInterlinks(birthData);
+            dbChartType = 'kp_interlinks';
+        } else if (normalizedType === 'kp_interlinks_advanced') {
+            chartData = await astroEngineClient.getKpAdvancedInterlinks(birthData);
+            dbChartType = 'kp_interlinks_advanced';
+        } else if (normalizedType === 'kp_interlinks_sl') {
+            chartData = await astroEngineClient.getKpInterlinksSL(birthData);
+            dbChartType = 'kp_interlinks_sl';
+        } else if (normalizedType === 'kp_nakshatra_nadi') {
+            chartData = await astroEngineClient.getKpNakshatraNadi(birthData);
+            dbChartType = 'kp_nakshatra_nadi';
+        } else if (normalizedType === 'kp_fortuna') {
+            chartData = await astroEngineClient.getKpFortuna(birthData);
+            dbChartType = 'kp_fortuna';
         } else {
             // Default to divisional chart generation
             chartData = await astroEngineClient.getDivisionalChart(birthData, chartType, system);

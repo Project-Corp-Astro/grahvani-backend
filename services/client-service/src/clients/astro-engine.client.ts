@@ -247,6 +247,7 @@ class AstroEngineClient {
             case 'raman':
                 return (await this.apiClient.post('/raman/dasha/prana', birthData)).data;
             case 'kp':
+
             case 'lahiri':
             default:
                 return (await this.internalClient.post('/dasha/prana', birthData)).data;
@@ -423,6 +424,30 @@ class AstroEngineClient {
         return (await this.apiClient.post('/charts/karkamsha-d9', birthData)).data;
     }
 
+    async getMandi(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        // Enforce Lahiri only for now as per engine
+        if (ayanamsa !== 'lahiri') throw new Error('Mandi is currently only supported for Lahiri');
+        const payload = { ...birthData, ayanamsa: ayanamsa };
+        return (await this.internalClient.post('/charts/mandi', payload)).data; // Proxy to updated engine route
+    }
+
+    async getGulika(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        if (ayanamsa !== 'lahiri') throw new Error('Gulika is currently only supported for Lahiri');
+        const payload = { ...birthData, ayanamsa: ayanamsa };
+        return (await this.internalClient.post('/charts/gulika', payload)).data;
+    }
+
+    async getD40(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        const payload = { ...birthData, ayanamsa: ayanamsa };
+        return (await this.internalClient.post('/divisional/d40', payload)).data;
+    }
+
+    async getD150(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        if (ayanamsa !== 'lahiri') throw new Error('D150 is currently only supported for Lahiri');
+        const payload = { ...birthData, ayanamsa: ayanamsa };
+        return (await this.internalClient.post('/divisional/d150', payload)).data;
+    }
+
     // =========================================================================
     // KP SYSTEM SPECIFIC ENDPOINTS
     // =========================================================================
@@ -449,6 +474,26 @@ class AstroEngineClient {
 
     async getKpPlanetSignificators(birthData: BirthData): Promise<AstroResponse> {
         return (await this.apiClient.post('/kp/planets-significators', birthData)).data;
+    }
+
+    async getKpInterlinks(birthData: BirthData): Promise<AstroResponse> {
+        return (await this.apiClient.post('/kp/interlinks', birthData)).data;
+    }
+
+    async getKpAdvancedInterlinks(birthData: BirthData): Promise<AstroResponse> {
+        return (await this.apiClient.post('/kp/interlinks-advanced', birthData)).data;
+    }
+
+    async getKpInterlinksSL(birthData: BirthData): Promise<AstroResponse> {
+        return (await this.apiClient.post('/kp/interlinks-sl', birthData)).data;
+    }
+
+    async getKpNakshatraNadi(birthData: BirthData): Promise<AstroResponse> {
+        return (await this.apiClient.post('/kp/nakshatra-nadi', birthData)).data;
+    }
+
+    async getKpFortuna(birthData: BirthData): Promise<AstroResponse> {
+        return (await this.apiClient.post('/kp/fortuna', birthData)).data;
     }
 
     async getKpHorary(birthData: BirthData & { horaryNumber: number; question: string }): Promise<AstroResponse> {

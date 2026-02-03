@@ -194,10 +194,15 @@ export class AstroEngineClient {
      */
     async getYoga(data: BirthData, yogaType: string): Promise<any> {
         const system = this.getAyanamsa(data);
+        if (system !== 'lahiri') {
+            throw new Error(`Yoga analysis is only available for Lahiri system. Current system: ${system}`);
+        }
+
         // Map common names to specific Lahiri endpoints
         const endpointMap: Record<string, string> = {
             'gaja_kesari': 'comprehensive_gaja_kesari',
             'guru_mangal': 'comprehensive_guru_mangal',
+            'guru_mangal_only': 'guru-mangal-only',
             'budha_aditya': 'budha-aditya-yoga',
             'chandra_mangal': 'chandra-mangal-yoga',
             'raj_yoga': 'raj-yoga',
@@ -210,7 +215,8 @@ export class AstroEngineClient {
             'spiritual': 'spiritual_prosperity_yogas',
             'shubh': 'shubh-yogas',
             'viparitha_raja': 'viparitha-raja-yoga',
-            'kalpadruma': 'kalpadruma-yoga'
+            'kalpadruma': 'kalpadruma-yoga',
+            'kala_sarpa': 'kala-sarpa-fixed'
         };
         const endpoint = endpointMap[yogaType] || yogaType;
 
@@ -228,6 +234,10 @@ export class AstroEngineClient {
      */
     async getDosha(data: BirthData, doshaType: string): Promise<any> {
         const system = this.getAyanamsa(data);
+        if (system !== 'lahiri') {
+            throw new Error(`Dosha analysis is only available for Lahiri system. Current system: ${system}`);
+        }
+
         const endpointMap: Record<string, string> = {
             'kala_sarpa': 'kala-sarpa-fixed',
             'angarak': 'calculate-angarak-dosha',
@@ -252,12 +262,17 @@ export class AstroEngineClient {
      */
     async getRemedy(data: BirthData, remedyType: string): Promise<any> {
         const system = this.getAyanamsa(data);
+        if (system !== 'lahiri') {
+            throw new Error(`Remedies are only available for Lahiri system. Current system: ${system}`);
+        }
+
         const endpointMap: Record<string, string> = {
             'yantra': 'yantra-recommendations',
             'mantra': 'mantra-analysis',
             'general': 'vedic_remedies',
             'gemstone': 'calculate-gemstone',
-            'lal_kitab': 'lal-kitab-remedies'
+            'lal_kitab': 'lal-kitab-remedies',
+            'chart_remedies': 'chart-with-remedies'
         };
         const endpoint = endpointMap[remedyType] || remedyType;
         // Some remedies match /lahiri/ endpoint directly, others need specific paths
@@ -269,17 +284,27 @@ export class AstroEngineClient {
      * Get Panchanga & Muhurat Elements (Generic)
      */
     async getPanchanga(data: BirthData, type: string = 'panchanga'): Promise<any> {
-        const system = this.getAyanamsa(data);
+        // Panchanga is an independent module in python, but usually proxied. 
+        // Based on ApiEndPoints.txt, it lives at root /panchanga or /choghadiya_times etc.
+        // It does NOT seem to be prefixed by /{system}/ unless it's /lahiri/guna-milan
+
         const endpointMap: Record<string, string> = {
-            'panchanga': 'panchanga',
-            'choghadiya': 'choghadiya_times',
-            'hora': 'hora_times',
-            'lagna_times': 'lagna_times',
-            'muhurat': 'muhurat'
+            'panchanga': '/panchanga',
+            'choghadiya': '/choghadiya_times',
+            'hora': '/hora_times',
+            'lagna_times': '/lagna_times',
+            'muhurat': '/muhurat',
+            'panchanga_month': '/panchanga/month'
         };
-        const endpoint = endpointMap[type] || type;
-        const response = await this.client.post(`/${system}/${endpoint}`, this.buildPayload(data));
-        return response.data;
+
+        const absoluteEndpoint = endpointMap[type];
+        if (absoluteEndpoint) {
+            const response = await this.client.post(absoluteEndpoint, this.buildPayload(data));
+            return response.data;
+        }
+
+        // If it falls through, it might be something else, but strictly sticking to known list
+        throw new Error(`Unknown Panchanga type: ${type}`);
     }
 
     /**
@@ -393,7 +418,7 @@ export class AstroEngineClient {
      * Get KP Planets and Cusps with sub-lords
      */
     async getKpPlanetsCusps(data: BirthData): Promise<any> {
-        const endpoint = '/kp/calculate_kp_planets_cusps';
+        const endpoint = '/kp/cusps_chart';
         const response = await this.client.post(endpoint, this.buildPayload(data));
         return response.data;
     }
@@ -481,6 +506,15 @@ export class AstroEngineClient {
                 'prana': '/kp/calculate_maha_antar_pratyantar_pran_dasha'
             };
             endpoint = kpEndpoints[level.toLowerCase()] || kpEndpoints['mahadasha'];
+        } else if (system === 'yukteswar') {
+            const yukteswarEndpoints: Record<string, string> = {
+                'mahadasha': '/yukteswar/calculate_mahaantar_dasha',
+                'antardasha': '/yukteswar/calculate_mahaantar_dasha',
+                'pratyantardasha': '/yukteswar/calculate_pratyantar_dasha',
+                'sookshma': '/yukteswar/calculate_sookshma_dasha',
+                'prana': '/yukteswar/calculate_prana_dasha'
+            };
+            endpoint = yukteswarEndpoints[level.toLowerCase()] || yukteswarEndpoints['mahadasha'];
         } else {
             // Lahiri/Default
             const lahiriEndpoints: Record<string, string> = {
@@ -516,7 +550,10 @@ export class AstroEngineClient {
      * Get Other Dasha Systems (Tribhagi, Shodashottari, Dwadashottari, etc.)
      */
     async getOtherDasha(data: BirthData, dashaType: string, context: Record<string, any> = {}): Promise<any> {
-        const endpointMap: Record<string, string> = {
+        const system = this.getAyanamsa(data);
+
+        // Define system-specific maps
+        const lahiriMap: Record<string, string> = {
             'tribhagi': '/lahiri/calculate_tribhagi_dasha',
             'tribhagi-40': '/lahiri/tribhagi-dasha-40',
             'shodashottari': '/lahiri/shodashottari-dasha',
@@ -527,7 +564,7 @@ export class AstroEngineClient {
             'dwisaptati': '/lahiri/calculate_dwisaptati',
             'shastihayani': '/lahiri/calculate_shastihayani',
             'shattrimshatsama': '/lahiri/calculate_Shattrimshatsama_dasha',
-            'chara': '/kp/chara-dasha',
+            'chara': '/kp/chara-dasha', // Chara usually shared or KP
             'ashtottari': '/lahiri/calculate_ashtottari_antar',
             'ashtottari_antar': '/lahiri/calculate_ashtottari_antar',
             'ashtottari_pratyantardasha': '/lahiri/calculate_ashtottari_prathyantar',
@@ -538,9 +575,30 @@ export class AstroEngineClient {
             'dasha_report_3years': '/lahiri/dasha_report_3years',
         };
 
-        const endpoint = endpointMap[dashaType.toLowerCase()];
+        const yukteswarMap: Record<string, string> = {
+            'tribhagi': '/yukteswar/calculate_tribhgi_dasha',
+            'tribhagi-40': '/yukteswar/calculate_tribhgi_40',
+            'shodashottari': '/yukteswar/calculate_shodashottari_dasha',
+            'dwadashottari': '/yukteswar/calculate_dwadashottari',
+            'panchottari': '/yukteswar/calculate_panchottari',
+            'chaturshitisama': '/yukteswar/calculate_chaturshitisama_dasha',
+            'satabdika': '/yukteswar/calculate_satabdika',
+            'dwisaptati': '/yukteswar/calculate_dwisaptatisama', // Note naming diff
+            'shastihayani': '/yukteswar/calculate_shastihayani',
+            'shattrimshatsama': '/yukteswar/calculate_shattrimshatsama',
+            'ashtottari': '/yukteswar/calculate_ashtottari_antar',
+            'ashtottari_antar': '/yukteswar/calculate_ashtottari_antar',
+            'ashtottari_pratyantardasha': '/yukteswar/calculate_ashtottari_pratyantardasha',
+            // Reports not yet verified for Yukteswar, falling back to Lahiri if needed or throwing error
+        };
+
+        // Select map based on system
+        const activeMap = system === 'yukteswar' ? yukteswarMap : lahiriMap;
+
+        const endpoint = activeMap[dashaType.toLowerCase()] || lahiriMap[dashaType.toLowerCase()];
+
         if (!endpoint) {
-            throw new Error(`Unknown dasha type: ${dashaType}`);
+            throw new Error(`Unknown dasha type: ${dashaType} for system ${system}`);
         }
 
         // Map frontend camelCase context to backend snake_case if they exist
@@ -549,13 +607,50 @@ export class AstroEngineClient {
         if (context.antarLord) extras.antar_lord = context.antarLord;
         if (context.pratyantarLord) extras.pratyantar_lord = context.pratyantarLord;
 
-        const cached = await cacheService.get<any>(`dasha_other:${dashaType}:${JSON.stringify(extras)}`, data);
+        const cached = await cacheService.get<any>(`dasha_other:${system}:${dashaType}:${JSON.stringify(extras)}`, data);
         if (cached) return { data: cached, cached: true };
 
         const response = await this.client.post(endpoint, this.buildPayload(data, extras));
-        await cacheService.set(`dasha_other:${dashaType}:${JSON.stringify(extras)}`, data, response.data);
+        await cacheService.set(`dasha_other:${system}:${dashaType}:${JSON.stringify(extras)}`, data, response.data);
 
         return { data: response.data, cached: false };
+    }
+
+    /**
+     * Get Mandi (Lahiri only)
+     */
+    async getMandi(data: BirthData): Promise<any> {
+        const system = this.getAyanamsa(data);
+        if (system !== 'lahiri') throw new Error('Mandi calculation is only available for Lahiri system.');
+        const response = await this.client.post(LAHIRI_ENDPOINTS.MANDI, this.buildPayload(data));
+        return response.data;
+    }
+
+    /**
+     * Get Gulika (Lahiri only)
+     */
+    async getGulika(data: BirthData): Promise<any> {
+        const system = this.getAyanamsa(data);
+        if (system !== 'lahiri') throw new Error('Gulika calculation is only available for Lahiri system.');
+        const response = await this.client.post(LAHIRI_ENDPOINTS.GULIKA, this.buildPayload(data));
+        return response.data;
+    }
+
+    /**
+     * Get D40 (Khavedamsa) - Now explicitly supported
+     */
+    async getD40(data: BirthData): Promise<any> {
+        return this.getDivisionalChart(data, 'd40');
+    }
+
+    /**
+     * Get D150 (Nadiamsha) - Lahiri only
+     */
+    async getD150(data: BirthData): Promise<any> {
+        const system = this.getAyanamsa(data);
+        if (system !== 'lahiri') throw new Error('D150 Nadiamsha is only available for Lahiri system.');
+        const response = await this.client.post(LAHIRI_ENDPOINTS.D150_NADIAMSHA, this.buildPayload(data));
+        return response.data;
     }
 
     // =========================================================================
@@ -678,6 +773,9 @@ export class AstroEngineClient {
      * Get Chaldean Numerology
      */
     async getChaldeanNumerology(data: BirthData & { name: string }): Promise<any> {
+        const system = this.getAyanamsa(data);
+        if (system !== 'lahiri') throw new Error('Numerology is only available for Lahiri system.');
+
         const endpoint = '/lahiri/chaldean_numerology';
         const response = await this.client.post(endpoint, {
             ...this.buildPayload(data),
@@ -717,7 +815,52 @@ export class AstroEngineClient {
      * Get Lo Shu Grid Numerology
      */
     async getLoShuGrid(data: BirthData): Promise<any> {
+        const system = this.getAyanamsa(data);
+        if (system !== 'lahiri') throw new Error('Numerology is only available for Lahiri system.');
+
         const endpoint = '/lahiri/lo_shu_grid_numerology';
+        const response = await this.client.post(endpoint, this.buildPayload(data));
+        return response.data;
+    }
+
+    async getKpSignificators(data: BirthData): Promise<any> {
+        return this.client.post(KP_ENDPOINTS.PLANET_SIGNIFICATORS, this.buildPayload(data)).then(r => r.data);
+    }
+
+    async getKpInterlinks(data: BirthData): Promise<any> {
+        return this.client.post(KP_ENDPOINTS.CUSPAL_INTERLINK, this.buildPayload(data)).then(r => r.data);
+    }
+
+    async getKpAdvancedInterlinks(data: BirthData): Promise<any> {
+        return this.client.post(KP_ENDPOINTS.CUSPAL_INTERLINK_ADV, this.buildPayload(data)).then(r => r.data);
+    }
+
+    async getKpInterlinksSL(data: BirthData): Promise<any> {
+        return this.client.post(KP_ENDPOINTS.CUSPAL_INTERLINK_SL, this.buildPayload(data)).then(r => r.data);
+    }
+
+    async getKpNakshatraNadi(data: BirthData): Promise<any> {
+        return this.client.post(KP_ENDPOINTS.NAKSHATRA_NADI, this.buildPayload(data)).then(r => r.data);
+    }
+
+    async getKpFortuna(data: BirthData): Promise<any> {
+        return this.client.post(KP_ENDPOINTS.FORTUNA, this.buildPayload(data)).then(r => r.data);
+    }
+
+    async getPersonNumerology(data: BirthData): Promise<any> {
+        const system = this.getAyanamsa(data);
+        if (system !== 'lahiri') throw new Error('Numerology is only available for Lahiri system.');
+
+        const endpoint = '/lahiri/person_numerology';
+        const response = await this.client.post(endpoint, this.buildPayload(data));
+        return response.data;
+    }
+
+    async getGunaMilan(data: BirthData): Promise<any> {
+        const system = this.getAyanamsa(data);
+        if (system !== 'lahiri') throw new Error('Guna Milan is only available for Lahiri system.');
+
+        const endpoint = '/lahiri/guna-milan';
         const response = await this.client.post(endpoint, this.buildPayload(data));
         return response.data;
     }
