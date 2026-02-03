@@ -70,7 +70,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         features: ['natal', 'transit', 'dasha', 'ashtakavarga', 'numerology', 'synastry', 'composite', 'progressed'],
         // Special Charts - verified endpoints
         specialCharts: [
-            'moon', 'sun', 'sudarshan', 'transit',
+            'moon', 'sun', 'sudarshan', 'transit', 'mandi', 'gulika', 'd40', 'd150',
             'ashtakavarga_sarva', 'ashtakavarga_bhinna', 'ashtakavarga_shodasha',
             'arudha_lagna', 'bhava_lagna', 'hora_lagna', 'sripathi_bhava', 'kp_bhava', 'equal_bhava',
             'karkamsha_d1', 'karkamsha_d9',
@@ -111,7 +111,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         specialCharts: [
             'moon', 'sun', 'sripathi_bhava', 'sudarshan', 'transit',
             'ashtakavarga_sarva', 'ashtakavarga_bhinna', 'ashtakavarga_shodasha',
-            'arudha_lagna', 'kp_bhava', 'equal_bhava_lagna',
+            'arudha_lagna', 'kp_bhava', 'equal_bhava',
             'karkamsha_d1', 'karkamsha_d9', 'bhava_lagna', 'hora_lagna'
         ],
         dashas: ['vimshottari'], // Lines 44-47
@@ -128,6 +128,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         specialCharts: [
             'kp_planets_cusps', 'kp_ruling_planets', 'kp_bhava_details', 'kp_significations',
             'kp_house_significations', 'kp_planet_significators',
+            'kp_interlinks', 'kp_interlinks_advanced', 'kp_interlinks_sl', 'kp_nakshatra_nadi', 'kp_fortuna',
             'kp_horary', 'chara_dasha', 'shodasha_varga_signs', 'muhurat'
         ],
         // Dashas listed in KP section lines 188-192
