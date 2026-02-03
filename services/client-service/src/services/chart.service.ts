@@ -310,6 +310,9 @@ export class ChartService {
         } else if (normalizedType === 'kp_fortuna') {
             chartData = await astroEngineClient.getKpFortuna(birthData);
             dbChartType = 'kp_fortuna';
+        } else if (normalizedType === 'kp_shodasha' || normalizedType === 'shodasha_varga_signs') {
+            chartData = await astroEngineClient.getShodashaVargaSummary(birthData, system);
+            dbChartType = 'shodasha_varga_signs';
         } else {
             // Default to divisional chart generation
             chartData = await astroEngineClient.getDivisionalChart(birthData, chartType, system);
