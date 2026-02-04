@@ -241,6 +241,8 @@ export const YUKTESWAR_ENDPOINTS = {
     MOON_CHART: '/yukteswar/calculate_moon_chart',
     SUN_CHART: '/yukteswar/calculate_sun_chart',
     EQUAL_CHART: '/yukteswar/calculate_equal_chart',
+    SUDARSHAN_CHAKRA: '/yukteswar/calculate_sudarshan_chakra',
+    SHODASHA_VARGA_SUMMARY: '/yukteswar/shodasha_varga_summary',
 
     // Divisional Charts
     D2_HORA: '/yukteswar/calculate_d2',

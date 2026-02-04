@@ -34,7 +34,7 @@ export class YukteswarClient extends BaseAstroClient {
     }
 
     async getSudarshanChakra(data: BirthData) {
-        throw new Error('Sudarshan Chakra is not supported for Sri Yukteswar system');
+        return this.post(YUKTESWAR_ENDPOINTS.SUDARSHAN_CHAKRA, data);
     }
 
     async getEqualBhava(data: BirthData) {
@@ -107,8 +107,7 @@ export class YukteswarClient extends BaseAstroClient {
     }
 
     async getShodashaVarga(data: BirthData) {
-        // Fallback to Lahiri's summary if Yukteswar specific one is missing in backend
-        return this.post('/lahiri/shodasha_varga_summary', data);
+        return this.post(YUKTESWAR_ENDPOINTS.SHODASHA_VARGA_SUMMARY, data);
     }
 
     // =========================================================================

@@ -366,6 +366,30 @@ export class ChartController {
         }
     }
 
+    /**
+     * POST /internal/shodasha-varga-summary
+     */
+    async getShodashaVargaSummary(req: Request, res: Response): Promise<void> {
+        try {
+            const birthData: BirthData = req.body;
+            if (!this.validateBirthData(birthData, res)) return;
+
+            const cacheKey = { ...birthData, type: 'shodasha_summary' };
+            const cached = await cacheService.get<any>('shodasha_summary', cacheKey);
+            if (cached) {
+                res.json({ success: true, data: cached, cached: true, calculatedAt: new Date().toISOString() });
+                return;
+            }
+
+            const data = await astroEngineClient.getShodashaVargaSummary(birthData);
+            await cacheService.set('shodasha_summary', cacheKey, data);
+            res.json({ success: true, data, cached: false, calculatedAt: new Date().toISOString() });
+        } catch (error: any) {
+            logger.error({ error: error.message }, 'Shodasha Varga Summary failed');
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
     // Helper method for validation
     private validateBirthData(data: BirthData, res: Response): boolean {
         if (!data.birthDate || !data.birthTime || !data.latitude || !data.longitude) {
