@@ -70,7 +70,7 @@ export class DivisionalController {
     }
 
     private validateChartType(type: string, res: Response): boolean {
-        const validTypes = ['d2', 'd3', 'd4', 'd7', 'd9', 'd10', 'd12', 'd16', 'd20', 'd24', 'd27', 'd30', 'd40', 'd45', 'd60'];
+        const validTypes = ['d2', 'd3', 'd4', 'd6', 'd7', 'd9', 'd10', 'd12', 'd16', 'd20', 'd24', 'd27', 'd30', 'd40', 'd45', 'd60', 'd150'];
         if (!validTypes.includes(type.toLowerCase())) {
             res.status(400).json({ success: false, error: `Invalid chart type. Valid types: ${validTypes.join(', ')}` });
             return false;

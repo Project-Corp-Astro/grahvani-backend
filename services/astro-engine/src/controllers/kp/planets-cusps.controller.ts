@@ -116,7 +116,7 @@ export class KpPlanetsCuspsController {
     }
 
     /**
-     * POST /internal/kp/shodasha-varga-signs
+     * POST /api/kp/shodasha_varga_signs
      */
     async getShodashaVargaSummary(req: Request, res: Response): Promise<void> {
         try {
@@ -137,6 +137,146 @@ export class KpPlanetsCuspsController {
             res.json({ success: true, data, cached: false, calculatedAt: new Date().toISOString() });
         } catch (error: any) {
             logger.error({ error: error.message }, 'KP Shodasha Varga failed');
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    /**
+     * POST /api/kp/house-significations
+     */
+    async getKpHouseSignifications(req: Request, res: Response): Promise<void> {
+        try {
+            const birthData: BirthData = req.body;
+            if (!this.validateBirthData(birthData, res)) return;
+
+            const cacheKey = { ...birthData, type: 'kp-house-significations' };
+            const cached = await cacheService.get<any>('kp-house-significations', cacheKey);
+            if (cached) { res.json({ success: true, data: cached, cached: true }); return; }
+
+            const data = await kpClient.getSignifications(birthData);
+            await cacheService.set('kp-house-significations', cacheKey, data);
+            res.json({ success: true, data, cached: false });
+        } catch (error: any) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    /**
+     * POST /api/kp/planet-significators
+     */
+    async getKpPlanetSignificators(req: Request, res: Response): Promise<void> {
+        try {
+            const birthData: BirthData = req.body;
+            if (!this.validateBirthData(birthData, res)) return;
+
+            const cacheKey = { ...birthData, type: 'kp-planet-significators' };
+            const cached = await cacheService.get<any>('kp-planet-significators', cacheKey);
+            if (cached) { res.json({ success: true, data: cached, cached: true }); return; }
+
+            const data = await kpClient.getPlanetSignificators(birthData);
+            await cacheService.set('kp-planet-significators', cacheKey, data);
+            res.json({ success: true, data, cached: false });
+        } catch (error: any) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    /**
+     * POST /api/kp/interlinks
+     */
+    async getKpInterlinks(req: Request, res: Response): Promise<void> {
+        try {
+            const birthData: BirthData = req.body;
+            if (!this.validateBirthData(birthData, res)) return;
+
+            const cacheKey = { ...birthData, type: 'kp-interlinks' };
+            const cached = await cacheService.get<any>('kp-interlinks', cacheKey);
+            if (cached) { res.json({ success: true, data: cached, cached: true }); return; }
+
+            const data = await kpClient.getCuspalInterlink(birthData);
+            await cacheService.set('kp-interlinks', cacheKey, data);
+            res.json({ success: true, data, cached: false });
+        } catch (error: any) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    /**
+     * POST /api/kp/interlinks-advanced
+     */
+    async getKpAdvancedInterlinks(req: Request, res: Response): Promise<void> {
+        try {
+            const birthData: BirthData = req.body;
+            if (!this.validateBirthData(birthData, res)) return;
+
+            const cacheKey = { ...birthData, type: 'kp-interlinks-adv' };
+            const cached = await cacheService.get<any>('kp-interlinks-adv', cacheKey);
+            if (cached) { res.json({ success: true, data: cached, cached: true }); return; }
+
+            const data = await kpClient.getCuspalInterlinkAdvanced(birthData);
+            await cacheService.set('kp-interlinks-adv', cacheKey, data);
+            res.json({ success: true, data, cached: false });
+        } catch (error: any) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    /**
+     * POST /api/kp/interlinks-sl
+     */
+    async getKpInterlinksSL(req: Request, res: Response): Promise<void> {
+        try {
+            const birthData: BirthData = req.body;
+            if (!this.validateBirthData(birthData, res)) return;
+
+            const cacheKey = { ...birthData, type: 'kp-interlinks-sl' };
+            const cached = await cacheService.get<any>('kp-interlinks-sl', cacheKey);
+            if (cached) { res.json({ success: true, data: cached, cached: true }); return; }
+
+            const data = await kpClient.getCuspalInterlinkSL(birthData);
+            await cacheService.set('kp-interlinks-sl', cacheKey, data);
+            res.json({ success: true, data, cached: false });
+        } catch (error: any) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    /**
+     * POST /api/kp/nakshatra-nadi
+     */
+    async getKpNakshatraNadi(req: Request, res: Response): Promise<void> {
+        try {
+            const birthData: BirthData = req.body;
+            if (!this.validateBirthData(birthData, res)) return;
+
+            const cacheKey = { ...birthData, type: 'kp-nakshatra-nadi' };
+            const cached = await cacheService.get<any>('kp-nakshatra-nadi', cacheKey);
+            if (cached) { res.json({ success: true, data: cached, cached: true }); return; }
+
+            const data = await kpClient.getNakshatraNadi(birthData);
+            await cacheService.set('kp-nakshatra-nadi', cacheKey, data);
+            res.json({ success: true, data, cached: false });
+        } catch (error: any) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    /**
+     * POST /api/kp/fortuna
+     */
+    async getKpFortuna(req: Request, res: Response): Promise<void> {
+        try {
+            const birthData: BirthData = req.body;
+            if (!this.validateBirthData(birthData, res)) return;
+
+            const cacheKey = { ...birthData, type: 'kp-fortuna' };
+            const cached = await cacheService.get<any>('kp-fortuna', cacheKey);
+            if (cached) { res.json({ success: true, data: cached, cached: true }); return; }
+
+            const data = await kpClient.getFortuna(birthData);
+            await cacheService.set('kp-fortuna', cacheKey, data);
+            res.json({ success: true, data, cached: false });
+        } catch (error: any) {
             res.status(500).json({ success: false, error: error.message });
         }
     }

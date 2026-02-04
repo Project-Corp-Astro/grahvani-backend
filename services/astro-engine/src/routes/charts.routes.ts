@@ -30,5 +30,8 @@ router.post('/kp-bhava', specialChartsController.getKpBhava.bind(specialChartsCo
 router.post('/equal-bhava', specialChartsController.getEqualBhava.bind(specialChartsController));
 router.post('/karkamsha-d1', specialChartsController.getKarkamshaD1.bind(specialChartsController));
 router.post('/karkamsha-d9', specialChartsController.getKarkamshaD9.bind(specialChartsController));
+router.post('/mandi', specialChartsController.getMandi.bind(specialChartsController));
+router.post('/gulika', specialChartsController.getGulika.bind(specialChartsController));
+router.post('/shodasha-varga', specialChartsController.getShodashaVarga.bind(specialChartsController));
 
 export default router;

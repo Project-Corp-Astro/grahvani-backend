@@ -121,6 +121,30 @@ export class KpClient extends BaseAstroClient {
         return this.post(KP_ENDPOINTS.SHODASHA_VARGA, data);
     }
 
+    // =========================================================================
+    // ADVANCED INTERLINKS & NADI
+    // =========================================================================
+
+    async getCuspalInterlink(data: BirthData) {
+        return this.post(KP_ENDPOINTS.CUSPAL_INTERLINK, data);
+    }
+
+    async getCuspalInterlinkAdvanced(data: BirthData) {
+        return this.post(KP_ENDPOINTS.CUSPAL_INTERLINK_ADV, data);
+    }
+
+    async getCuspalInterlinkSL(data: BirthData) {
+        return this.post(KP_ENDPOINTS.CUSPAL_INTERLINK_SL, data);
+    }
+
+    async getNakshatraNadi(data: BirthData) {
+        return this.post(KP_ENDPOINTS.NAKSHATRA_NADI, data);
+    }
+
+    async getFortuna(data: BirthData) {
+        return this.post(KP_ENDPOINTS.FORTUNA, data);
+    }
+
     // Ashtakavarga (Fallback to Lahiri if KP-specific not available)
     async getBhinnaAshtakavarga(data: BirthData) {
         return this.post('/lahiri/calculate_binnatakvarga', data);

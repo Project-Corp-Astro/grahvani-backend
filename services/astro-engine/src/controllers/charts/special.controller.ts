@@ -295,6 +295,76 @@ export class SpecialChartsController {
         }
     }
 
+    /**
+     * POST /api/charts/mandi
+     */
+    async getMandi(req: Request, res: Response): Promise<void> {
+        try {
+            const birthData: BirthData = req.body;
+            const ayanamsa: AyanamsaType = birthData.ayanamsa || 'lahiri';
+            if (!this.validateBirthData(birthData, res)) return;
+
+            if (ayanamsa !== 'lahiri') {
+                res.status(400).json({ success: false, error: 'Mandi only supported for Lahiri system' });
+                return;
+            }
+
+            const data = await lahiriClient.getMandi(birthData);
+            res.json({ success: true, data, cached: false, calculatedAt: new Date().toISOString() });
+        } catch (error: any) {
+            logger.error({ error: error.message }, 'Mandi failed');
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    /**
+     * POST /api/charts/gulika
+     */
+    async getGulika(req: Request, res: Response): Promise<void> {
+        try {
+            const birthData: BirthData = req.body;
+            const ayanamsa: AyanamsaType = birthData.ayanamsa || 'lahiri';
+            if (!this.validateBirthData(birthData, res)) return;
+
+            if (ayanamsa !== 'lahiri') {
+                res.status(400).json({ success: false, error: 'Gulika only supported for Lahiri system' });
+                return;
+            }
+
+            const data = await lahiriClient.getGulika(birthData);
+            res.json({ success: true, data, cached: false, calculatedAt: new Date().toISOString() });
+        } catch (error: any) {
+            logger.error({ error: error.message }, 'Gulika failed');
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    /**
+     * POST /api/charts/shodasha-varga
+     */
+    async getShodashaVarga(req: Request, res: Response): Promise<void> {
+        try {
+            const birthData: BirthData = req.body;
+            const ayanamsa: AyanamsaType = birthData.ayanamsa || 'lahiri';
+            if (!this.validateBirthData(birthData, res)) return;
+
+            const cacheKey = { ...birthData, type: 'shodasha-varga', ayanamsa };
+            const cached = await cacheService.get<any>(`shodasha-varga:${ayanamsa}`, cacheKey);
+            if (cached) {
+                res.json({ success: true, data: cached, cached: true, calculatedAt: new Date().toISOString() });
+                return;
+            }
+
+            const client = this.getClient(ayanamsa);
+            const data = await client.getShodashaVarga(birthData);
+            await cacheService.set(`shodasha-varga:${ayanamsa}`, cacheKey, data);
+            res.json({ success: true, data, cached: false, calculatedAt: new Date().toISOString() });
+        } catch (error: any) {
+            logger.error({ error: error.message }, 'Shodasha Varga failed');
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
     private getClient(ayanamsa: AyanamsaType) {
         if (ayanamsa === 'raman') return ramanClient;
         if (ayanamsa === 'yukteswar') return yukteswarClient;
