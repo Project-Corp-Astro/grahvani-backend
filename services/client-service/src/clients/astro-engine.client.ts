@@ -61,9 +61,10 @@ class AstroEngineClient {
     constructor() {
         this.baseURL = process.env.ASTRO_ENGINE_URL || 'http://localhost:3014';
 
-        // Use persistent connections to avoid exhaustion
-        const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 10, maxFreeSockets: 5 });
-        const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 10, maxFreeSockets: 5 });
+        // Use persistent connections (Keep-Alive)
+        // Optimized for Microservice-to-Microservice communication (high throughput)
+        const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 100, maxFreeSockets: 20 });
+        const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 100, maxFreeSockets: 20 });
 
         // Client for internal routes (Lahiri - backward compatible)
         this.internalClient = axios.create({

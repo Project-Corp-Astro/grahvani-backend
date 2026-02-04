@@ -1,5 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { clientService } from '../services/client.service';
+import { chartService } from '../services/chart.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 /**
@@ -68,6 +69,13 @@ export class ClientController {
                 ipAddress: req.ip,
                 userAgent: req.get('user-agent'),
             };
+            // Auto-heal missing charts in background (Fire-and-Forget)
+            // This ensures all Ayanamsas are available without user waiting
+            chartService.ensureFullVedicProfile(tenantId, id, metadata).catch(err => {
+                // Log but don't crash request
+                console.error(`[AutoHeal] Failed for client ${id}:`, err);
+            });
+
             const client = await clientService.getClient(tenantId, id, metadata);
             res.json(transformClient(client));
         } catch (error) {

@@ -13,8 +13,13 @@ const app: Express = express();
 getDatabaseManager();
 console.log('✅ Database manager initialized (Standardized Port 6543)');
 
-// Trust proxy for correct IP capture
-app.set('trust proxy', true);
+// Trust proxy configuration for Rate Limiting
+// Dev: false (Direct access, no proxy) | Prod: 1 (Behind single Reverse Proxy)
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+} else {
+    app.set('trust proxy', false);
+}
 
 // Middleware
 app.use(helmet());
