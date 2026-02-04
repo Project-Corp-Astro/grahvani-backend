@@ -36,7 +36,8 @@ export class ChartController {
             };
 
             // Trigger background audit for missing charts
-            chartService.ensureFullVedicProfile(tenantId, id, metadata);
+            // REMOVED for performance audit (Phase 1 Fix): Heavy write logic on read path
+            // chartService.ensureFullVedicProfile(tenantId, id, metadata);
 
             const charts = await chartService.getClientCharts(tenantId, id, metadata);
             res.json(charts);

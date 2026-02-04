@@ -380,35 +380,104 @@ export class ChartService {
      * Technical Audit: Ensures all charts required by a system are present.
      * PERFORMANCE: Skips audit if generationStatus is 'completed' and versions match.
      */
-    async ensureFullVedicProfile(tenantId: string, clientId: string, metadata: RequestMetadata): Promise<void> {
-        // Use a lock to prevent concurrent audits/generations for the same client
+    async ensureFullVedicProfile(tenantId: string, clientId: string, metadata: RequestMetadata, targetSystem?: AyanamsaSystem): Promise<void> {
+        // 1. Short-circuit if already generating
         if (generationLocks.has(clientId)) {
-            logger.warn({ clientId }, '⚠️ AUDIT: Already locked, skipping');
+            // logger.debug({ clientId }, '⚠️ AUDIT: Generation in progress, skipping check');
             return;
         }
 
         try {
-            // 1. Fetch client with status and version
             const client = await clientRepository.findById(tenantId, clientId);
             if (!client) return;
 
-            const currentStatus = (client as any).generationStatus;
-            logger.info({ clientId, currentStatus }, '🔍 AUDIT: Checking for missing charts');
+            // 2. Define systems to check
+            // If targetSystem is explicitly requested, check only that. Otherwise check ALL.
+            const systemsToCheck: AyanamsaSystem[] = targetSystem
+                ? [targetSystem]
+                : ['lahiri', 'kp', 'raman', 'yukteswar'];
 
-            // 2. ALWAYS check for missing charts, even if marked as 'completed'
-            // This ensures Ashtakavarga and other previously failed charts get retried
-            if (currentStatus !== 'processing') {
-                logger.info({ clientId }, '🚀 AUDIT: Triggering background generation');
-                this.generateFullVedicProfile(tenantId, clientId, metadata).catch(err => {
-                    logger.error({ err, clientId }, 'Background generation failed');
-                });
-            } else {
-                logger.warn({ clientId }, '⏸️ AUDIT: Already processing, skipping');
+            logger.debug({ clientId, systems: systemsToCheck.length }, '🔍 AUDIT: Lightweight missing data check');
+
+            // 3. Check each system for missing data
+            for (const system of systemsToCheck) {
+                // Metadata-only check (Fast)
+                const missing = await this.getMissingCharts(tenantId, clientId, system);
+
+                if (missing.length > 0) {
+                    logger.info({ clientId, system, missingCount: missing.length }, '🚑 AUDIT: Missing charts detected - auto-healing triggered');
+
+                    // 4. Trigger Background Generation (Fire-and-Forget)
+                    // NEVER await this in the read path
+                    this.generateSystemProfile(tenantId, clientId, system, metadata).catch(err => {
+                        logger.error({ err, clientId, system }, '❌ Background auto-healing failed');
+                    });
+                }
             }
         } catch (error) {
+            // Swallow errors in audit to never block the read response
             logger.error({ error, clientId }, 'Error during profile audit');
         }
     }
+
+    /**
+     * STARTUP RECOVERY: Resumes interrupted generations.
+     * Finds clients stuck in 'processing' state (likely due to server crash)
+     * and re-triggers their self-healing check.
+     * Run this ONCE on server startup.
+     */
+    async resumeInterruptedGenerations() {
+        try {
+            logger.info('🔄 RECOVERY: Scanning for interrupted chart generations...');
+
+            // 1. Find clients stuck in 'processing' state via system query
+            const stuckClients = await clientRepository.findProcessingClients(50);
+
+            if (stuckClients.length === 0) {
+                logger.info('✅ RECOVERY: No interrupted generations found.');
+                return;
+            }
+
+            logger.info({ count: stuckClients.length }, '⚠️ RECOVERY: Found stuck clients - triggering auto-heal');
+
+            // 2. Trigger auto-heal for each (Fire-and-Forget batch)
+            const operations = stuckClients.map(client => async () => {
+                // Must explicitly cast or ensure tenantId is present on the client object
+                const tenantId = client.tenantId;
+                if (!tenantId) {
+                    logger.warn({ clientId: client.id }, 'RECOVERY: Skipping client with missing tenantId');
+                    return;
+                }
+
+                const metadata: RequestMetadata = {
+                    userId: 'SYSTEM_RECOVERY',
+                    ipAddress: '127.0.0.1',
+                    userAgent: 'Backend/StartupScript'
+                };
+
+                logger.info({ clientId: client.id }, '🚑 RECOVERY: Resuming generation for client');
+                // Force check all systems
+                await this.ensureFullVedicProfile(tenantId, client.id, metadata);
+            });
+
+            // Execute with concurrency limit to be safe
+            await executeBatched(operations, 5, 100);
+
+            logger.info('✅ RECOVERY: Batch processing initiated.');
+
+        } catch (err: any) {
+            logger.error({ err: err.message }, '❌ Start-up recovery failed');
+        }
+    }
+
+    // WAIT. Let's look at `ChartService` properties. Does it have `prisma`?
+    // Step 177 view shows `import { clientRepository }` but not `this.prisma`.
+    // It seems `ChartService` methods use `clientRepository`.
+
+    // ACTION: I will execute a "Task Boundary" to view `ClientRepository` availability.
+    // I need to see if I can run a cross-tenant query.
+    // Recovering...
+
 
     async generateFullVedicProfile(tenantId: string, clientId: string, metadata: RequestMetadata): Promise<any> {
         if (generationLocks.has(clientId)) {
@@ -430,32 +499,25 @@ export class ChartService {
             const ayanamsas: AyanamsaSystem[] = ['lahiri', 'kp', 'raman', 'yukteswar'];
             const results: any = {};
 
-            // 2. Loop through systems and check missing
+            // 2. Loop through systems and check missing - FAIL-SAFE
             for (const system of ayanamsas) {
-                const missing = await this.getMissingCharts(tenantId, clientId, system);
-                logger.info({ system, missingCount: missing.length, missing: missing.slice(0, 5), clientId }, `📊 MISSING CHARTS [${system.toUpperCase()}]`);
-                if (missing.length > 0) {
-                    logger.info({ system, missingCount: missing.length, clientId }, '🔧 GENERATING missing charts for system');
-                    await this.generateMissingCharts(tenantId, clientId, missing, system, metadata);
-
-                    // Specific specialized generations for each system
-                    if (system === 'lahiri' || system === 'raman') {
-                        await this.generateAllApplicableDashas(tenantId, clientId, system, metadata);
-                    } else if (system === 'kp') {
-                        await this.generateAllApplicableDashas(tenantId, clientId, 'kp', metadata);
-                    }
+                try {
+                    const result = await this.generateSystemProfile(tenantId, clientId, system, metadata);
+                    results[system] = result;
+                } catch (err: any) {
+                    logger.error({ err: err.message, clientId, system }, '❌ System generation failed, continuing to next');
+                    results[system] = { error: err.message, status: 'failed' };
                 }
-                results[system] = { missingCount: missing.length };
             }
 
-            // 3. Mark as Completed
+            // 3. Mark as Completed (even if partial failures occurred, we don't want to get stuck in processing)
             await clientRepository.update(tenantId, clientId, {
                 generationStatus: 'completed',
                 chartsVersion: 2 // Updated system version
             } as any);
 
             const duration = Date.now() - startTime;
-            logger.info({ clientId, duration }, 'Full Vedic Profile generation completed successfully');
+            logger.info({ clientId, duration }, 'Full Vedic Profile generation completed');
 
             return {
                 status: 'success',
@@ -463,12 +525,33 @@ export class ChartService {
                 results
             };
         } catch (error: any) {
-            logger.error({ error: error.message, clientId }, 'Full Vedic Profile generation failed');
+            logger.error({ error: error.message, clientId }, 'Full Vedic Profile generation failed hard');
             await clientRepository.update(tenantId, clientId, { generationStatus: 'failed' } as any);
             throw error;
         } finally {
             generationLocks.delete(clientId);
         }
+    }
+
+    /**
+     * Generate profile for a SINGLE system (Isolated & Resilient)
+     */
+    async generateSystemProfile(tenantId: string, clientId: string, system: AyanamsaSystem, metadata: RequestMetadata) {
+        const missing = await this.getMissingCharts(tenantId, clientId, system);
+        logger.info({ system, missingCount: missing.length, missing: missing.slice(0, 5), clientId }, `📊 MISSING CHARTS [${system.toUpperCase()}]`);
+
+        if (missing.length > 0) {
+            logger.info({ system, missingCount: missing.length, clientId }, '🔧 GENERATING missing charts for system');
+            await this.generateMissingCharts(tenantId, clientId, missing, system, metadata);
+
+            // Specific specialized generations for each system
+            if (system === 'lahiri' || system === 'raman') {
+                await this.generateAllApplicableDashas(tenantId, clientId, system, metadata);
+            } else if (system === 'kp') {
+                await this.generateAllApplicableDashas(tenantId, clientId, 'kp', metadata);
+            }
+        }
+        return { missingCount: missing.length, status: 'success' };
     }
 
     /**
@@ -1453,6 +1536,41 @@ export class ChartService {
      */
     async getKpPlanetSignificators(tenantId: string, clientId: string, metadata: RequestMetadata) {
         return this.generateAndSaveChart(tenantId, clientId, 'kp_planet_significators', 'kp', metadata);
+    }
+
+    /**
+     * Get KP Interlinks
+     */
+    async getKpInterlinks(tenantId: string, clientId: string, metadata: RequestMetadata) {
+        return this.generateAndSaveChart(tenantId, clientId, 'kp_interlinks', 'kp', metadata);
+    }
+
+    /**
+     * Get KP Advanced Interlinks
+     */
+    async getKpAdvancedInterlinks(tenantId: string, clientId: string, metadata: RequestMetadata) {
+        return this.generateAndSaveChart(tenantId, clientId, 'kp_interlinks_advanced', 'kp', metadata);
+    }
+
+    /**
+     * Get KP Interlinks (Sub-Lord)
+     */
+    async getKpInterlinksSL(tenantId: string, clientId: string, metadata: RequestMetadata) {
+        return this.generateAndSaveChart(tenantId, clientId, 'kp_interlinks_sl', 'kp', metadata);
+    }
+
+    /**
+     * Get KP Nakshatra Nadi
+     */
+    async getKpNakshatraNadi(tenantId: string, clientId: string, metadata: RequestMetadata) {
+        return this.generateAndSaveChart(tenantId, clientId, 'kp_nakshatra_nadi', 'kp', metadata);
+    }
+
+    /**
+     * Get KP Fortuna
+     */
+    async getKpFortuna(tenantId: string, clientId: string, metadata: RequestMetadata) {
+        return this.generateAndSaveChart(tenantId, clientId, 'kp_fortuna', 'kp', metadata);
     }
 
     /**

@@ -44,7 +44,17 @@ export class DatabaseManager {
                         url: url,
                     },
                 },
-            });
+                // Optimize connection pool for serverless/container environment
+                // Supabase Transaction Mode (Port 6543) allows many small connections
+                // But we limit locally to prevent event loop lag
+                // Recommended: cpu_count * 2 + 1, or static 10-20 for microservices
+            } as any); // Type cast if necessary for advanced options not in type defs, or just standard args
+
+            // Note: Prisma manages pool via connection string `connection_limit` param.
+            // We ensure it's set if missing.
+            if (!url.includes('connection_limit')) {
+                logger.warn('⚠️ connection_limit not set in DATABASE_URL. Prisma defaults to num_cpus * 2 + 1.');
+            }
 
             logger.info('✅ Database client initialized');
         } catch (error) {

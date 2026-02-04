@@ -16,8 +16,13 @@ const app = express();
 getDatabaseManager();
 logger.info('✅ Database manager initialized (Standardized Port 6543)');
 
-// Trust proxy for correct IP capture behind load balancers/Nginx
-app.set('trust proxy', true);
+// Trust proxy configuration for Rate Limiting
+// Dev: false (Direct access, no proxy) | Prod: 1 (Behind single Reverse Proxy)
+if (config.env === 'production') {
+    app.set('trust proxy', 1);
+} else {
+    app.set('trust proxy', false);
+}
 
 // ============ SECURITY MIDDLEWARES ============
 app.use(helmet());

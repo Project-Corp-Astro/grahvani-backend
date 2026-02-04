@@ -180,6 +180,19 @@ export class ClientRepository {
             },
         });
     }
+    /**
+     * SYSTEM: Find clients stuck in processing (Cross-Tenant)
+     * Used for startup recovery scripts only.
+     */
+    async findProcessingClients(limit = 50): Promise<Client[]> {
+        return this.prisma.client.findMany({
+            where: {
+                generationStatus: 'processing', // @ts-ignore - status exists on schema but type might not be updated in generated client yet or is custom
+                deletedAt: null
+            },
+            take: limit
+        });
+    }
 }
 
 export const clientRepository = new ClientRepository();

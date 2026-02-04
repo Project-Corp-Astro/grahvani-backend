@@ -308,6 +308,11 @@ model Client {
   @@index([tenantId, birthDate])
   @@index([tenantId, createdAt])
   @@index([tenantId, deletedAt])
+  @@index([tenantId, phonePrimary])
+  @@index([tenantId, clientCode])
+  
+  // GIN Index for JSONB Search
+  @@index([tags], type: Gin)
   
   @@map("clients")
 
