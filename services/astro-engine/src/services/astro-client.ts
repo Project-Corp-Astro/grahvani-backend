@@ -700,7 +700,7 @@ export class AstroEngineClient {
 
         if (system === 'raman') endpoint = RAMAN_ENDPOINTS.SHODASHA_VARGA;
         if (system === 'kp') endpoint = KP_ENDPOINTS.SHODASHA_VARGA;
-        if (system === 'yukteswar') endpoint = LAHIRI_ENDPOINTS.SHODASHA_VARGA_SUMMARY; // Fallback for Yukteswar
+        if (system === 'yukteswar') endpoint = YUKTESWAR_ENDPOINTS.SHODASHA_VARGA_SUMMARY;
 
         const response = await this.client.post(endpoint, this.buildPayload(data));
         return response.data;

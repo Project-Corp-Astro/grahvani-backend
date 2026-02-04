@@ -31,6 +31,7 @@ router.post('/shadbala', chartController.getSpecialChart.bind(chartController));
 router.post('/ashtakavarga', chartController.getAshtakavarga.bind(chartController));
 router.post('/sarva-ashtakavarga', chartController.getSarvaAshtakavarga.bind(chartController));
 router.post('/shodasha-varga', chartController.getShodashaVarga.bind(chartController));
+router.post('/shodasha-varga-summary', chartController.getShodashaVargaSummary.bind(chartController));
 
 // =============================================================================
 // DASHA

@@ -70,8 +70,8 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         features: ['natal', 'transit', 'dasha', 'ashtakavarga', 'numerology', 'synastry', 'composite', 'progressed'],
         // Special Charts - verified endpoints
         specialCharts: [
-            'moon', 'sun', 'sudarshan', 'transit', 'mandi', 'gulika', 'd40', 'd150',
-            'ashtakavarga_sarva', 'ashtakavarga_bhinna', 'ashtakavarga_shodasha',
+            'moon', 'sun', 'sudarshana', 'transit', 'mandi', 'gulika', 'd40', 'd150',
+            'ashtakavarga_sarva', 'ashtakavarga_bhinna', 'ashtakavarga_shodasha', 'shodasha_varga_signs',
             'arudha_lagna', 'bhava_lagna', 'hora_lagna', 'sripathi_bhava', 'kp_bhava', 'equal_bhava',
             'karkamsha_d1', 'karkamsha_d9',
             'numerology_chaldean', 'numerology_loshu', 'person_numerology',
@@ -108,8 +108,8 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         features: ['natal', 'transit', 'dasha', 'ashtakavarga'],
         // Special Charts - verified from ApiEndPoints.txt lines 6-36
         specialCharts: [
-            'moon', 'sun', 'sripathi_bhava', 'sudarshan', 'transit',
-            'ashtakavarga_sarva', 'ashtakavarga_bhinna', 'ashtakavarga_shodasha',
+            'moon', 'sun', 'sripathi_bhava', 'sudarshana', 'transit',
+            'ashtakavarga_sarva', 'ashtakavarga_bhinna', 'ashtakavarga_shodasha', 'shodasha_varga_signs',
             'arudha_lagna', 'kp_bhava', 'equal_bhava',
             'karkamsha_d1', 'karkamsha_d9', 'bhava_lagna', 'hora_lagna'
         ],
@@ -143,7 +143,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         specialCharts: [
             'sun_chart', 'moon_chart', 'equal_chart', 'sripathi_bhava', 'kp_bhava',
             'arudha_lagna', 'karakamsha_birth', 'karkamsha_d9', 'bhava_lagna', 'hora_lagna', 'gl_chart',
-            'ashtakavarga_sarva', 'ashtakavarga_bhinna'
+            'ashtakavarga_sarva', 'ashtakavarga_bhinna', 'sudarshana', 'shodasha_varga_signs'
         ],
         dashas: [
             'mahaantar', 'pratyantar', 'sookshma', 'prana',
