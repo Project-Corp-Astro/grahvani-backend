@@ -317,7 +317,7 @@ export class ChartService {
         } else if (normalizedType === 'kp_fortuna') {
             chartData = await astroEngineClient.getKpFortuna(birthData);
             dbChartType = 'kp_fortuna';
-        } else if (normalizedType === 'kp_shodasha' || normalizedType === 'shodasha_varga_signs') {
+        } else if (normalizedType === 'kp_shodasha' || normalizedType === 'shodasha_varga_signs' || normalizedType === 'shodasha_varga_summary') {
             chartData = await astroEngineClient.getShodashaVargaSummary(birthData, system);
             dbChartType = 'shodasha_varga_signs';
         } else {
@@ -416,32 +416,42 @@ export class ChartService {
                 ? [targetSystem]
                 : ['lahiri', 'kp', 'raman', 'yukteswar'];
 
+            // Set lock to prevent overlapping audits
+            generationLocks.add(clientId);
+
             // 4. Parallel Background Audit (ALWAYS RUNS if not throttled)
             (async () => {
-                const auditTasks = systemsToCheck.map(async (system) => {
-                    const missing = await this.getMissingCharts(tenantId, clientId, system);
-                    if (missing.length > 0) {
-                        logger.debug({ clientId, system, missingCount: missing.length }, '🚑 AUDIT: Missing charts detected');
-                        // Trigger specific system generation in background
-                        await this.generateSystemProfile(tenantId, clientId, system, metadata).catch(err => {
-                            logger.error({ err: err.message, clientId, system }, '❌ Background auto-healing failed');
-                        });
-                    }
-                });
+                try {
+                    const auditTasks = systemsToCheck.map(async (system) => {
+                        const missing = await this.getMissingCharts(tenantId, clientId, system);
+                        if (missing.length > 0) {
+                            logger.debug({ clientId, system, missingCount: missing.length }, '🚑 AUDIT: Missing charts detected');
+                            // Trigger specific system generation in background
+                            await this.generateSystemProfile(tenantId, clientId, system, metadata).catch(err => {
+                                logger.error({ err: err.message, clientId, system }, '❌ Background auto-healing failed');
+                            });
+                        }
+                    });
 
-                await Promise.allSettled(auditTasks);
+                    await Promise.allSettled(auditTasks);
 
-                // Final sync: if nothing was missing but status is off, fix it
-                if (!targetSystem) {
-                    const finalClient = await clientRepository.findById(tenantId, clientId);
-                    if (finalClient && finalClient.generationStatus !== 'completed') {
-                        await clientRepository.update(tenantId, clientId, {
-                            generationStatus: 'completed',
-                            chartsVersion: 2
-                        } as any);
+                    // Final sync: if nothing was missing but status is off, fix it
+                    if (!targetSystem) {
+                        const finalClient = await clientRepository.findById(tenantId, clientId);
+                        if (finalClient && finalClient.generationStatus !== 'completed') {
+                            await clientRepository.update(tenantId, clientId, {
+                                generationStatus: 'completed',
+                                chartsVersion: 2
+                            } as any);
+                        }
                     }
+                } finally {
+                    generationLocks.delete(clientId);
                 }
-            })().catch(err => logger.error({ err: err.message, clientId }, 'Background audit failure'));
+            })().catch(err => {
+                logger.error({ err: err.message, clientId }, 'Background audit failure');
+                generationLocks.delete(clientId);
+            });
 
         } catch (error) {
             logger.error({ error, clientId }, 'Error during profile audit launch');
