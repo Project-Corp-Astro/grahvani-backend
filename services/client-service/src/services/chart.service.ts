@@ -568,14 +568,32 @@ export class ChartService {
                     'kp_planets_cusps': 'getKpPlanetsCusps',
                     'kp_ruling_planets': 'getKpRulingPlanets',
                     'kp_bhava_details': 'getKpBhavaDetails',
-                    'kp_significations': 'getKpSignifications'
+                    'kp_significations': 'getKpSignifications',
+                    'kp_house_significations': 'getKpHouseSignifications',
+                    'kp_planet_significators': 'getKpPlanetSignificators',
+                    'kp_interlinks': 'getKpInterlinks',
+                    'kp_interlinks_advanced': 'getKpAdvancedInterlinks',
+                    'kp_interlinks_sl': 'getKpInterlinksSL',
+                    'kp_nakshatra_nadi': 'getKpNakshatraNadi',
+                    'kp_fortuna': 'getKpFortuna',
+                    'kp_shodasha': 'generateAndSaveChart' // Use router for this
                 };
                 const methodName = methodMap[lowerType];
-                if (methodName && (this as any)[methodName]) {
-                    // CRITICAL FIX: Do NOT swallow errors silently. Log them.
-                    operations.push(() => (this as any)[methodName](tenantId, clientId, metadata)
+                if (methodName) {
+                    const task = (this as any)[methodName] === this.generateAndSaveChart
+                        ? () => this.generateAndSaveChart(tenantId, clientId, chartType, system, metadata)
+                        : () => (this as any)[methodName](tenantId, clientId, metadata);
+
+                    operations.push(() => task()
                         .catch((err: any) => {
                             logger.warn({ err: err.message, clientId, chartType }, 'KP chart generation failed');
+                            if (err?.statusCode === 404 || err?.statusCode === 500) markEndpointFailed(system, chartType);
+                        }));
+                } else {
+                    // Fallback to general router for any KP charts not in map
+                    operations.push(() => this.generateAndSaveChart(tenantId, clientId, chartType, system, metadata)
+                        .catch((err: any) => {
+                            logger.warn({ err: err.message, clientId, chartType }, 'KP chart generation fallback failed');
                             if (err?.statusCode === 404 || err?.statusCode === 500) markEndpointFailed(system, chartType);
                         }));
                 }

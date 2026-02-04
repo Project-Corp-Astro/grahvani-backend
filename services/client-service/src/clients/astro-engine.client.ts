@@ -428,24 +428,24 @@ class AstroEngineClient {
         // Enforce Lahiri only for now as per engine
         if (ayanamsa !== 'lahiri') throw new Error('Mandi is currently only supported for Lahiri');
         const payload = { ...birthData, ayanamsa: ayanamsa };
-        return (await this.internalClient.post('/charts/mandi', payload)).data; // Proxy to updated engine route
+        return (await this.apiClient.post('/charts/mandi', payload)).data;
     }
 
     async getGulika(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
         if (ayanamsa !== 'lahiri') throw new Error('Gulika is currently only supported for Lahiri');
         const payload = { ...birthData, ayanamsa: ayanamsa };
-        return (await this.internalClient.post('/charts/gulika', payload)).data;
+        return (await this.apiClient.post('/charts/gulika', payload)).data;
     }
 
     async getD40(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
         const payload = { ...birthData, ayanamsa: ayanamsa };
-        return (await this.internalClient.post('/divisional/d40', payload)).data;
+        return (await this.apiClient.post('/charts/divisional/d40', payload)).data;
     }
 
     async getD150(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
         if (ayanamsa !== 'lahiri') throw new Error('D150 is currently only supported for Lahiri');
         const payload = { ...birthData, ayanamsa: ayanamsa };
-        return (await this.internalClient.post('/divisional/d150', payload)).data;
+        return (await this.apiClient.post('/charts/divisional/d150', payload)).data;
     }
 
     async getShodashaVargaSummary(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
@@ -455,7 +455,7 @@ class AstroEngineClient {
         } else if (ayanamsa === 'raman') {
             return (await this.apiClient.post('/raman/shodasha_varga_signs', birthData)).data;
         }
-        return (await this.internalClient.post('/charts/shodasha-varga', { ...birthData, ayanamsa })).data;
+        return (await this.apiClient.post('/charts/shodasha-varga', { ...birthData, ayanamsa })).data;
     }
 
     // =========================================================================
@@ -479,11 +479,11 @@ class AstroEngineClient {
     }
 
     async getKpHouseSignifications(birthData: BirthData): Promise<AstroResponse> {
-        return (await this.apiClient.post('/kp/calculate_house_significations', birthData)).data;
+        return (await this.apiClient.post('/kp/house-significations', birthData)).data;
     }
 
     async getKpPlanetSignificators(birthData: BirthData): Promise<AstroResponse> {
-        return (await this.apiClient.post('/kp/planets-significators', birthData)).data;
+        return (await this.apiClient.post('/kp/planet-significators', birthData)).data;
     }
 
     async getKpInterlinks(birthData: BirthData): Promise<AstroResponse> {

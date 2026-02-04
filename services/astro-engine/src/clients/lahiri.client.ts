@@ -76,6 +76,14 @@ export class LahiriClient extends BaseAstroClient {
     async getKarkamshaD1(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.KARKAMSHA_D1, data); }
     async getKarkamshaD9(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.KARKAMSHA_D9, data); }
 
+    async getMandi(data: BirthData) {
+        return this.post(LAHIRI_ENDPOINTS.MANDI, data);
+    }
+
+    async getGulika(data: BirthData) {
+        return this.post(LAHIRI_ENDPOINTS.GULIKA, data);
+    }
+
     // =========================================================================
     // ASHTAKAVARGA
     // =========================================================================

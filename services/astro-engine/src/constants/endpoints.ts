@@ -311,6 +311,8 @@ export const DIVISIONAL_CHART_MAP: Record<string, string> = {
     'd40': 'calculate_d40',
     'd45': 'calculate_d45',
     'd60': 'calculate_d60',
+    'd6': 'd6_shashtamsha',
+    'd150': 'd150-nadiamsha',
 };
 
 /************************************************Dasha level to endpoint mapping*******************************************/

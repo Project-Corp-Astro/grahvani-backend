@@ -85,6 +85,7 @@ export class BaseAstroClient {
             latitude: String(data.latitude),
             longitude: String(data.longitude),
             timezone_offset: data.timezoneOffset,
+            ayanamsa: data.ayanamsa || 'lahiri',
             ...extras,
         };
     }

@@ -166,6 +166,7 @@ export class RamanController {
     }
 
     async getKpBhava(req: Request, res: Response): Promise<void> {
+        logger.info({ body: req.body }, 'Raman KP Bhava requested');
         await this.handleLagnaChart(req, res, 'kp-bhava', (data) => ramanClient.getKpBhava(data));
     }
 
@@ -202,7 +203,12 @@ export class RamanController {
             await cacheService.set(`raman-${chartName}`, cacheKey, data);
             res.json({ success: true, data, cached: false, ayanamsa: 'raman', calculatedAt: new Date().toISOString() });
         } catch (error: any) {
-            logger.error({ error: error.message }, `Raman ${chartName} failed`);
+            logger.error({
+                error: error.message,
+                stack: error.stack,
+                chartName,
+                response: error.response?.data
+            }, `Raman ${chartName} failed`);
             res.status(500).json({ success: false, error: error.message });
         }
     }

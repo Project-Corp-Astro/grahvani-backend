@@ -1,6 +1,6 @@
 generator client {
   provider      = "prisma-client-js"
-  output        = "../src/generated/prisma_temp"
+  output        = "../src/generated/prisma"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
@@ -178,6 +178,16 @@ enum ChartType {
   kp_bhava_details
   kp_significations
   kp_horary
+  kp_house_significations
+  kp_planet_significators
+  kp_interlinks
+  kp_interlinks_advanced
+  kp_interlinks_sl
+  kp_nakshatra_nadi
+  kp_fortuna
+  shodasha_varga_signs
+  mandi
+  gulika
 }
 
 enum RemedyType {
