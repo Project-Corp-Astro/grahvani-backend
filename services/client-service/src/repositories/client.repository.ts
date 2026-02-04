@@ -149,23 +149,17 @@ export class ClientRepository {
      * Permanent delete client with manual cascade (fallback for DB-level cascade)
      */
     async delete(tenantId: string, id: string): Promise<void> {
-        await this.prisma.$transaction([
-            this.prisma.clientSavedChart.deleteMany({ where: { clientId: id, tenantId } }),
-            this.prisma.clientNote.deleteMany({ where: { clientId: id, tenantId } }),
-            this.prisma.clientRemedy.deleteMany({ where: { clientId: id, tenantId } }),
-            this.prisma.clientConsultation.deleteMany({ where: { clientId: id, tenantId } }),
-            this.prisma.clientFamilyLink.deleteMany({
+        // Increase timeout for this specific heavy operation on Supabase Free Tier
+        // Using raw SQL to bypass the default 60s timeout if needed
+        await this.prisma.$transaction(async (tx) => {
+            await tx.$executeRawUnsafe(`SET LOCAL statement_timeout = 300000;`); // 5 minutes
+            await tx.client.delete({
                 where: {
-                    OR: [
-                        { clientId: id },
-                        { relatedClientId: id }
-                    ],
+                    id,
                     tenantId
                 }
-            }),
-            this.prisma.clientActivityLog.deleteMany({ where: { clientId: id, tenantId } }),
-            this.prisma.client.delete({ where: { id, tenantId } })
-        ]);
+            });
+        });
     }
 
     /**

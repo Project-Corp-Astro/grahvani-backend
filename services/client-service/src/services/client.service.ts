@@ -298,12 +298,17 @@ export class ClientService {
             throw new ClientNotFoundError(id);
         }
 
-        // Set lock to prevent background generations from saving new charts during/after delete
-        const { generationLocks } = require('./chart.service');
-        generationLocks.add(id);
+        // Signal background generations to stop immediately
+        const { generationLocks, abortedClients } = require('./chart.service');
+        abortedClients.add(id);
+        generationLocks.delete(id); // Take over the lock
 
         try {
-            // Perform permanent hard delete (cascading handled by Repository/DB)
+            // PHASE 1: Mark as 'failed' (proxy for deleting) to enforce DB-level short-circuit
+            // We use 'failed' because we cannot easily alter the Postgres Enum on Supabase without owner permissions
+            await clientRepository.update(tenantId, id, { generationStatus: 'failed' } as any);
+
+            // PHASE 2: Perform permanent hard delete with high timeout
             await clientRepository.delete(tenantId, id);
 
             // Record activity (pointing to a now-deleted record reference is fine for logs)
@@ -334,8 +339,9 @@ export class ClientService {
 
             return { success: true };
         } finally {
-            // Always release lock so we don't leak memory even if delete failed
+            // Always release lock and abort signal so we don't leak memory even if delete failed
             generationLocks.delete(id);
+            abortedClients.delete(id);
         }
     }
 }

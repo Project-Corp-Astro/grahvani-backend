@@ -16,6 +16,13 @@ const MAX_CONCURRENT_OPS = 1; // Strict limit to avoid "MaxClientsInSessionMode"
 // Track background generation tasks to avoid overlaps
 export const generationLocks = new Set<string>();
 
+// Track clients that are being deleted to abort background work immediately
+export const abortedClients = new Set<string>();
+
+// Audit cooldown to avoid redundant checks (Map<clientId, lastAuditTimestamp>)
+const auditCooldowns = new Map<string, number>();
+const AUDIT_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+
 // Sleep utility for rate limiting
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -376,14 +383,16 @@ export class ChartService {
 
 
 
-    /**
-     * Technical Audit: Ensures all charts required by a system are present.
-     * PERFORMANCE: Skips audit if generationStatus is 'completed' and versions match.
-     */
     async ensureFullVedicProfile(tenantId: string, clientId: string, metadata: RequestMetadata, targetSystem?: AyanamsaSystem): Promise<void> {
         // 1. Short-circuit if already generating
         if (generationLocks.has(clientId)) {
-            // logger.debug({ clientId }, '⚠️ AUDIT: Generation in progress, skipping check');
+            return;
+        }
+
+        // 2. Throttling: Skip if audited very recently (unless targeting specific system)
+        const now = Date.now();
+        const lastAudit = auditCooldowns.get(clientId) || 0;
+        if (!targetSystem && (now - lastAudit) < AUDIT_COOLDOWN_MS) {
             return;
         }
 
@@ -391,32 +400,51 @@ export class ChartService {
             const client = await clientRepository.findById(tenantId, clientId);
             if (!client) return;
 
-            // 2. Define systems to check
-            // If targetSystem is explicitly requested, check only that. Otherwise check ALL.
+            // STRICT ABORT: If client is being deleted (marked as failed), stop immediately
+            if (client.generationStatus === 'failed' || abortedClients.has(clientId)) {
+                logger.info({ clientId }, '🛑 AUDIT: Aborted (Client is deleting/failed)');
+                return;
+            }
+
+            // Update cooldown timestamp
+            auditCooldowns.set(clientId, now);
+            // Cleanup old entries occasionally (optional, but good for memory)
+            if (auditCooldowns.size > 1000) auditCooldowns.clear();
+
+            // 3. Define systems to check
             const systemsToCheck: AyanamsaSystem[] = targetSystem
                 ? [targetSystem]
                 : ['lahiri', 'kp', 'raman', 'yukteswar'];
 
-            logger.debug({ clientId, systems: systemsToCheck.length }, '🔍 AUDIT: Lightweight missing data check');
+            // 4. Parallel Background Audit (ALWAYS RUNS if not throttled)
+            (async () => {
+                const auditTasks = systemsToCheck.map(async (system) => {
+                    const missing = await this.getMissingCharts(tenantId, clientId, system);
+                    if (missing.length > 0) {
+                        logger.debug({ clientId, system, missingCount: missing.length }, '🚑 AUDIT: Missing charts detected');
+                        // Trigger specific system generation in background
+                        await this.generateSystemProfile(tenantId, clientId, system, metadata).catch(err => {
+                            logger.error({ err: err.message, clientId, system }, '❌ Background auto-healing failed');
+                        });
+                    }
+                });
 
-            // 3. Check each system for missing data
-            for (const system of systemsToCheck) {
-                // Metadata-only check (Fast)
-                const missing = await this.getMissingCharts(tenantId, clientId, system);
+                await Promise.allSettled(auditTasks);
 
-                if (missing.length > 0) {
-                    logger.info({ clientId, system, missingCount: missing.length }, '🚑 AUDIT: Missing charts detected - auto-healing triggered');
-
-                    // 4. Trigger Background Generation (Fire-and-Forget)
-                    // NEVER await this in the read path
-                    this.generateSystemProfile(tenantId, clientId, system, metadata).catch(err => {
-                        logger.error({ err, clientId, system }, '❌ Background auto-healing failed');
-                    });
+                // Final sync: if nothing was missing but status is off, fix it
+                if (!targetSystem) {
+                    const finalClient = await clientRepository.findById(tenantId, clientId);
+                    if (finalClient && finalClient.generationStatus !== 'completed') {
+                        await clientRepository.update(tenantId, clientId, {
+                            generationStatus: 'completed',
+                            chartsVersion: 2
+                        } as any);
+                    }
                 }
-            }
+            })().catch(err => logger.error({ err: err.message, clientId }, 'Background audit failure'));
+
         } catch (error) {
-            // Swallow errors in audit to never block the read response
-            logger.error({ error, clientId }, 'Error during profile audit');
+            logger.error({ error, clientId }, 'Error during profile audit launch');
         }
     }
 
@@ -481,51 +509,64 @@ export class ChartService {
 
     async generateFullVedicProfile(tenantId: string, clientId: string, metadata: RequestMetadata): Promise<any> {
         if (generationLocks.has(clientId)) {
-            logger.warn({ clientId }, '⚠️ GENERATION: Already locked, exiting');
+            logger.debug({ clientId }, '⚠️ GENERATION: Already locked, exiting');
             return { status: 'already_processing' };
         }
 
         generationLocks.add(clientId);
         const startTime = Date.now();
-        logger.info({ clientId }, '🔒 GENERATION: Lock acquired, starting full profile generation');
+        logger.info({ clientId }, '🔒 GENERATION: Orchestrating Parallel Multi-System Profile');
 
         try {
             const client = await clientRepository.findById(tenantId, clientId);
             if (!client) throw new Error('Client not found');
 
-            // 1. Mark as Processing
+            // STRICT ABORT: If client is being deleted (marked as failed), stop immediately
+            if (client.generationStatus === 'failed' || abortedClients.has(clientId)) {
+                logger.info({ clientId }, '🛑 GENERATION: Aborted (Client is deleting/failed)');
+                return { status: 'aborted' };
+            }
+
+            // 1. Initial State Update
             await clientRepository.update(tenantId, clientId, { generationStatus: 'processing' } as any);
 
             const ayanamsas: AyanamsaSystem[] = ['lahiri', 'kp', 'raman', 'yukteswar'];
+
+            // 2. Sequential-Parallel Orchestration
+            // To prevent connection pool exhaustion, we run 2 systems at a time
+            const batch1 = ayanamsas.slice(0, 2);
+            const batch2 = ayanamsas.slice(2, 4);
+
             const results: any = {};
 
-            // 2. Loop through systems and check missing - FAIL-SAFE
-            for (const system of ayanamsas) {
-                try {
-                    const result = await this.generateSystemProfile(tenantId, clientId, system, metadata);
-                    results[system] = result;
-                } catch (err: any) {
-                    logger.error({ err: err.message, clientId, system }, '❌ System generation failed, continuing to next');
-                    results[system] = { error: err.message, status: 'failed' };
-                }
+            for (const batch of [batch1, batch2]) {
+                const outcomes = await Promise.allSettled(
+                    batch.map(system => this.generateSystemProfile(tenantId, clientId, system, metadata))
+                );
+
+                batch.forEach((system, index) => {
+                    const outcome = outcomes[index];
+                    if (outcome.status === 'fulfilled') {
+                        results[system] = outcome.value;
+                    } else {
+                        logger.error({ system, err: outcome.reason, clientId }, '❌ System generation failed');
+                        results[system] = { status: 'failed', error: outcome.reason };
+                    }
+                });
             }
 
-            // 3. Mark as Completed (even if partial failures occurred, we don't want to get stuck in processing)
+            // 3. Final State Update
             await clientRepository.update(tenantId, clientId, {
                 generationStatus: 'completed',
-                chartsVersion: 2 // Updated system version
+                chartsVersion: 2
             } as any);
 
             const duration = Date.now() - startTime;
-            logger.info({ clientId, duration }, 'Full Vedic Profile generation completed');
+            logger.info({ clientId, duration }, '✅ Full Vedic Profile orchestrated finished (Parallel)');
 
-            return {
-                status: 'success',
-                duration,
-                results
-            };
+            return { status: 'success', duration, results };
         } catch (error: any) {
-            logger.error({ error: error.message, clientId }, 'Full Vedic Profile generation failed hard');
+            logger.error({ error: error.message, clientId }, 'Vedic Profile orchestration failed');
             await clientRepository.update(tenantId, clientId, { generationStatus: 'failed' } as any);
             throw error;
         } finally {
@@ -538,19 +579,16 @@ export class ChartService {
      */
     async generateSystemProfile(tenantId: string, clientId: string, system: AyanamsaSystem, metadata: RequestMetadata) {
         const missing = await this.getMissingCharts(tenantId, clientId, system);
-        logger.info({ system, missingCount: missing.length, missing: missing.slice(0, 5), clientId }, `📊 MISSING CHARTS [${system.toUpperCase()}]`);
 
         if (missing.length > 0) {
-            logger.info({ system, missingCount: missing.length, clientId }, '🔧 GENERATING missing charts for system');
+            logger.debug({ system, missingCount: missing.length, clientId }, `🔧 GENERATING [${system.toUpperCase()}]`);
+            // Batch within a system is still safe to avoid connection spikes, 
+            // but multiple systems now run their batches in parallel.
             await this.generateMissingCharts(tenantId, clientId, missing, system, metadata);
-
-            // Specific specialized generations for each system
-            if (system === 'lahiri' || system === 'raman') {
-                await this.generateAllApplicableDashas(tenantId, clientId, system, metadata);
-            } else if (system === 'kp') {
-                await this.generateAllApplicableDashas(tenantId, clientId, 'kp', metadata);
-            }
+        } else {
+            logger.debug({ system, clientId }, `✅ [${system.toUpperCase()}] Already complete`);
         }
+
         return { missingCount: missing.length, status: 'success' };
     }
 
@@ -569,6 +607,12 @@ export class ChartService {
 
         for (const chartType of missingCharts) {
             const lowerType = chartType.toLowerCase();
+
+            // ABORT CHECK: If client was deleted (lock removed or aborted flag set)
+            if (!generationLocks.has(clientId) || abortedClients.has(clientId)) {
+                logger.info({ clientId, system }, '🛑 GENERATION: Aborted (Client likely deleted)');
+                return;
+            }
 
             // Skip endpoints that have recently failed
             if (shouldSkipEndpoint(system, chartType)) {
@@ -1042,35 +1086,6 @@ export class ChartService {
         return { ...chart, data: finalData };
     }
 
-    /**
-     * Generate all applicable dashas for a system
-     */
-    async generateAllApplicableDashas(tenantId: string, clientId: string, system: AyanamsaSystem, metadata: RequestMetadata): Promise<void> {
-        const capabilities = SYSTEM_CAPABILITIES[system];
-        if (!capabilities || !capabilities.dashas) {
-            logger.warn({ system, clientId }, 'No dasha capabilities found for system');
-            return;
-        }
-
-        const ops = capabilities.dashas.map(type => async () => {
-            try {
-                if (type === 'vimshottari') {
-                    // Generate both raw prana (deep) and UI-friendly tree
-                    await this.generateDeepDasha(tenantId, clientId, system, metadata);
-                    await this.generateDasha(tenantId, clientId, 'tree', system, {});
-                } else if (type === 'chara' && system === 'kp') {
-                    // Specialized KP Chara Dasha handled via Alternative Dasha
-                    await this.generateAlternativeDasha(tenantId, clientId, 'chara', system, 'mahadasha', {}, true, metadata);
-                } else if (!['dasha_3months', 'dasha_6months', 'dasha_report_1year', 'dasha_report_2years', 'dasha_report_3years'].includes(type)) {
-                    // Generic Alternative Dasha Systems
-                    await this.generateAlternativeDasha(tenantId, clientId, type, system, 'mahadasha', {}, true, metadata);
-                }
-            } catch (err: any) {
-                logger.debug({ err: err.message, type, system }, 'Skipped optional dasha generation');
-            }
-        });
-        await executeBatched(ops);
-    }
 
     /**
      * Generate consolidated summary of active periods
@@ -1637,10 +1652,15 @@ export class ChartService {
         if (capabilities.dashas) {
             for (const d of capabilities.dashas) {
                 if (d === 'vimshottari') {
-                    expected.push('dasha_vimshottari'); // 'dasha' is raw depth, 'dasha_vimshottari' is tree
-                    // We check for 'dasha_vimshottari' as the standard marker
+                    expected.push('dasha_vimshottari'); // UI Tree
+                    // Also track Raw Prana for Lahiri/Raman
+                    if (system === 'lahiri' || system === 'raman') {
+                        expected.push('dasha');
+                    }
                 } else {
-                    expected.push(`dasha_${d}`);
+                    // FIX: Avoid double prefixing dasha_dasha_
+                    const type = d.toLowerCase().startsWith('dasha_') ? d : `dasha_${d}`;
+                    expected.push(type);
                 }
             }
         }
@@ -1675,7 +1695,6 @@ export class ChartService {
         }
 
         // Filter out what we already have
-        // Normalize expected types to lower case for comparison, but keep original case for return
         return expected.filter(type => {
             const normalized = type.toLowerCase();
             return !existingTypes.has(normalized);

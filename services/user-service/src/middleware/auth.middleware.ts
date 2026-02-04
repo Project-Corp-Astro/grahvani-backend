@@ -58,9 +58,25 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
 
         next();
     } catch (error) {
+        if (error instanceof jwt.TokenExpiredError) {
+            console.warn(`[authMiddleware] Token expired for user. ExpiredAt: ${error.expiredAt}`);
+
+            return res.status(401).json({
+                error: { code: 'UNAUTHORIZED', message: 'Token has expired' }
+            });
+        }
+
+        if (error instanceof jwt.JsonWebTokenError) {
+            console.warn(`[authMiddleware] Invalid token: ${error.message}`);
+
+            return res.status(401).json({
+                error: { code: 'UNAUTHORIZED', message: 'Invalid token' }
+            });
+        }
+
         console.error('[authMiddleware] JWT Verification Error:', error);
         return res.status(401).json({
-            error: { code: 'UNAUTHORIZED', message: 'Invalid or expired token' }
+            error: { code: 'UNAUTHORIZED', message: 'Authentication failed' }
         });
     }
 };

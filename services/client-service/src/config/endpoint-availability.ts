@@ -95,8 +95,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         // Dashas - verified endpoints
         dashas: [
             'vimshottari', 'tribhagi', 'tribhagi-40', 'ashtottari', 'shodashottari', 'dwadashottari', 'panchottari',
-            'chaturshitisama', 'satabdika', 'dwisaptati', 'shastihayani', 'shattrimshatsama',
-            'dasha_3months', 'dasha_6months', 'dasha_report_1year', 'dasha_report_2years', 'dasha_report_3years'
+            'chaturshitisama', 'satabdika', 'dwisaptati', 'shastihayani', 'shattrimshatsama'
         ],
         hasDivisional: true,
         hasAshtakavarga: true,
@@ -187,7 +186,10 @@ export function isChartAvailable(system: AyanamsaSystem, chartType: string): boo
         (capabilities.doshas?.some(s => `dosha:${s}` === normalizedType) ?? false) ||
         (capabilities.remedies?.some(s => `remedy:${s}` === normalizedType) ?? false) ||
         (capabilities.panchanga?.some(s => `panchanga:${s}` === normalizedType) ?? false) ||
-        (capabilities.dashas?.some(s => `dasha_${s}` === normalizedType) ?? false);
+        (capabilities.dashas?.some(s => {
+            const type = s.toLowerCase().startsWith('dasha_') ? s.toLowerCase() : `dasha_${s.toLowerCase()}`;
+            return type === normalizedType;
+        }) ?? false);
 }
 
 /**
