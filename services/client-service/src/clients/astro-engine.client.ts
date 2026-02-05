@@ -248,7 +248,12 @@ class AstroEngineClient {
             case 'raman':
                 return (await this.apiClient.post('/raman/dasha/prana', birthData)).data;
             case 'kp':
-
+                // KP has its own dasha endpoints, but if calling raw prana:
+                return (await this.internalClient.post('/dasha/prana', { ...birthData, ayanamsa: 'kp' })).data;
+            case 'yukteswar':
+                // Per ApiEndPoints.txt line 267: /yukteswar/calculate_prana_dasha
+                // The proxy at /dasha/prana likely handles this if ayanamsa is in payload.
+                return (await this.internalClient.post('/dasha/prana', { ...birthData, ayanamsa: 'yukteswar' })).data;
             case 'lahiri':
             default:
                 return (await this.internalClient.post('/dasha/prana', birthData)).data;
@@ -292,9 +297,12 @@ class AstroEngineClient {
     ): Promise<AstroResponse> {
         logger.info({ ayanamsa, dashaType, options }, 'Generating Other Dasha');
 
+        // Normalize dasha type for the engine (especially for Yukteswar)
+        const type = this.getNormalizedDashaType(dashaType, ayanamsa);
+
         // Use URLSearchParams for clean query string construction
         const params = new URLSearchParams();
-        params.append('type', dashaType);
+        params.append('type', type);
 
         // Add context lords if present
         if (options.mahaLord) params.append('mahaLord', options.mahaLord);
@@ -303,6 +311,46 @@ class AstroEngineClient {
 
         const payload = { ...birthData, ayanamsa: ayanamsa, ...options };
         return (await this.internalClient.post(`/dasha/other?${params.toString()}`, payload)).data;
+    }
+
+    /**
+     * Normalize dasha type names for Yukteswar engine endpoints
+     * Maps frontend/DB names to exact Astro Engine endpoint names
+     */
+    private getNormalizedDashaType(dashaType: string, ayanamsa: Ayanamsa): string {
+        const type = dashaType.toLowerCase().replace(/-dasha$/, '').replace(/-/g, '_');
+
+        if (ayanamsa === 'yukteswar') {
+            // Yukteswar-specific endpoint mappings
+            // Explicit list for documentation and future-proofing
+            const yukMapping: Record<string, string> = {
+                // Vimshottari
+                'vimshottari': 'vimshottari',
+                'mahaantar': 'mahaantar',
+
+                // Tribhagi variants
+                'tribhagi': 'tribhagi',
+                'tribhagi_40': 'tribhagi_40',
+
+                // Other supported systems
+                'dwisaptati': 'dwisaptatisama',
+                'dwisaptatisama': 'dwisaptatisama',
+                'shattrimshatsama': 'shattrimshatsama',
+                'shodashottari': 'shodashottari',
+                'dwadashottari': 'dwadashottari',
+                'panchottari': 'panchottari',
+                'satabdika': 'satabdika',
+                'chaturshitisama': 'chaturshitisama',
+
+                // Ashtottari variants
+                'ashtottari': 'ashtottari',
+                'ashtottari_pratyantardasha': 'ashtottari_pratyantardashas',
+                'ashtottari_pratyantardashas': 'ashtottari_pratyantardashas',
+            };
+            return yukMapping[type] || type;
+        }
+
+        return type;
     }
 
     // =========================================================================

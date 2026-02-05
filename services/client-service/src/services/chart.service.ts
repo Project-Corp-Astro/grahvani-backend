@@ -776,7 +776,6 @@ export class ChartService {
         const client = await clientRepository.findById(tenantId, clientId);
         if (!client) throw new ClientNotFoundError(clientId);
 
-        const drillDownPath = options.drillDownPath || [];
         const birthData = this.prepareBirthData(client, ayanamsa);
 
         // DB-FIRST: Check if this EXACT dasha already exists in database (High Performance)
@@ -788,200 +787,98 @@ export class ChartService {
         );
 
         if (matchingDasha && (matchingDasha.chartConfig as any)?.level === level) {
-            logger.info({ clientId, level, ayanamsa }, 'Dasha found in database - checking for data completeness');
-
-            let dashaData: any = matchingDasha.chartData;
-            const rootList = dashaData.dasha_list || dashaData.mahadashas || [];
-
-            // If it's a 'tree' request, ensure it's at least 3 levels deep, and always get a 5-level active path summary
-            if (level === 'tree' && rootList.length > 0) {
-                const wasExpanded = this.populateSublevelsRecursive(rootList, 1, 3, drillDownPath);
-                const currentPath = this.extractCurrentPathRecursive(rootList); // Fully 5-level path
-
-                if (wasExpanded || !dashaData.curr_path) {
-                    logger.info({ clientId }, 'Updating database record with balanced tree and current path summary');
-                    const updatedData = { ...dashaData, mahadashas: rootList, curr_path: currentPath };
-                    await chartRepository.update(tenantId, matchingDasha.id, {
-                        chartData: updatedData,
-                        calculatedAt: new Date()
-                    });
-                    dashaData = updatedData;
-                } else {
-                    // Just update a local copy for response
-                    dashaData = { ...dashaData, curr_path: currentPath };
-                }
-            }
-
+            logger.info({ clientId, level, ayanamsa }, 'Dasha found in database - returning raw stored data');
             return {
                 clientId,
                 clientName: client.fullName,
                 level,
                 ayanamsa,
-                data: dashaData,
+                data: matchingDasha.chartData,
                 cached: true,
                 calculatedAt: matchingDasha.calculatedAt,
             };
         }
 
-        const dashaData = await astroEngineClient.getVimshottariDasha(birthData, level, options);
-
-        // Helper to extract the list based on context
-        const rootList = (dashaData as any).dasha_list || (dashaData as any).data?.mahadashas || (dashaData as any).data?.dasha_list || [];
-
-        let finalList = rootList;
-        let lastParent: any = null;
-
-        // Determine hierarchy path from options
-        const contextLords = [options.mahaLord, options.antarLord, options.pratyantarLord, options.sookshmaLord].filter(Boolean);
-        let processedIndex = 0; // Track how deep we got in the engine data
-
-        if (rootList.length > 0 && contextLords.length > 0) {
-            let currentNodes = rootList;
-            for (let i = 0; i < contextLords.length; i++) {
-                const lord = contextLords[i];
-                const node = currentNodes.find((n: any) => n.planet === lord);
-                if (node) {
-                    lastParent = node;
-                    processedIndex = i + 1; // Successfully processed this level
-
-                    // Try standard nested keys
-                    const nextLevel = node.sublevels ||
-                        node.antardashas ||
-                        node.pratyantardashas ||
-                        node.sookshmadashas ||
-                        node.pranadashas;
-
-                    if (nextLevel && Array.isArray(nextLevel) && nextLevel.length > 0) {
-                        currentNodes = nextLevel;
-                        finalList = currentNodes;
-                    } else {
-                        // Leaf reached in Engine Data.
-                        // But we might need to go deeper based on contextLords.
-                        finalList = [];
-                        break; // Exit engine traversal, switch to calculation
-                    }
-                } else {
-                    // Lord not found in current level
-                    finalList = [];
-                    break;
-                }
-            }
+        // ENGINE CALL: Fetch raw data from Python engine
+        let dashaResponse: any;
+        if (level === 'tree' || level === 'prana_raw') {
+            logger.info({ clientId, ayanamsa }, 'Fetching full Prana Dasha (raw) from engine');
+            dashaResponse = await astroEngineClient.getPranaDasha(birthData, ayanamsa);
+        } else {
+            logger.info({ clientId, ayanamsa, level }, 'Fetching level-specific dasha from engine');
+            dashaResponse = await astroEngineClient.getVimshottariDasha(birthData, level, options);
         }
 
-        // AUTO-CALCULATION RECURSION
-        // If we haven't reached the bottom of contextLords, we must calculate the missing steps.
-        // Example: Context [Maha, Antar, Prat, Sookshma]. Engine gave Maha, Antar.
-        // processedIndex = 2. We need to process Prat (2) and Sookshma (3) to get Prana list.
-
-        if (lastParent && processedIndex < contextLords.length) {
-            logger.info({
-                processedDepth: processedIndex,
-                targetDepth: contextLords.length,
-                parent: lastParent.planet
-            }, 'Traversing missing levels via calculation');
-
-            for (let i = processedIndex; i < contextLords.length; i++) {
-                const targetLord = contextLords[i];
-                if (!targetLord) continue;
-
-                // Calculate children of current lastParent
-                const children = calculateSubPeriods(
-                    lastParent.planet,
-                    lastParent.start_date,
-                    lastParent.duration_years,
-                    lastParent.end_date
-                );
-
-                // Find the next parent in this calculated list
-                // Note: normalized comparison is handled inside calculator but result has Title Case
-                const nextNode = children.find(c => c.planet === targetLord || c.planet.toLowerCase() === targetLord.toLowerCase());
-
-                if (nextNode) {
-                    lastParent = nextNode;
-                    // We don't set finalList yet, we are just stepping down
-                } else {
-                    logger.warn({ targetLord, parent: lastParent.planet }, 'Could not find target lord in calculated sub-periods');
-                    lastParent = null;
-                    break;
-                }
-            }
-        }
-
-        // Final Step: If we have a valid lastParent (either from Engine or Calculation),
-        // and finalList is empty (meaning we need children), OR we just finished calculation traversal...
-        // Actually, if we performed calculation traversal, finalList is effectively "pending".
-        // We need to return the children of the FINAL lastParent.
-
-        // Condition: We processed ALL context lords (so lastParent is the immediate parent of result).
-        // AND finalList is empty (or we want to overwrite root ref).
-        if (lastParent && (finalList.length === 0 || finalList === rootList)) {
-            // Calculate the final requested list (children of the last context lord)
-            finalList = calculateSubPeriods(
-                lastParent.planet,
-                lastParent.start_date,
-                lastParent.duration_years,
-                lastParent.end_date
-            );
-        }
-
-        // BALANCE TREE POPULATION
-        // If 'tree' is requested, ensure we have at least 3 levels plus a current 5-level path summary
-        if (level === 'tree' && rootList.length > 0) {
-            logger.info({ clientId, ayanamsa }, 'Balancing tree depth with path-aware expansion');
-            this.populateSublevelsRecursive(rootList, 1, 3, drillDownPath);
-            const currentPath = this.extractCurrentPathRecursive(rootList);
-            (dashaData as any).curr_path = currentPath;
-        }
+        // Use the raw data from response
+        const finalData = dashaResponse.data || dashaResponse;
 
         const result = {
             clientId,
             clientName: client.fullName,
             level,
             ayanamsa,
-            data: dashaData.data,
-            cached: dashaData.cached,
-            calculatedAt: dashaData.calculatedAt,
+            data: finalData,
+            cached: dashaResponse.cached,
+            calculatedAt: dashaResponse.calculatedAt || new Date().toISOString(),
         };
 
-        // AUTO-SAVE: If this was a successful engine call, store the exact data in DB
+        // AUTO-SAVE: Store the EXACT data from engine in DB
         // unless it's a very specific drill-down (to avoid polluting DB with millions of small branches)
-        // However, user wants everything stored, so we save based on 'tree' or top-level.
-        if (level === 'tree' || !options.mahaLord) {
+        // However, per user requirement "We need to store exactly whatever is coming from the Python engine"
+        if (level === 'tree' || level === 'mahadasha' || level === 'prana_raw' || !options.mahaLord) {
             await this.saveChart(tenantId, clientId, {
                 chartType: 'dasha_vimshottari',
                 chartName: `${client.fullName} - ${level} Vimshottari (${ayanamsa})`,
-                chartData: dashaData.data,
+                chartData: finalData,
                 chartConfig: { system: ayanamsa, level, dashaType: 'vimshottari' },
                 calculatedAt: new Date(),
                 system: ayanamsa,
             }, { userId: 'system' } as any);
         }
 
-        logger.info({ tenantId, clientId, level, ayanamsa }, 'Dasha calculated and cached in DB');
+        logger.info({ tenantId, clientId, level, ayanamsa }, 'Dasha raw data stored and returned');
 
         return result;
     }
 
     /**
      * Map dasha type string to database enum
+     * Handles input normalization from various sources (frontend, engine)
      */
     private getDashaChartType(dashaType: string): any {
-        const type = dashaType.toLowerCase();
+        const type = dashaType.toLowerCase().replace(/-/g, '_'); // Normalize hyphens to underscores
+
         const mapping: Record<string, string> = {
+            // Vimshottari variants
             'vimshottari': 'dasha_vimshottari',
+            'mahaantar': 'dasha_vimshottari',
+
+            // Standard dashas
             'chara': 'dasha_chara',
             'yogini': 'dasha_yogini',
+
+            // Ashtottari variants (all map to base)
             'ashtottari': 'dasha_ashtottari',
+            'ashtottari_antar': 'dasha_ashtottari',
+            'ashtottari_pratyantardasha': 'dasha_ashtottari',
+            'ashtottari_pratyantardashas': 'dasha_ashtottari',
+
+            // Tribhagi variants
             'tribhagi': 'dasha_tribhagi',
-            'tribhagi-40': 'dasha_tribhagi_40',
+            'tribhagi_40': 'dasha_tribhagi_40',
+
+            // Other dasha systems
             'shodashottari': 'dasha_shodashottari',
             'dwadashottari': 'dasha_dwadashottari',
             'panchottari': 'dasha_panchottari',
             'chaturshitisama': 'dasha_chaturshitisama',
             'satabdika': 'dasha_satabdika',
             'dwisaptati': 'dasha_dwisaptati',
+            'dwisaptatisama': 'dasha_dwisaptati',
             'shastihayani': 'dasha_shastihayani',
             'shattrimshatsama': 'dasha_shattrimshatsama',
+
+            // Report types
             'dasha_3months': 'dasha_3months',
             'dasha_6months': 'dasha_6months',
             'dasha_report_1year': 'dasha_report_1year',
@@ -1097,42 +994,6 @@ export class ChartService {
     }
 
 
-    /**
-     * Generate consolidated summary of active periods
-     */
-    async generateDashaSummary(tenantId: string, clientId: string, ayanamsa: AyanamsaSystem, metadata: RequestMetadata): Promise<void> {
-        const charts = await chartRepository.findByClientId(tenantId, clientId);
-        const dashaCharts = charts.filter(c => c.chartType.toString().startsWith('dasha_') && (c as any).system === ayanamsa);
-
-        const analysis: any = { activeDashas: {}, calculatedAt: new Date(), system: ayanamsa };
-
-        for (const chart of dashaCharts) {
-            const data = (chart.chartData as any);
-            const periods = data.dasha_list || (Array.isArray(data) ? data : (data.periods || data.mahadashas || []));
-            const current = this.findCurrentDasha(periods);
-
-            if (current) {
-                const systemName = chart.chartType.toString().replace('dasha_', '');
-                analysis.activeDashas[systemName] = {
-                    period: current.planet || current.lord || current.sign,
-                    fullPath: this.extractDashaPath(periods),
-                    startDate: current.start_date || current.startDate,
-                    endDate: current.end_date || current.endDate,
-                    progress: this.calculateDashaProgress(current)
-                };
-            }
-        }
-
-        await this.saveChart(tenantId, clientId, {
-            chartType: 'dasha_summary',
-            chartName: `Active Dasha Analysis (${ayanamsa})`,
-            chartData: analysis,
-            chartConfig: { system: ayanamsa, analyzed: true },
-            calculatedAt: new Date(),
-            system: ayanamsa,
-        }, metadata);
-    }
-
     private findCurrentDasha(periods: any[]): any {
         if (!Array.isArray(periods) || periods.length === 0) return null;
         const now = new Date();
@@ -1171,113 +1032,41 @@ export class ChartService {
     }
 
     /**
-     * Recursively populate dasha sublevels down to a specified max level.
-     * Path-Aware: If the current period is in the targetPath or isActivePath, we expand to level 5.
-     * Returns true if any new levels were calculated.
+     * Generate consolidated summary of active periods
      */
-    private populateSublevelsRecursive(periods: any[], currentLevel: number, defaultMax: number = 3, targetPath: string[] = []): boolean {
-        if (currentLevel >= 6 || !Array.isArray(periods)) return false;
-        let anyExpanded = false;
+    async generateDashaSummary(tenantId: string, clientId: string, ayanamsa: AyanamsaSystem, metadata: RequestMetadata): Promise<void> {
+        const charts = await chartRepository.findByClientId(tenantId, clientId);
+        const dashaCharts = charts.filter(c => c.chartType.toString().startsWith('dasha_') && (c as any).system === ayanamsa);
 
-        const now = new Date();
+        const analysis: any = { activeDashas: {}, calculatedAt: new Date(), system: ayanamsa };
 
-        for (const period of periods) {
-            const planet = (period.planet || period.lord || '').toLowerCase();
-            const targetPlanetAtThisLevel = targetPath[currentLevel - 1]?.toLowerCase();
+        for (const chart of dashaCharts) {
+            const data = (chart.chartData as any);
+            const periods = data.dasha_list || (Array.isArray(data) ? data : (data.periods || data.mahadashas || []));
+            const current = this.findCurrentDasha(periods);
 
-            // Determine if this specific branch should be deeper
-            const isActive = now >= new Date(period.start_date || period.startDate) && now < new Date(period.end_date || period.endDate);
-            const isTarget = planet === targetPlanetAtThisLevel;
-
-            // DETERMINISTIC DEPTH STRATEGY:
-            // 1. Minimum 3 levels for all branches (allows 2 levels of drill-down).
-            // 2. Active branch always 5 levels.
-            // 3. User target path (the one in the URL) always 5 levels to ensure absolute stability.
-            const effectiveMax = (isActive || isTarget) ? 5 : defaultMax;
-
-            if (currentLevel >= effectiveMax) continue;
-
-            const shouldGoDeeper = currentLevel < effectiveMax;
-
-            if (!shouldGoDeeper) {
-                // Just alias keys for frontend consistency if we are stopping here
-                period.sublevels = period.sublevels || period.antardashas || period.pratyantardashas || period.sookshmadashas || period.pranadashas;
-                continue;
+            if (current) {
+                const systemName = chart.chartType.toString().replace('dasha_', '');
+                analysis.activeDashas[systemName] = {
+                    period: current.planet || current.lord || current.sign,
+                    fullPath: this.extractDashaPath(periods),
+                    startDate: current.start_date || current.startDate,
+                    endDate: current.end_date || current.endDate,
+                    progress: this.calculateDashaProgress(current)
+                };
             }
-
-            // Check if sublevels exist or need calculation
-            let sublevels = period.sublevels ||
-                period.antardashas ||
-                period.pratyantardashas ||
-                period.sookshmadashas ||
-                period.pranadashas;
-
-            if (!sublevels || !Array.isArray(sublevels) || sublevels.length === 0) {
-                // Calculate missing sublevels
-                sublevels = calculateSubPeriods(
-                    period.planet || period.lord,
-                    period.start_date || period.startDate,
-                    period.duration_years,
-                    period.end_date || period.endDate
-                );
-                // Standardize the key to 'sublevels' for consistency
-                period.sublevels = sublevels;
-                anyExpanded = true;
-            } else {
-                // Even if found, move/alias to 'sublevels' to ensure frontend finds it easily
-                period.sublevels = sublevels;
-            }
-
-            // Recurse to next level
-            const nextPathForBranch = isTarget ? targetPath : []; // Only pass path down its OWN branch
-            const childExpanded = this.populateSublevelsRecursive(period.sublevels, currentLevel + 1, defaultMax, nextPathForBranch);
-            if (childExpanded) anyExpanded = true;
-        }
-        return anyExpanded;
-    }
-
-    /**
-     * Specifically extract and fully populate (5 levels) only the CURRENT active path.
-     * This is much more efficient than populating the entire 5-level tree.
-     */
-    private extractCurrentPathRecursive(periods: any[], currentLevelIdx: number = 1): any[] {
-        if (currentLevelIdx > 5 || !Array.isArray(periods) || periods.length === 0) return [];
-
-        const now = new Date();
-        const activeNode = periods.find(p => {
-            const s = new Date(p.start_date || p.startDate);
-            const e = new Date(p.end_date || p.endDate);
-            return now >= s && now < e;
-        });
-
-        if (!activeNode) return [];
-
-        // Ensure this active branch is fully calculated
-        let sublevels = activeNode.sublevels ||
-            activeNode.antardashas ||
-            activeNode.pratyantardashas ||
-            activeNode.sookshmadashas ||
-            activeNode.pranadashas;
-
-        if (!sublevels || sublevels.length === 0) {
-            sublevels = calculateSubPeriods(
-                activeNode.planet || activeNode.lord,
-                activeNode.start_date || activeNode.startDate,
-                activeNode.duration_years,
-                activeNode.end_date || activeNode.endDate
-            );
-            activeNode.sublevels = sublevels;
         }
 
-        const simplifiedNode = {
-            planet: activeNode.planet || activeNode.lord,
-            startDate: activeNode.start_date || activeNode.startDate,
-            endDate: activeNode.end_date || activeNode.endDate,
-            level: currentLevelIdx
-        };
-
-        return [simplifiedNode, ...this.extractCurrentPathRecursive(sublevels, currentLevelIdx + 1)];
+        await this.saveChart(tenantId, clientId, {
+            chartType: 'dasha_summary',
+            chartName: `Active Dasha Analysis (${ayanamsa})`,
+            chartData: analysis,
+            chartConfig: { system: ayanamsa, analyzed: true },
+            calculatedAt: new Date(),
+            system: ayanamsa,
+        }, metadata);
     }
+
 
     /**
      * Generate Ashtakavarga for a client (Lahiri/Raman only)

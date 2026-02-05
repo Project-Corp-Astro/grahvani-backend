@@ -146,9 +146,9 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
             'ashtakavarga_sarva', 'ashtakavarga_bhinna', 'sudarshana', 'shodasha_varga_signs'
         ],
         dashas: [
-            'mahaantar', 'pratyantar', 'sookshma', 'prana',
-            'ashtottari_antar', 'ashtottari_pratyantardasha', 'tribhagi', 'tribhagi_40',
-            'shodashottari', 'dwisaptatisama', 'shastihayani', 'shattrimshatsama',
+            'vimshottari', 'mahaantar', 'pratyantar', 'sookshma', 'prana',
+            'ashtottari_antar', 'ashtottari_pratyantardashas', 'tribhagi', 'tribhagi_40',
+            'shodashottari', 'dwadashottari', 'dwisaptatisama', 'shastihayani', 'shattrimshatsama',
             'panchottari', 'satabdika', 'chaturshitisama'
         ],
         hasDivisional: true,
