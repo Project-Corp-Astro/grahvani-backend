@@ -21,7 +21,11 @@ export const abortedClients = new Set<string>();
 
 // Audit cooldown to avoid redundant checks (Map<clientId, lastAuditTimestamp>)
 const auditCooldowns = new Map<string, number>();
-const AUDIT_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+const AUDIT_COOLDOWN_MS = 30 * 60 * 1000; // 30 minutes (increased from 5 to reduce disk IO)
+
+// Global generation rate limiter (prevents disk IO spikes)
+let activeGenerations = 0;
+const MAX_ACTIVE_GENERATIONS = 2; // Max concurrent full profile generations
 
 // Sleep utility for rate limiting
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -523,9 +527,16 @@ export class ChartService {
             return { status: 'already_processing' };
         }
 
+        // Global rate limiting to prevent disk IO spikes
+        if (activeGenerations >= MAX_ACTIVE_GENERATIONS) {
+            logger.warn({ clientId, activeGenerations }, '⚠️ GENERATION: Rate limited, too many active generations');
+            return { status: 'rate_limited', message: 'Server busy, try again later' };
+        }
+
         generationLocks.add(clientId);
+        activeGenerations++;
         const startTime = Date.now();
-        logger.info({ clientId }, '🔒 GENERATION: Orchestrating Parallel Multi-System Profile');
+        logger.info({ clientId, activeGenerations }, '🔒 GENERATION: Orchestrating Parallel Multi-System Profile');
 
         try {
             const client = await clientRepository.findById(tenantId, clientId);
@@ -581,6 +592,7 @@ export class ChartService {
             throw error;
         } finally {
             generationLocks.delete(clientId);
+            activeGenerations = Math.max(0, activeGenerations - 1);
         }
     }
 

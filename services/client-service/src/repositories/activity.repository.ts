@@ -35,6 +35,28 @@ export class ActivityRepository {
     }
 
     /**
+     * Batch create activity log entries (reduces disk IO)
+     */
+    async createMany(dataList: CreateActivityLogData[]) {
+        if (dataList.length === 0) return { count: 0 };
+
+        return this.prisma.clientActivityLog.createMany({
+            data: dataList.map(data => ({
+                tenantId: data.tenantId,
+                clientId: data.clientId,
+                userId: data.userId,
+                action: data.action,
+                details: data.details || {},
+                ipAddress: data.ipAddress,
+                userAgent: data.userAgent,
+                deviceType: data.deviceType,
+                deviceName: data.deviceName,
+            })),
+            skipDuplicates: true,
+        });
+    }
+
+    /**
      * Get activity logs for a specific client
      */
     async findByClientId(tenantId: string, clientId: string, limit = 50) {

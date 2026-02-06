@@ -2,8 +2,17 @@ import { PrismaClient, ClientSavedChart, ChartType } from '../generated/prisma';
 import { getPrismaClient } from '../config/database';
 import { getRedisClient } from '../config/redis';
 import { logger } from '../config/logger';
+import { compressChartData, decompressChartData } from '../utils/compression';
 
 const CACHE_TTL = 3600; // 1 hour
+
+// List of chart types that should be compressed (large JSON payloads)
+const COMPRESSIBLE_CHARTS: string[] = [
+    'dasha', 'dasha_vimshottari', 'dasha_chara', 'dasha_yogini',
+    'ashtakavarga_sarva', 'ashtakavarga_bhinna', 'ashtakavarga_shodasha',
+    'kp_interlinks', 'kp_interlinks_advanced', 'kp_interlinks_sl',
+    'sudarshana', 'shodasha_varga_signs'
+];
 
 export class ChartRepository {
     private prisma = getPrismaClient();
@@ -40,7 +49,11 @@ export class ChartRepository {
                     await redis.expire(cacheKey, CACHE_TTL);
                     const charts = JSON.parse(cachedData) as ClientSavedChart[];
                     logger.debug({ clientId, count: charts.length, source: 'REDIS' }, '[CACHE HIT] Charts loaded from Redis');
-                    return charts;
+                    // Decompress any compressed chart data from cache
+                    return charts.map(chart => ({
+                        ...chart,
+                        chartData: decompressChartData(chart.chartData)
+                    }));
                 }
             }
         } catch (error) {
@@ -76,7 +89,12 @@ export class ChartRepository {
                 }
 
                 logger.info({ clientId, count: charts.length, source: 'DATABASE' }, 'Charts loaded from database');
-                return charts;
+
+                // Decompress any compressed chart data
+                return charts.map(chart => ({
+                    ...chart,
+                    chartData: decompressChartData(chart.chartData)
+                }));
             } finally {
                 // Cleanup: Remove current fetch from promise map once done
                 this.fetchPromises.delete(cacheKey);
@@ -92,9 +110,14 @@ export class ChartRepository {
      * Find specific chart by ID
      */
     async findById(tenantId: string, id: string): Promise<ClientSavedChart | null> {
-        return this.prisma.clientSavedChart.findFirst({
+        const chart = await this.prisma.clientSavedChart.findFirst({
             where: { id, tenantId }
         });
+        if (!chart) return null;
+        return {
+            ...chart,
+            chartData: decompressChartData(chart.chartData)
+        };
     }
 
     /**
@@ -102,7 +125,7 @@ export class ChartRepository {
      * Uses the unique constraint [tenantId, clientId, chartType, system] for O(1) DB lookup.
      */
     async findOneByTypeAndSystem(tenantId: string, clientId: string, type: ChartType, system: string): Promise<ClientSavedChart | null> {
-        return this.prisma.clientSavedChart.findUnique({
+        const chart = await this.prisma.clientSavedChart.findUnique({
             where: {
                 tenantId_clientId_chartType_system: {
                     tenantId,
@@ -112,6 +135,11 @@ export class ChartRepository {
                 }
             }
         });
+        if (!chart) return null;
+        return {
+            ...chart,
+            chartData: decompressChartData(chart.chartData)
+        };
     }
 
     async create(tenantId: string, data: {
@@ -128,6 +156,13 @@ export class ChartRepository {
         const { clientId, chartType, system, ...rest } = data;
         const calculatedAt = data.calculatedAt || new Date();
 
+        // Compress chart data for large payloads (reduces disk IO significantly)
+        const chartTypeStr = chartType.toString().toLowerCase();
+        const shouldCompress = COMPRESSIBLE_CHARTS.some(t => chartTypeStr.includes(t));
+        const processedChartData = shouldCompress
+            ? compressChartData(data.chartData)
+            : data.chartData;
+
         const result = await this.prisma.clientSavedChart.upsert({
             where: {
                 tenantId_clientId_chartType_system: {
@@ -139,10 +174,12 @@ export class ChartRepository {
             },
             update: {
                 ...rest,
+                chartData: processedChartData,
                 calculatedAt
             },
             create: {
                 ...data,
+                chartData: processedChartData,
                 tenantId,
                 calculatedAt,
                 system: system || 'lahiri'
