@@ -618,6 +618,62 @@ export class ChartController {
     }
 
     /**
+     * POST /clients/:id/kp/interlinks
+     * Get KP Cuspal Interlinks
+     */
+    async getKpInterlinks(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = { userId: req.user!.id, ipAddress: req.ip, userAgent: req.get('user-agent') };
+            const result = await chartService.getKpInterlinks(tenantId, id, metadata);
+            res.json({ success: true, data: result.chartData, cached: result.cached, calculatedAt: result.calculatedAt });
+        } catch (error) { next(error); }
+    }
+
+    /**
+     * POST /clients/:id/kp/interlinks-advanced
+     * Get KP Advanced Interlinks (SSL)
+     */
+    async getKpAdvancedInterlinks(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = { userId: req.user!.id, ipAddress: req.ip, userAgent: req.get('user-agent') };
+            const result = await chartService.getKpAdvancedInterlinks(tenantId, id, metadata);
+            res.json({ success: true, data: result.chartData, cached: result.cached, calculatedAt: result.calculatedAt });
+        } catch (error) { next(error); }
+    }
+
+    /**
+     * POST /clients/:id/kp/nakshatra-nadi
+     * Get KP Nakshatra Nadi
+     */
+    async getKpNakshatraNadi(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = { userId: req.user!.id, ipAddress: req.ip, userAgent: req.get('user-agent') };
+            const result = await chartService.getKpNakshatraNadi(tenantId, id, metadata);
+            res.json({ success: true, data: result.chartData, cached: result.cached, calculatedAt: result.calculatedAt });
+        } catch (error) { next(error); }
+    }
+
+    /**
+     * POST /clients/:id/kp/fortuna
+     * Get KP Pars Fortuna
+     */
+    async getKpFortuna(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.user!.tenantId;
+            const metadata = { userId: req.user!.id, ipAddress: req.ip, userAgent: req.get('user-agent') };
+            const result = await chartService.getKpFortuna(tenantId, id, metadata);
+            res.json({ success: true, data: result.chartData, cached: result.cached, calculatedAt: result.calculatedAt });
+        } catch (error) { next(error); }
+    }
+
+    /**
      * POST /clients/:id/kp/horary
      * Get KP Horary (Prashna) analysis
      */
