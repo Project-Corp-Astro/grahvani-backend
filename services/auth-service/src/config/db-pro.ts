@@ -24,14 +24,22 @@ export class DatabaseManager {
      */
     private initializeClient(): void {
         try {
-            const url = process.env.AUTH_DATABASE_URL || process.env.DATABASE_URL;
+            let url = process.env.AUTH_DATABASE_URL || process.env.DATABASE_URL;
             logger.info(`🔍 DEBUG: AUTH_DATABASE_URL present: ${!!process.env.AUTH_DATABASE_URL}`);
-            logger.info(`🔍 DEBUG: Using URL starting with: ${url?.substring(0, 20)}...`);
 
             if (!url) {
                 throw new Error('DATABASE_URL not configured in environment');
             }
 
+            // OPTIMIZATION: Auto-configure for Supabase Transaction Pooler & Dev Limits
+            if (url.includes(':6543') && !url.includes('pgbouncer=true')) {
+                url += (url.includes('?') ? '&' : '?') + 'pgbouncer=true';
+            }
+            if (process.env.NODE_ENV === 'development' && !url.includes('connection_limit')) {
+                url += (url.includes('?') ? '&' : '?') + 'connection_limit=5';
+            }
+
+            logger.info(`🔧 DEBUG: Adjusted Connection String: ${url.replace(/:[^:@]+@/, ':****@')}`);
             logger.info('🚀 Initializing standardized Prisma client (Port 6543)...');
 
             this.prismaClient = new PrismaClient({

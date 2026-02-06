@@ -564,7 +564,7 @@ export class AstroEngineClient {
                 'ashtottari_antar': YUKTESWAR_ENDPOINTS.ASHTOTTARI_ANTAR,
                 'ashtottari_pratyantardasha': YUKTESWAR_ENDPOINTS.ASHTOTTARI_PRATYANTAR,
                 'tribhagi': YUKTESWAR_ENDPOINTS.TRIBHAGI,
-                'tribhagi-40': YUKTESWAR_ENDPOINTS.TRIBHAGI_40,
+                'tribhagi_40': YUKTESWAR_ENDPOINTS.TRIBHAGI_40, // Handle underscore alias
                 'shodashottari': YUKTESWAR_ENDPOINTS.SHODASHOTTARI,
                 'dwadashottari': YUKTESWAR_ENDPOINTS.DWADASHOTTARI,
                 'dwisaptati': YUKTESWAR_ENDPOINTS.DWISAPTATISAMA,
@@ -581,6 +581,7 @@ export class AstroEngineClient {
             const endpointMap: Record<string, string> = {
                 'tribhagi': '/lahiri/calculate_tribhagi_dasha',
                 'tribhagi-40': '/lahiri/tribhagi-dasha-40',
+                'tribhagi_40': '/lahiri/tribhagi-dasha-40', // Handle underscore alias from client-service
                 'shodashottari': '/lahiri/shodashottari-dasha',
                 'dwadashottari': '/lahiri/dwadashottari-dasha',
                 'panchottari': '/lahiri/calculate-panchottari-dasha',
