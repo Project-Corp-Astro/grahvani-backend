@@ -187,22 +187,42 @@ export class ChartRepository {
         });
 
         await this.invalidateCache(tenantId, clientId);
-        return result;
+        return {
+            ...result,
+            chartData: decompressChartData(result.chartData)
+        };
     }
 
     /**
      * Update an existing chart by ID
      */
     async update(tenantId: string, id: string, data: any) {
+        let processedData = data;
+
+        // If updating chartData, ensure it's compressed if needed
+        if (data.chartData && data.chartType) {
+            const chartTypeStr = data.chartType.toString().toLowerCase();
+            const shouldCompress = COMPRESSIBLE_CHARTS.some(t => chartTypeStr.includes(t));
+            if (shouldCompress) {
+                processedData = {
+                    ...data,
+                    chartData: compressChartData(data.chartData)
+                };
+            }
+        }
+
         const result = await this.prisma.clientSavedChart.update({
             where: { id, tenantId },
-            data
+            data: processedData
         });
 
         if (result.clientId) {
             await this.invalidateCache(tenantId, result.clientId);
         }
-        return result;
+        return {
+            ...result,
+            chartData: decompressChartData(result.chartData)
+        };
     }
 
     /**

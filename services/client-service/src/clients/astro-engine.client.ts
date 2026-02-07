@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { logger } from '../config';
 import { BaseError } from '../errors/client.errors';
+import { decompressChartData } from '../utils/compression';
 
 // =============================================================================
 // Types & Interfaces
@@ -106,6 +107,13 @@ class AstroEngineClient {
         client.interceptors.response.use(
             (response: AxiosResponse) => {
                 logger.info({ url: response.config.url, status: response.status }, 'Astro Engine response');
+
+                // Defensive decompression: If the engine sends data that matches our compression marker
+                // (e.g. if we are proxying another instance or engine is GZIP aware), decompress it.
+                if (response.data && response.data.data) {
+                    response.data.data = decompressChartData(response.data.data);
+                }
+
                 return response;
             },
             async (error: AxiosError) => {

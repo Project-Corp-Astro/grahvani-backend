@@ -627,8 +627,15 @@ export class ChartController {
             const tenantId = req.user!.tenantId;
             const metadata = { userId: req.user!.id, ipAddress: req.ip, userAgent: req.get('user-agent') };
             const result = await chartService.getKpInterlinks(tenantId, id, metadata);
-            res.json({ success: true, data: result.chartData, cached: result.cached, calculatedAt: result.calculatedAt });
-        } catch (error) { next(error); }
+            res.json({
+                success: true,
+                data: result.chartData,
+                cached: result.cached,
+                calculatedAt: result.calculatedAt
+            });
+        } catch (error) {
+            next(error);
+        }
     }
 
     /**
@@ -641,8 +648,15 @@ export class ChartController {
             const tenantId = req.user!.tenantId;
             const metadata = { userId: req.user!.id, ipAddress: req.ip, userAgent: req.get('user-agent') };
             const result = await chartService.getKpAdvancedInterlinks(tenantId, id, metadata);
-            res.json({ success: true, data: result.chartData, cached: result.cached, calculatedAt: result.calculatedAt });
-        } catch (error) { next(error); }
+            res.json({
+                success: true,
+                data: result.chartData,
+                cached: result.cached,
+                calculatedAt: result.calculatedAt
+            });
+        } catch (error) {
+            next(error);
+        }
     }
 
     /**
@@ -655,8 +669,15 @@ export class ChartController {
             const tenantId = req.user!.tenantId;
             const metadata = { userId: req.user!.id, ipAddress: req.ip, userAgent: req.get('user-agent') };
             const result = await chartService.getKpNakshatraNadi(tenantId, id, metadata);
-            res.json({ success: true, data: result.chartData, cached: result.cached, calculatedAt: result.calculatedAt });
-        } catch (error) { next(error); }
+            res.json({
+                success: true,
+                data: result.chartData,
+                cached: result.cached,
+                calculatedAt: result.calculatedAt
+            });
+        } catch (error) {
+            next(error);
+        }
     }
 
     /**
@@ -669,8 +690,15 @@ export class ChartController {
             const tenantId = req.user!.tenantId;
             const metadata = { userId: req.user!.id, ipAddress: req.ip, userAgent: req.get('user-agent') };
             const result = await chartService.getKpFortuna(tenantId, id, metadata);
-            res.json({ success: true, data: result.chartData, cached: result.cached, calculatedAt: result.calculatedAt });
-        } catch (error) { next(error); }
+            res.json({
+                success: true,
+                data: result.chartData,
+                cached: result.cached,
+                calculatedAt: result.calculatedAt
+            });
+        } catch (error) {
+            next(error);
+        }
     }
 
     /**
