@@ -206,11 +206,11 @@ export class LahiriClient extends BaseAstroClient {
     // PANCHANGA
     // =========================================================================
 
-    async getPanchanga(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.PANCHANGA, data); }
-    async getChoghadiya(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.CHOGHADIYA, data); }
-    async getHoraTimes(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.HORA_TIMES, data); }
-    async getLagnaTimes(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.LAGNA_TIMES, data); }
-    async getMuhurat(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.MUHURAT, data); }
+    async getPanchanga(data: BirthData) { return this.postUniversal(LAHIRI_ENDPOINTS.PANCHANGA, data); }
+    async getChoghadiya(data: BirthData) { return this.postUniversal(LAHIRI_ENDPOINTS.CHOGHADIYA, data); }
+    async getHoraTimes(data: BirthData) { return this.postUniversal(LAHIRI_ENDPOINTS.HORA_TIMES, data); }
+    async getLagnaTimes(data: BirthData) { return this.postUniversal(LAHIRI_ENDPOINTS.LAGNA_TIMES, data); }
+    async getMuhurat(data: BirthData) { return this.postUniversal(LAHIRI_ENDPOINTS.MUHURAT, data); }
 
     // =========================================================================
     // EXTENDED DASHAS
@@ -234,6 +234,18 @@ export class LahiriClient extends BaseAstroClient {
     async getDashaReport1Year(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.DASHA_REPORT_1YEAR, data); }
     async getDashaReport2Years(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.DASHA_REPORT_2YEARS, data); }
     async getDashaReport3Years(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.DASHA_REPORT_3YEARS, data); }
+
+    // =========================================================================
+    // NEW INTEGRATED ROUTES
+    // =========================================================================
+
+    /** Gati Kalagna Chart */
+    async getGlChart(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.GL_CHART, data); }
+
+    /** Karaka Strength Analysis */
+    async getKarakaStrength(data: BirthData) { return this.post(LAHIRI_ENDPOINTS.KARAKA_STRENGTH, data); }
+    // NOTE: birth_panchanga uses getPanchanga() method (same /panchanga endpoint)
 }
 
 export const lahiriClient = new LahiriClient();
+

@@ -134,7 +134,12 @@ export const LAHIRI_ENDPOINTS = {
     SHADBALA: '/lahiri/calculate_shadbala',
 
     // Extra Charts
-    D40_CHART: '/lahiri/d40-chart', // NEW
+    D40_CHART: '/lahiri/d40-chart',
+
+    // New integrated routes
+    GL_CHART: '/lahiri/calculate_gl_chart',
+    KARAKA_STRENGTH: '/lahiri/calculate_karaka_strength',
+    // NOTE: birth_panchanga uses PANCHANGA endpoint (same /panchanga path)
 } as const;
 
 
@@ -237,7 +242,7 @@ export const WESTERN_ENDPOINTS = {
 export const YUKTESWAR_ENDPOINTS = {
     // Natal & Transit
     NATAL: '/yukteswar/calculate_d1',
-    TRANSIT: '/yukteswar/calculate_d1',
+    TRANSIT: '/yukteswar/calculate_transit_chart',  // Updated: was calculate_d1
     MOON_CHART: '/yukteswar/calculate_moon_chart',
     SUN_CHART: '/yukteswar/calculate_sun_chart',
     EQUAL_CHART: '/yukteswar/calculate_equal_chart',

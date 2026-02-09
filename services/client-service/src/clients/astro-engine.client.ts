@@ -7,7 +7,7 @@ import { decompressChartData } from '../utils/compression';
 // Types & Interfaces
 // =============================================================================
 
-export type Ayanamsa = 'lahiri' | 'raman' | 'kp' | 'yukteswar' | 'western';
+export type Ayanamsa = 'lahiri' | 'raman' | 'kp' | 'yukteswar' | 'western' | 'universal';
 
 export interface BirthData {
     birthDate: string;      // YYYY-MM-DD
@@ -15,6 +15,7 @@ export interface BirthData {
     latitude: number;
     longitude: number;
     timezoneOffset: number;
+    timezone?: string;      // String timezone (e.g., 'Asia/Kolkata')
     userName?: string;
     ayanamsa?: Ayanamsa;    // Standardized: 'lahiri' | 'raman' | 'kp' | 'yukteswar' | 'western'
 }
@@ -635,6 +636,78 @@ class AstroEngineClient {
         } catch {
             return false;
         }
+    }
+
+    // =========================================================================
+    // NEW INTEGRATED ROUTES
+    // =========================================================================
+
+    /**
+     * Base Panchanga - calculates panchanga using birth date/time directly
+     * This is system-agnostic and should be stored once per client with 'universal' system
+     */
+    async getBasePanchanga(birthData: BirthData): Promise<AstroResponse> {
+        logger.info({}, 'Generating panchanga');
+        return (await this.apiClient.post('/panchanga', birthData)).data;
+    }
+
+    /**
+     * Gati Kalagna Chart (GL Chart) - currently Lahiri only
+     */
+    async getGlChart(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        if (ayanamsa === 'yukteswar') {
+            return (await this.apiClient.post('/yukteswar/calculate_gl_chart', birthData)).data;
+        }
+        if (ayanamsa !== 'lahiri') {
+            throw new Error('GL Chart is currently only available for Lahiri and Yukteswar systems');
+        }
+        return (await this.apiClient.post('/lahiri/calculate_gl_chart', birthData)).data;
+    }
+
+    /**
+     * Karaka Strength Analysis - currently Lahiri only
+     */
+    async getKarakaStrength(birthData: BirthData, ayanamsa: Ayanamsa = 'lahiri'): Promise<AstroResponse> {
+        if (ayanamsa !== 'lahiri') {
+            throw new Error('Karaka Strength is currently only available for Lahiri system');
+        }
+        return (await this.apiClient.post('/lahiri/calculate_karaka_strength', birthData)).data;
+    }
+
+    /**
+     * Yukteswar Transit Chart - uses birth location with current planetary positions
+     */
+    async getYukteswarTransitChart(birthData: BirthData): Promise<AstroResponse> {
+        logger.info({}, 'Generating Yukteswar transit chart');
+        return (await this.apiClient.post('/yukteswar/calculate_transit_chart', birthData)).data;
+    }
+
+    /**
+     * Choghadiya - auspicious time periods (universal, based on birth date)
+     */
+    async getChoghadiya(birthData: BirthData): Promise<AstroResponse> {
+        return (await this.apiClient.post('/choghadiya_times', birthData)).data;
+    }
+
+    /**
+     * Hora Times - planetary hours (universal, based on birth date)
+     */
+    async getHoraTimes(birthData: BirthData): Promise<AstroResponse> {
+        return (await this.apiClient.post('/hora_times', birthData)).data;
+    }
+
+    /**
+     * Lagna Times - rising sign times (universal, based on birth date)
+     */
+    async getLagnaTimes(birthData: BirthData): Promise<AstroResponse> {
+        return (await this.apiClient.post('/lagna_times', birthData)).data;
+    }
+
+    /**
+     * Muhurat - auspicious moments (universal, based on birth date)
+     */
+    async getMuhurat(birthData: BirthData): Promise<AstroResponse> {
+        return (await this.apiClient.post('/muhurat', birthData)).data;
     }
 }
 

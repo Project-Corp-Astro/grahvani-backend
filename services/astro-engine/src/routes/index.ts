@@ -8,6 +8,7 @@ import compatibilityRoutes from './compatibility.routes';
 import numerologyRoutes from './numerology.routes';
 import analysisRoutes from './analysis.routes';
 import panchangaRoutes from './panchanga.routes';
+import { panchangaController } from '../controllers/panchanga/panchanga.controller';
 
 const router = Router();
 
@@ -42,5 +43,15 @@ router.use('/analysis', analysisRoutes);
 
 // Panchanga: /api/panchanga/*
 router.use('/panchanga', panchangaRoutes);
+
+// =============================================================================
+// UNIVERSAL PANCHANGA ROUTES (root-level, matching Python engine endpoints)
+// These are birth-date based and system-agnostic
+// =============================================================================
+router.post('/panchanga', panchangaController.getPanchanga.bind(panchangaController));
+router.post('/choghadiya_times', panchangaController.getChoghadiya.bind(panchangaController));
+router.post('/hora_times', panchangaController.getHora.bind(panchangaController));
+router.post('/lagna_times', panchangaController.getLagnaTimes.bind(panchangaController));
+router.post('/muhurat', panchangaController.getMuhurat.bind(panchangaController));
 
 export default router;

@@ -36,8 +36,7 @@ export class ChartController {
             };
 
             // Trigger background audit for missing charts
-            // REMOVED for performance audit (Phase 1 Fix): Heavy write logic on read path
-            // chartService.ensureFullVedicProfile(tenantId, id, metadata);
+            chartService.ensureFullVedicProfile(tenantId, id, metadata);
 
             const charts = await chartService.getClientCharts(tenantId, id, metadata);
             res.json(charts);
@@ -364,7 +363,7 @@ export class ChartController {
             res.status(201).json({
                 success: true,
                 data: chart.chartData,
-                cached: chart.cached,
+                cached: (chart as any).cached,
                 calculatedAt: chart.calculatedAt,
                 ayanamsa: 'raman'
             });
@@ -386,7 +385,7 @@ export class ChartController {
             res.status(201).json({
                 success: true,
                 data: chart.chartData,
-                cached: chart.cached,
+                cached: (chart as any).cached,
                 calculatedAt: chart.calculatedAt,
                 ayanamsa: 'raman'
             });
@@ -408,7 +407,7 @@ export class ChartController {
             res.status(201).json({
                 success: true,
                 data: chart.chartData,
-                cached: chart.cached,
+                cached: (chart as any).cached,
                 calculatedAt: chart.calculatedAt,
                 ayanamsa: 'raman'
             });
@@ -453,7 +452,7 @@ export class ChartController {
             res.status(201).json({
                 success: true,
                 data: chart.chartData,
-                cached: chart.cached,
+                cached: (chart as any).cached,
                 calculatedAt: chart.calculatedAt,
                 ayanamsa: 'raman'
             });
@@ -484,7 +483,7 @@ export class ChartController {
             res.json({
                 success: true,
                 data: result.chartData,
-                cached: result.cached,
+                cached: (result as any).cached,
                 calculatedAt: result.calculatedAt
             });
         } catch (error) {
@@ -509,7 +508,7 @@ export class ChartController {
             res.json({
                 success: true,
                 data: result.chartData,
-                cached: result.cached,
+                cached: (result as any).cached,
                 calculatedAt: result.calculatedAt
             });
         } catch (error) {
@@ -534,7 +533,7 @@ export class ChartController {
             res.json({
                 success: true,
                 data: result.chartData,
-                cached: result.cached,
+                cached: (result as any).cached,
                 calculatedAt: result.calculatedAt
             });
         } catch (error) {
@@ -559,7 +558,7 @@ export class ChartController {
             res.json({
                 success: true,
                 data: result.chartData,
-                cached: result.cached,
+                cached: (result as any).cached,
                 calculatedAt: result.calculatedAt
             });
         } catch (error) {
@@ -584,7 +583,7 @@ export class ChartController {
             res.json({
                 success: true,
                 data: result.chartData,
-                cached: result.cached,
+                cached: (result as any).cached,
                 calculatedAt: result.calculatedAt
             });
         } catch (error) {
@@ -609,7 +608,7 @@ export class ChartController {
             res.json({
                 success: true,
                 data: result.chartData,
-                cached: result.cached,
+                cached: (result as any).cached,
                 calculatedAt: result.calculatedAt
             });
         } catch (error) {
@@ -630,7 +629,7 @@ export class ChartController {
             res.json({
                 success: true,
                 data: result.chartData,
-                cached: result.cached,
+                cached: (result as any).cached,
                 calculatedAt: result.calculatedAt
             });
         } catch (error) {
@@ -651,7 +650,7 @@ export class ChartController {
             res.json({
                 success: true,
                 data: result.chartData,
-                cached: result.cached,
+                cached: (result as any).cached,
                 calculatedAt: result.calculatedAt
             });
         } catch (error) {
@@ -672,7 +671,7 @@ export class ChartController {
             res.json({
                 success: true,
                 data: result.chartData,
-                cached: result.cached,
+                cached: (result as any).cached,
                 calculatedAt: result.calculatedAt
             });
         } catch (error) {
@@ -693,7 +692,7 @@ export class ChartController {
             res.json({
                 success: true,
                 data: result.chartData,
-                cached: result.cached,
+                cached: (result as any).cached,
                 calculatedAt: result.calculatedAt
             });
         } catch (error) {
