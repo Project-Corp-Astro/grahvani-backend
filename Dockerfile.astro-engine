@@ -1,0 +1,45 @@
+# Astro Engine Proxy Service Dockerfile
+FROM node:22-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json turbo.json ./
+COPY contracts/package.json ./contracts/
+COPY services/auth-service/package.json ./services/auth-service/
+COPY services/user-service/package.json ./services/user-service/
+COPY services/client-service/package.json ./services/client-service/
+COPY services/astro-engine/package.json ./services/astro-engine/
+RUN npm ci --ignore-scripts
+
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json turbo.json ./
+COPY contracts/ ./contracts/
+RUN cd contracts && npx tsc
+COPY services/astro-engine/ ./services/astro-engine/
+RUN cd services/astro-engine && npx tsc
+
+FROM node:22-alpine AS pruner
+WORKDIR /app
+COPY package.json package-lock.json turbo.json ./
+COPY contracts/package.json ./contracts/
+COPY services/auth-service/package.json ./services/auth-service/
+COPY services/user-service/package.json ./services/user-service/
+COPY services/client-service/package.json ./services/client-service/
+COPY services/astro-engine/package.json ./services/astro-engine/
+RUN npm ci --omit=dev --ignore-scripts
+
+FROM node:22-alpine AS runner
+ENV NODE_ENV=production TZ=Asia/Kolkata
+WORKDIR /app
+RUN addgroup --system --gid 1001 grahvani && adduser --system --uid 1001 grahvani
+COPY --from=pruner /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/contracts/dist ./contracts/dist
+COPY --from=builder /app/contracts/package.json ./contracts/
+COPY --from=builder /app/services/astro-engine/dist ./services/astro-engine/dist
+COPY --from=builder /app/services/astro-engine/package.json ./services/astro-engine/
+RUN chown -R grahvani:grahvani /app
+USER grahvani
+WORKDIR /app/services/astro-engine
+EXPOSE 3014
+CMD ["node", "dist/server.js"]
