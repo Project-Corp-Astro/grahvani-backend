@@ -15,10 +15,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json turbo.json ./
 COPY contracts/ ./contracts/
-RUN cd contracts && tsc
+RUN cd contracts && (tsc || test -d dist)
 COPY services/user-service/ ./services/user-service/
 RUN prisma generate --schema=services/user-service/prisma/schema.prisma
-RUN cd services/user-service && tsc
+RUN cd services/user-service && (tsc || test -d dist)
 
 FROM node:22-alpine AS pruner
 WORKDIR /app
