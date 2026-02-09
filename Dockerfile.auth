@@ -47,4 +47,4 @@ RUN chown -R grahvani:grahvani /app
 USER grahvani
 WORKDIR /app/services/auth-service
 EXPOSE 3001
-CMD ["node", "dist/main.js"]
+CMD ["sh", "-c", "echo '=== DIR LISTING ===' && ls -la dist/ && ls -la dist/generated/ 2>&1 && ls -la dist/config/ 2>&1 && echo '=== STARTING NODE ===' && node dist/main.js 2>&1; echo \"EXIT CODE: $?\"; sleep 300"]
