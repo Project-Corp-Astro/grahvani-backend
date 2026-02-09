@@ -1,0 +1,134 @@
+services:
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: auth-service
+        ENTRY_FILE: main.js
+    container_name: grahvani-auth
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - DIRECT_URL=${DIRECT_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - BCRYPT_ROUNDS=${BCRYPT_ROUNDS:-12}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY}
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: user-service
+        ENTRY_FILE: server.js
+    container_name: grahvani-user
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - DIRECT_URL=${DIRECT_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY}
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    depends_on:
+      auth-service:
+        condition: service_healthy
+
+  client-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: client-service
+        ENTRY_FILE: server.js
+    container_name: grahvani-client
+    restart: unless-stopped
+    ports:
+      - "3008:3008"
+    environment:
+      - PORT=3008
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - DIRECT_URL=${DIRECT_URL}
+      - REDIS_URL=${REDIS_URL}
+      - MEILISEARCH_URL=${MEILISEARCH_URL}
+      - MEILISEARCH_KEY=${MEILISEARCH_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY}
+      - ASTRO_ENGINE_URL=http://astro-engine:3014
+      - GEOCODING_API_KEY=${GEOCODING_API_KEY:-}
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3008/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    depends_on:
+      auth-service:
+        condition: service_healthy
+
+  astro-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: astro-engine
+        ENTRY_FILE: server.js
+    container_name: grahvani-astro-engine
+    restart: unless-stopped
+    ports:
+      - "3014:3014"
+    environment:
+      - PORT=3014
+      - NODE_ENV=production
+      - REDIS_URL=${REDIS_URL}
+      - ASTRO_ENGINE_EXTERNAL_URL=${ASTRO_ENGINE_EXTERNAL_URL:-https://astroengine.astrocorp.in}
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3014/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
