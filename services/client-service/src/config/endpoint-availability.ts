@@ -7,7 +7,7 @@
  * @version 2.0.0 - Updated 2026-01-21 based on actual API testing
  */
 
-export type AyanamsaSystem = 'lahiri' | 'raman' | 'kp' | 'yukteswar' | 'western';
+export type AyanamsaSystem = 'lahiri' | 'raman' | 'kp' | 'yukteswar' | 'western' | 'universal';
 
 export interface SystemCapabilities {
     charts: string[];
@@ -78,7 +78,10 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
             'dasha_vimshottari', 'dasha_chara', 'dasha_tribhagi', 'dasha_tribhagi_40',
             'dasha_shodashottari', 'dasha_dwadashottari', 'dasha_panchottari', 'dasha_chaturshitisama',
             'dasha_satabdika', 'dasha_dwisaptati', 'dasha_shastihayani', 'dasha_shattrimshatsama',
-            'dasha_summary'
+            'dasha_summary',
+            // NEW: Integrated routes
+            'gl_chart', 'karaka_strength', 'birth_panchanga',
+            'choghadiya', 'hora_times', 'lagna_times', 'muhurat'
         ],
         // Yogas - verified endpoints from ApiEndPoints.txt lines 134-150
         yogas: [
@@ -90,8 +93,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         doshas: ['kala_sarpa', 'angarak', 'guru_chandal', 'shrapit', 'sade_sati', 'pitra'],
         // Remedies - verified endpoints lines 159-164
         remedies: ['yantra', 'mantra', 'general', 'gemstone', 'lal_kitab'],
-        // Panchanga - verified endpoints lines 166-173
-        panchanga: ['panchanga', 'choghadiya', 'hora', 'lagna_times', 'muhurat'],
+        // Panchanga: Removed - now using birth_panchanga (universal, stored once per client)
         // Dashas - verified endpoints
         dashas: [
             'vimshottari', 'tribhagi', 'tribhagi-40', 'ashtottari', 'shodashottari', 'dwadashottari', 'panchottari',
@@ -143,7 +145,9 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         specialCharts: [
             'sun_chart', 'moon_chart', 'equal_chart', 'sripathi_bhava', 'kp_bhava',
             'arudha_lagna', 'karakamsha_birth', 'karkamsha_d9', 'bhava_lagna', 'hora_lagna', 'gl_chart',
-            'ashtakavarga_sarva', 'ashtakavarga_bhinna', 'sudarshana', 'shodasha_varga_signs'
+            'ashtakavarga_sarva', 'ashtakavarga_bhinna', 'sudarshana', 'shodasha_varga_signs',
+            // NEW: Integrated routes
+            'yukteswar_transit'
         ],
         dashas: [
             'vimshottari', 'mahaantar', 'pratyantar', 'sookshma', 'prana',
@@ -160,6 +164,17 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
         charts: ['progressed', 'synastry', 'composite'],
         features: ['progressed', 'synastry', 'composite'],
         specialCharts: [],
+        hasDivisional: false,
+        hasAshtakavarga: false,
+        hasNumerology: false,
+        hasHorary: false,
+    },
+    universal: {
+        charts: [],
+        features: [],
+        specialCharts: [
+            'birth_panchanga', 'choghadiya', 'hora_times', 'lagna_times', 'muhurat'
+        ],
         hasDivisional: false,
         hasAshtakavarga: false,
         hasNumerology: false,

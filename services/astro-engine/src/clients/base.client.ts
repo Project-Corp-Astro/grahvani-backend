@@ -91,10 +91,33 @@ export class BaseAstroClient {
     }
 
     /**
+     * Build payload specifically for Universal Panchanga routes (using Python's new field names)
+     * Python engine expects: date, time, latitude, longitude, timezone
+     */
+    protected buildUniversalPanchangaPayload(data: BirthData): Record<string, any> {
+        return {
+            date: data.birthDate,
+            time: data.birthTime,
+            latitude: String(data.latitude),
+            longitude: String(data.longitude),
+            timezone: data.timezone || 'UTC',
+        };
+    }
+
+    /**
      * Execute POST request to external API
      */
     protected async post<T = any>(endpoint: string, data: BirthData, extras: Record<string, any> = {}): Promise<T> {
         const payload = this.buildPayload(data, extras);
+        const response = await this.client.post<T>(endpoint, payload);
+        return response.data;
+    }
+
+    /**
+     * Execute POST request using Universal Panchanga payload format
+     */
+    protected async postUniversal<T = any>(endpoint: string, data: BirthData): Promise<T> {
+        const payload = this.buildUniversalPanchangaPayload(data);
         const response = await this.client.post<T>(endpoint, payload);
         return response.data;
     }

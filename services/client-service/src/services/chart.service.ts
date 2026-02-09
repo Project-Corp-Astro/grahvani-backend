@@ -169,7 +169,7 @@ export class ChartService {
         tenantId: string,
         clientId: string,
         chartType: string,
-        system: 'lahiri' | 'kp' | 'raman' | 'yukteswar' | 'western',
+        system: AyanamsaSystem,
         metadata: RequestMetadata
     ) {
         // Validate chart type is available for this system
@@ -260,13 +260,8 @@ export class ChartService {
             const remedyType = normalizedType.replace('remedy_', '').replace('remedy:', '');
             chartData = await astroEngineClient.getRemedy(birthData, remedyType, system);
             dbChartType = `remedy_${remedyType}` as any;
-        } else if (normalizedType === 'panchanga' || normalizedType.startsWith('panchanga:')) {
-            const panchType = normalizedType.includes(':') ? normalizedType.split(':')[1] : normalizedType;
-            chartData = await astroEngineClient.getPanchanga(birthData, panchType, system);
-            dbChartType = panchType === 'panchanga' ? 'panchanga' : (panchType as any);
-        } else if (normalizedType === 'choghadiya' || normalizedType === 'hora_times' || normalizedType === 'lagna_times' || normalizedType === 'muhurat') {
-            chartData = await astroEngineClient.getPanchanga(birthData, normalizedType, system);
-            dbChartType = normalizedType as any;
+            // NOTE: Old panchanga/choghadiya/hora_times/lagna_times/muhurat handlers removed
+            // Use birth_panchanga instead (universal, birth-date based) - handled in NEW INTEGRATED ROUTES section
         } else if (normalizedType === 'shadbala') {
             chartData = await astroEngineClient.getShadbala(birthData, system);
             dbChartType = 'shadbala';
@@ -324,6 +319,85 @@ export class ChartService {
         } else if (normalizedType === 'kp_shodasha' || normalizedType === 'shodasha_varga_signs' || normalizedType === 'shodasha_varga_summary') {
             chartData = await astroEngineClient.getShodashaVargaSummary(birthData, system);
             dbChartType = 'shodasha_varga_signs';
+            // =========================================================================
+            // NEW INTEGRATED ROUTES
+            // =========================================================================
+        } else if (normalizedType === 'birth_panchanga') {
+            // Birth panchanga uses birth date (NOT current date), stored once per client
+            chartData = await astroEngineClient.getBasePanchanga(birthData);
+            dbChartType = 'birth_panchanga';
+            // Override system to 'universal' for birth_panchanga - stored once, reused across all systems
+            return {
+                ...(await this.saveChart(tenantId, clientId, {
+                    chartType: dbChartType as any,
+                    chartName: `${client.fullName} - Birth Panchanga`,
+                    chartData: chartData.data,
+                    chartConfig: { system: 'universal' },
+                    calculatedAt: new Date(),
+                    system: 'universal' as any,
+                }, metadata)), cached: chartData.cached
+            };
+        } else if (normalizedType === 'choghadiya') {
+            chartData = await astroEngineClient.getChoghadiya(birthData);
+            dbChartType = 'choghadiya';
+            return {
+                ...(await this.saveChart(tenantId, clientId, {
+                    chartType: dbChartType as any,
+                    chartName: `${client.fullName} - Choghadiya`,
+                    chartData: chartData.data,
+                    chartConfig: { system: 'universal' },
+                    calculatedAt: new Date(),
+                    system: 'universal' as any,
+                }, metadata)), cached: chartData.cached
+            };
+        } else if (normalizedType === 'hora_times') {
+            chartData = await astroEngineClient.getHoraTimes(birthData);
+            dbChartType = 'hora_times';
+            return {
+                ...(await this.saveChart(tenantId, clientId, {
+                    chartType: dbChartType as any,
+                    chartName: `${client.fullName} - Hora Times`,
+                    chartData: chartData.data,
+                    chartConfig: { system: 'universal' },
+                    calculatedAt: new Date(),
+                    system: 'universal' as any,
+                }, metadata)), cached: chartData.cached
+            };
+        } else if (normalizedType === 'lagna_times') {
+            chartData = await astroEngineClient.getLagnaTimes(birthData);
+            dbChartType = 'lagna_times';
+            return {
+                ...(await this.saveChart(tenantId, clientId, {
+                    chartType: dbChartType as any,
+                    chartName: `${client.fullName} - Lagna Times`,
+                    chartData: chartData.data,
+                    chartConfig: { system: 'universal' },
+                    calculatedAt: new Date(),
+                    system: 'universal' as any,
+                }, metadata)), cached: chartData.cached
+            };
+        } else if (normalizedType === 'muhurat') {
+            chartData = await astroEngineClient.getMuhurat(birthData);
+            dbChartType = 'muhurat';
+            return {
+                ...(await this.saveChart(tenantId, clientId, {
+                    chartType: dbChartType as any,
+                    chartName: `${client.fullName} - Muhurat`,
+                    chartData: chartData.data,
+                    chartConfig: { system: 'universal' },
+                    calculatedAt: new Date(),
+                    system: 'universal' as any,
+                }, metadata)), cached: chartData.cached
+            };
+        } else if (normalizedType === 'gl_chart') {
+            chartData = await astroEngineClient.getGlChart(birthData, system);
+            dbChartType = 'gl_chart';
+        } else if (normalizedType === 'karaka_strength') {
+            chartData = await astroEngineClient.getKarakaStrength(birthData, system);
+            dbChartType = 'karaka_strength';
+        } else if (normalizedType === 'yukteswar_transit') {
+            chartData = await astroEngineClient.getYukteswarTransitChart(birthData);
+            dbChartType = 'yukteswar_transit';
         } else {
             // Default to divisional chart generation
             chartData = await astroEngineClient.getDivisionalChart(birthData, chartType, system);
@@ -439,6 +513,16 @@ export class ChartService {
 
                     await Promise.allSettled(auditTasks);
 
+                    // 5. Audit UNIVERSAL charts (Panchanga, etc)
+                    const missingUniversal = await this.getMissingCharts(tenantId, clientId, 'universal' as any);
+                    if (missingUniversal.length > 0) {
+                        logger.info({ clientId, missingCount: missingUniversal.length }, '🚑 AUDIT: Missing universal charts detected');
+                        // Use any existing system (e.g. lahiri) to drive the generation as these methods handle 'universal' internally
+                        await this.generateMissingCharts(tenantId, clientId, missingUniversal, 'lahiri', metadata).catch(err => {
+                            logger.error({ err: err.message, clientId }, '❌ Background universal auto-healing failed');
+                        });
+                    }
+
                     // Final sync: if nothing was missing but status is off, fix it
                     if (!targetSystem) {
                         const finalClient = await clientRepository.findById(tenantId, clientId);
@@ -550,6 +634,19 @@ export class ChartService {
 
             // 1. Initial State Update
             await clientRepository.update(tenantId, clientId, { generationStatus: 'processing' } as any);
+
+            // 1.5. UNIVERSAL CHARTS: Generate panchanga types once (not per-system)
+            // These are all based on birth date/time and are system-agnostic
+            const universalChartTypes = ['birth_panchanga', 'choghadiya', 'hora_times', 'lagna_times', 'muhurat'];
+            for (const chartType of universalChartTypes) {
+                try {
+                    logger.info({ clientId, chartType }, `📅 Generating ${chartType} (universal)`);
+                    await this.generateAndSaveChart(tenantId, clientId, chartType, 'lahiri' as any, metadata);
+                } catch (err: any) {
+                    // Non-fatal: Log but continue with other charts
+                    logger.error({ err: err.message, clientId, chartType }, `⚠️ ${chartType} failed (non-fatal)`);
+                }
+            }
 
             const ayanamsas: AyanamsaSystem[] = ['lahiri', 'kp', 'raman', 'yukteswar'];
 
@@ -1302,7 +1399,7 @@ export class ChartService {
      * Centralized builder for Astro Engine birth data.
      * Ensures all fields (including userName) are consistently mapped.
      */
-    private prepareBirthData(client: any, ayanamsa: 'lahiri' | 'raman' | 'kp' | 'yukteswar' | 'western' = 'lahiri'): any {
+    private prepareBirthData(client: any, ayanamsa: AyanamsaSystem = 'lahiri'): any {
         if (!client.birthDate || !client.birthTime) {
             throw new Error('Incomplete client birth details');
         }
@@ -1313,6 +1410,7 @@ export class ChartService {
             latitude: Number(client.birthLatitude || 0),
             longitude: Number(client.birthLongitude || 0),
             timezoneOffset: this.parseTimezoneOffset(client.birthTimezone),
+            timezone: client.birthTimezone || 'UTC',
             userName: client.fullName || client.name || 'Anonymous',
             ayanamsa: ayanamsa,  // FIXED: Use 'ayanamsa' field, not 'system'
         };
@@ -1497,17 +1595,27 @@ export class ChartService {
             }
         }
 
-        // 6. PANCHANGA
-        if (capabilities.panchanga) {
-            for (const p of capabilities.panchanga) {
-                if (p === 'panchanga') expected.push('panchanga');
-                else expected.push(p); // 'hora', 'choghadiya' etc are direct types
+        // 6. UNIVERSAL CHARTS
+        // These are handled by the 'universal' system entry in SYSTEM_CAPABILITIES
+        // but we keep this block for backward compatibility/redundancy with Lahiri if needed
+        if (system === 'universal' || system === 'lahiri') {
+            const universalTypes = ['birth_panchanga', 'choghadiya', 'hora_times', 'lagna_times', 'muhurat'];
+            for (const type of universalTypes) {
+                // Check if this universal chart already exists for the client
+                const exists = existing.some(c =>
+                    c.chartType?.toString().toLowerCase() === type.toLowerCase() &&
+                    ((c as any).system === 'universal' || (c as any).chartConfig?.system === 'universal')
+                );
+                if (!exists) {
+                    expected.push(type);
+                }
             }
         }
 
-        // Filter out what we already have
+        // Filter out what we already have (redundancy check for system-specific)
         return expected.filter(type => {
             const normalized = type.toLowerCase();
+            // If it's a universal type we just added, it's already in the expected list only if missing
             return !existingTypes.has(normalized);
         });
     }
