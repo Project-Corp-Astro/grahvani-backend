@@ -21,6 +21,7 @@ RUN prisma generate --schema=services/auth-service/prisma/schema.prisma
 RUN cd services/auth-service && (tsc || test -d dist)
 
 FROM node:22-alpine AS pruner
+RUN apk add --no-cache python3 make g++
 WORKDIR /app
 COPY package.json package-lock.json turbo.json ./
 COPY contracts/package.json ./contracts/
@@ -28,7 +29,7 @@ COPY services/auth-service/package.json ./services/auth-service/
 COPY services/user-service/package.json ./services/user-service/
 COPY services/client-service/package.json ./services/client-service/
 COPY services/astro-engine/package.json ./services/astro-engine/
-RUN npm ci --omit=dev --ignore-scripts
+RUN npm ci --omit=dev
 
 FROM node:22-alpine AS runner
 ENV NODE_ENV=production TZ=Asia/Kolkata
@@ -47,4 +48,4 @@ RUN chown -R grahvani:grahvani /app
 USER grahvani
 WORKDIR /app/services/auth-service
 EXPOSE 3001
-CMD ["sh", "-c", "echo '=== DIR LISTING ===' && ls -la dist/ && ls -la dist/generated/ 2>&1 && ls -la dist/config/ 2>&1 && echo '=== STARTING NODE ===' && node dist/main.js 2>&1; echo \"EXIT CODE: $?\"; sleep 300"]
+CMD ["node", "dist/main.js"]
