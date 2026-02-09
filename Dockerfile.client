@@ -42,6 +42,7 @@ COPY --from=builder /app/services/client-service/dist ./services/client-service/
 COPY --from=builder /app/services/client-service/package.json ./services/client-service/
 COPY --from=builder /app/services/client-service/prisma ./services/client-service/prisma/
 COPY --from=builder /app/services/client-service/src/generated ./services/client-service/src/generated/
+COPY --from=builder /app/services/client-service/src/generated ./services/client-service/dist/generated/
 RUN chown -R grahvani:grahvani /app
 USER grahvani
 WORKDIR /app/services/client-service

@@ -42,6 +42,7 @@ COPY --from=builder /app/services/auth-service/dist ./services/auth-service/dist
 COPY --from=builder /app/services/auth-service/package.json ./services/auth-service/
 COPY --from=builder /app/services/auth-service/prisma ./services/auth-service/prisma/
 COPY --from=builder /app/services/auth-service/src/generated ./services/auth-service/src/generated/
+COPY --from=builder /app/services/auth-service/src/generated ./services/auth-service/dist/generated/
 RUN chown -R grahvani:grahvani /app
 USER grahvani
 WORKDIR /app/services/auth-service
