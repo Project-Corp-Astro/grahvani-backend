@@ -1,0 +1,111 @@
+name: CI & Deploy
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      contracts: ${{ steps.filter.outputs.contracts }}
+      auth: ${{ steps.filter.outputs.auth }}
+      user: ${{ steps.filter.outputs.user }}
+      client: ${{ steps.filter.outputs.client }}
+      astro-engine: ${{ steps.filter.outputs.astro-engine }}
+      any-service: ${{ steps.filter.outputs.auth == 'true' || steps.filter.outputs.user == 'true' || steps.filter.outputs.client == 'true' || steps.filter.outputs.astro-engine == 'true' || steps.filter.outputs.contracts == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            contracts:
+              - 'contracts/**'
+              - 'package.json'
+              - 'package-lock.json'
+            auth:
+              - 'services/auth-service/**'
+              - 'contracts/**'
+              - 'Dockerfile.auth'
+            user:
+              - 'services/user-service/**'
+              - 'contracts/**'
+              - 'Dockerfile.user'
+            client:
+              - 'services/client-service/**'
+              - 'contracts/**'
+              - 'Dockerfile.client'
+            astro-engine:
+              - 'services/astro-engine/**'
+              - 'contracts/**'
+              - 'Dockerfile.astro-engine'
+
+  lint-and-test:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.any-service == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+
+      - name: Generate Prisma clients
+        run: |
+          npx prisma generate --schema=services/auth-service/prisma/schema.prisma
+          npx prisma generate --schema=services/user-service/prisma/schema.prisma
+          npx prisma generate --schema=services/client-service/prisma/schema.prisma
+
+      - name: Build contracts
+        run: npx turbo run build --filter=@grahvani/contracts
+
+      - name: Lint
+        run: npx turbo run lint
+
+      - name: Test
+        run: |
+          npx turbo run test \
+            --filter=@grahvani/auth-service \
+            --filter=@grahvani/user-service \
+            --filter=@grahvani/astro-engine
+
+  deploy:
+    needs: [detect-changes, lint-and-test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 2
+      matrix:
+        include:
+          - service: auth
+            uuid_secret: COOLIFY_AUTH_UUID
+            changed: ${{ needs.detect-changes.outputs.auth }}
+          - service: user
+            uuid_secret: COOLIFY_USER_UUID
+            changed: ${{ needs.detect-changes.outputs.user }}
+          - service: client
+            uuid_secret: COOLIFY_CLIENT_UUID
+            changed: ${{ needs.detect-changes.outputs.client }}
+          - service: astro-engine
+            uuid_secret: COOLIFY_ASTRO_UUID
+            changed: ${{ needs.detect-changes.outputs.astro-engine }}
+    steps:
+      - name: Deploy ${{ matrix.service }}
+        if: matrix.changed == 'true' || needs.detect-changes.outputs.contracts == 'true'
+        run: |
+          curl -s -X POST \
+            "http://147.93.30.201:8000/api/v1/applications/${{ secrets[matrix.uuid_secret] }}/restart" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}" \
+            -H "Content-Type: application/json"
+          echo "Triggered deploy for ${{ matrix.service }}"
