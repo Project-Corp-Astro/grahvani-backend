@@ -196,10 +196,10 @@ enum ChartType {
   shodasha_varga_signs
   mandi
   gulika
-  
+
   // New chart types for integrated routes
   birth_panchanga       // Birth-time panchanga (universal, stored once per client)
-  // NOTE: choghadiya, hora_times, lagna_times, muhurat already defined above (lines 146-149)
+  // NOTE: choghadiya, hora_times, lagna_times, muhurat already defined above
   gl_chart              // Gati Kalagna chart
   karaka_strength       // Karaka strength analysis
   yukteswar_transit     // Yukteswar system transit chart
@@ -261,14 +261,14 @@ model Client {
   id            String    @id @default(uuid()) @db.Uuid
   tenantId      String    @map("tenant_id") @db.Uuid
   clientCode    String    @map("client_code") @db.VarChar(20)
-  
+
   // Basic Information
   fullName      String    @map("full_name") @db.VarChar(200)
   phonePrimary  String?   @map("phone_primary") @db.VarChar(20)
   phoneSecondary String?  @map("phone_secondary") @db.VarChar(20)
   email         String?   @db.VarChar(255)
   photoUrl      String?   @map("photo_url") @db.VarChar(500)
-  
+
   // Birth Details
   birthDate     DateTime? @map("birth_date") @db.Date
   birthTime     DateTime? @map("birth_time") @db.Time
@@ -278,7 +278,7 @@ model Client {
   birthTimezone String?   @map("birth_timezone") @db.VarChar(50)
   birthTimeKnown Boolean  @default(true) @map("birth_time_known")
   birthTimeAccuracy BirthTimeAccuracy @default(exact) @map("birth_time_accuracy")
-  
+
   // Personal Details
   gender        Gender?
   maritalStatus MaritalStatus? @map("marital_status")
@@ -286,7 +286,7 @@ model Client {
   businessDetails String? @map("business_details") @db.Text
   currentSituation String? @map("current_situation") @db.Text
   specialConsiderations String? @map("special_considerations") @db.Text
-  
+
   // Address
   addressLine1  String?   @map("address_line1") @db.VarChar(300)
   addressLine2  String?   @map("address_line2") @db.VarChar(300)
@@ -294,24 +294,24 @@ model Client {
   state         String?   @db.VarChar(100)
   postalCode    String?   @map("postal_code") @db.VarChar(20)
   country       String?   @db.VarChar(100)
-  
+
   // Organization
   tags          Json?     @default("[]") @db.JsonB
   metadata      Json?     @default("{}") @db.JsonB
-  
+
   // Generation Status Tracking
   generationStatus ChartGenerationStatus @default(pending) @map("generation_status")
   chartsVersion Int @default(1) @map("charts_version")
-  
+
   // Source & Audit
   source        ClientSource @default(manual)
   createdBy     String?   @map("created_by") @db.Uuid
-  
+
   // Timestamps
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
   deletedAt     DateTime? @map("deleted_at")
-  
+
   // Relations
   familyLinksFrom   ClientFamilyLink[] @relation("FamilyLinkFrom")
   familyLinksTo     ClientFamilyLink[] @relation("FamilyLinkTo")
@@ -320,7 +320,7 @@ model Client {
   notes             ClientNote[]
   remedies          ClientRemedy[]
   activityLogs      ClientActivityLog[]
-  
+
   // Indexes
   @@unique([id, tenantId])
   @@unique([tenantId, clientCode])
@@ -333,10 +333,10 @@ model Client {
   @@index([tenantId, deletedAt])
   @@index([tenantId, phonePrimary])
   @@index([tenantId, clientCode])
-  
+
   // GIN Index for JSONB Search
   @@index([tags], type: Gin)
-  
+
   @@map("clients")
   @@schema("app_clients")
 }
@@ -351,18 +351,18 @@ model ClientFamilyLink {
   notes             String?  @db.Text
   createdAt         DateTime @default(now()) @map("created_at")
   createdBy         String?  @map("created_by") @db.Uuid
-  
+
   // Relations
   client        Client @relation("FamilyLinkFrom", fields: [clientId], references: [id], onDelete: Cascade)
   relatedClient Client @relation("FamilyLinkTo", fields: [relatedClientId], references: [id], onDelete: Cascade)
-  
+
   // Constraints
   @@unique([id, tenantId])
   @@unique([clientId, relatedClientId])
   @@index([tenantId])
   @@index([clientId])
   @@index([relatedClientId])
-  
+
   @@map("client_family_links")
   @@schema("app_clients")
 }
@@ -382,17 +382,17 @@ model ClientConsultation {
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
   createdBy        String?   @map("created_by") @db.Uuid
-  
+
   // Relations
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
   remedies ClientRemedy[]
-  
+
   @@index([tenantId])
   @@index([clientId])
   @@index([bookingId])
   @@unique([id, tenantId])
   @@index([tenantId, consultationDate])
-  
+
   @@map("client_consultations")
   @@schema("app_clients")
 }
@@ -410,16 +410,16 @@ model ClientSavedChart {
   calculatedAt  DateTime  @map("calculated_at")
   createdAt     DateTime  @default(now()) @map("created_at")
   createdBy     String?   @map("created_by") @db.Uuid
-  
+
   // Relations
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  
+
   @@index([tenantId])
   @@index([clientId])
   @@unique([id, tenantId])
   @@unique([tenantId, clientId, chartType, system])
   @@index([clientId, chartType])
-  
+
   @@map("client_saved_charts")
   @@schema("app_clients")
 }
@@ -505,7 +505,7 @@ model ClientActivityLog {
   deviceType      String?  @map("device_type") @db.VarChar(50)
   deviceName      String?  @map("device_name") @db.VarChar(100)
   timestamp       DateTime @default(now())
-  
+
   // Relations
   client          Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
