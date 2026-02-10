@@ -47,4 +47,4 @@ COPY --from=builder --chown=grahvani:grahvani /app/services/auth-service/src/gen
 USER grahvani
 WORKDIR /app/services/auth-service
 EXPOSE 3001
-CMD ["node", "dist/main.js"]
+CMD ["sh", "-c", "echo '=== CHECKING BCRYPT ===' && ls -la /app/node_modules/bcrypt/lib/binding/ 2>&1 || echo 'NO BCRYPT BINDING DIR' && echo '=== STARTING APP ===' && node dist/main.js 2>&1; echo EXIT_CODE:$?; sleep 600"]
