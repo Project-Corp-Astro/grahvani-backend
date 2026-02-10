@@ -1,4 +1,4 @@
-name: CI & Deploy
+name: CI
 
 on:
   pull_request:
@@ -9,6 +9,9 @@ on:
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
+
+# Coolify auto-deploys on push to main via its own GitHub webhook.
+# This workflow gates PRs — merge is blocked until CI passes.
 
 jobs:
   detect-changes:
@@ -79,33 +82,3 @@ jobs:
             --filter=@grahvani/auth-service \
             --filter=@grahvani/user-service \
             --filter=@grahvani/astro-engine
-
-  deploy:
-    needs: [detect-changes, lint-and-test]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 2
-      matrix:
-        include:
-          - service: auth
-            uuid_secret: COOLIFY_AUTH_UUID
-            changed: ${{ needs.detect-changes.outputs.auth }}
-          - service: user
-            uuid_secret: COOLIFY_USER_UUID
-            changed: ${{ needs.detect-changes.outputs.user }}
-          - service: client
-            uuid_secret: COOLIFY_CLIENT_UUID
-            changed: ${{ needs.detect-changes.outputs.client }}
-          - service: astro-engine
-            uuid_secret: COOLIFY_ASTRO_UUID
-            changed: ${{ needs.detect-changes.outputs.astro-engine }}
-    steps:
-      - name: Deploy ${{ matrix.service }}
-        if: matrix.changed == 'true' || needs.detect-changes.outputs.contracts == 'true'
-        run: |
-          curl -s -X POST \
-            "http://147.93.30.201:8000/api/v1/applications/${{ secrets[matrix.uuid_secret] }}/restart" \
-            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}" \
-            -H "Content-Type: application/json"
-          echo "Triggered deploy for ${{ matrix.service }}"
