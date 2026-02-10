@@ -18,5 +18,14 @@ module.exports = {
         '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
         'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
-    ignorePatterns: ['dist', 'node_modules', 'coverage', '*.sql'],
+    overrides: [
+        {
+            files: ['**/scripts/**/*.ts'],
+            rules: {
+                '@typescript-eslint/ban-ts-comment': 'off',
+                '@typescript-eslint/no-unused-vars': 'off',
+            },
+        },
+    ],
+    ignorePatterns: ['dist', 'node_modules', 'coverage', '*.sql', '**/generated/**'],
 };

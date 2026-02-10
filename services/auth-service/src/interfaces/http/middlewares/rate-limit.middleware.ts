@@ -1,95 +1,98 @@
 // Rate Limiting Middleware
 // Prevents brute force attacks on authentication endpoints
-import { Request, Response, NextFunction } from 'express';
-import { getRedisClient } from '../../../config/redis';
-import { logger } from '../../../config/logger';
+import { Request, Response, NextFunction } from "express";
+import { getRedisClient } from "../../../config/redis";
+import { logger } from "../../../config/logger";
 
 interface RateLimitConfig {
-    windowMs: number;      // Time window in milliseconds
-    maxRequests: number;   // Max requests per window
-    keyPrefix: string;     // Redis key prefix
+  windowMs: number; // Time window in milliseconds
+  maxRequests: number; // Max requests per window
+  keyPrefix: string; // Redis key prefix
 }
 
 const RATE_LIMITS: Record<string, RateLimitConfig> = {
-    login: {
-        windowMs: 15 * 60 * 1000,  // 15 minutes
-        maxRequests: 50,           // Increased from 5 to 50 for better dev experience
-        keyPrefix: 'rate:login',
-    },
-    register: {
-        windowMs: 60 * 1000,       // 1 minute (dev only)
-        maxRequests: 1000,         // Relaxed for dev
-        keyPrefix: 'rate:register',
-    },
-    passwordReset: {
-        windowMs: 60 * 1000,       // 1 minute (dev only)
-        maxRequests: 1000,         // Relaxed for dev
-        keyPrefix: 'rate:reset',
-    },
-    api: {
-        windowMs: 60 * 1000,       // 1 minute
-        maxRequests: 5000,         // Relaxed for dev
-        keyPrefix: 'rate:api',
-    },
+  login: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    maxRequests: 50, // Increased from 5 to 50 for better dev experience
+    keyPrefix: "rate:login",
+  },
+  register: {
+    windowMs: 60 * 1000, // 1 minute (dev only)
+    maxRequests: 1000, // Relaxed for dev
+    keyPrefix: "rate:register",
+  },
+  passwordReset: {
+    windowMs: 60 * 1000, // 1 minute (dev only)
+    maxRequests: 1000, // Relaxed for dev
+    keyPrefix: "rate:reset",
+  },
+  api: {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 5000, // Relaxed for dev
+    keyPrefix: "rate:api",
+  },
 };
 
 export function createRateLimiter(type: keyof typeof RATE_LIMITS) {
-    const config = RATE_LIMITS[type];
-    const redis = getRedisClient();
+  const config = RATE_LIMITS[type];
+  const redis = getRedisClient();
 
-    return async (req: Request, res: Response, next: NextFunction) => {
-        // Bypass rate limiting in development
-        if (process.env.NODE_ENV !== 'production') {
-            return next();
-        }
+  return async (req: Request, res: Response, next: NextFunction) => {
+    // Bypass rate limiting in development
+    if (process.env.NODE_ENV !== "production") {
+      return next();
+    }
 
-        try {
-            // Use IP + email (if available) as key
-            const email = req.body?.email || '';
-            const ip = req.ip || req.socket.remoteAddress || 'unknown';
-            const key = `${config.keyPrefix}:${ip}:${email}`;
+    try {
+      // Use IP + email (if available) as key
+      const email = req.body?.email || "";
+      const ip = req.ip || req.socket.remoteAddress || "unknown";
+      const key = `${config.keyPrefix}:${ip}:${email}`;
 
-            // Increment counter
-            const count = await redis.incr(key);
+      // Increment counter
+      const count = await redis.incr(key);
 
-            // Set expiry on first request
-            if (count === 1) {
-                await redis.pexpire(key, config.windowMs);
-            }
+      // Set expiry on first request
+      if (count === 1) {
+        await redis.pexpire(key, config.windowMs);
+      }
 
-            // Get remaining TTL
-            const ttl = await redis.pttl(key);
+      // Get remaining TTL
+      const ttl = await redis.pttl(key);
 
-            // Set rate limit headers
-            res.set({
-                'X-RateLimit-Limit': config.maxRequests.toString(),
-                'X-RateLimit-Remaining': Math.max(0, config.maxRequests - count).toString(),
-                'X-RateLimit-Reset': Math.ceil((Date.now() + ttl) / 1000).toString(),
-            });
+      // Set rate limit headers
+      res.set({
+        "X-RateLimit-Limit": config.maxRequests.toString(),
+        "X-RateLimit-Remaining": Math.max(
+          0,
+          config.maxRequests - count,
+        ).toString(),
+        "X-RateLimit-Reset": Math.ceil((Date.now() + ttl) / 1000).toString(),
+      });
 
-            if (count > config.maxRequests) {
-                logger.warn({ ip, email, type }, 'Rate limit exceeded');
+      if (count > config.maxRequests) {
+        logger.warn({ ip, email, type }, "Rate limit exceeded");
 
-                return res.status(429).json({
-                    error: {
-                        code: 'RATE_LIMITED',
-                        message: 'Too many requests, please try again later',
-                        retryAfter: Math.ceil(ttl / 1000),
-                    }
-                });
-            }
+        return res.status(429).json({
+          error: {
+            code: "RATE_LIMITED",
+            message: "Too many requests, please try again later",
+            retryAfter: Math.ceil(ttl / 1000),
+          },
+        });
+      }
 
-            next();
-        } catch (error) {
-            // Don't block requests if Redis fails
-            logger.error({ error }, 'Rate limiter error');
-            next();
-        }
-    };
+      next();
+    } catch (error) {
+      // Don't block requests if Redis fails
+      logger.error({ error }, "Rate limiter error");
+      next();
+    }
+  };
 }
 
 // Pre-configured rate limiters
-export const loginRateLimiter = createRateLimiter('login');
-export const registerRateLimiter = createRateLimiter('register');
-export const passwordResetRateLimiter = createRateLimiter('passwordReset');
-export const apiRateLimiter = createRateLimiter('api');
+export const loginRateLimiter = createRateLimiter("login");
+export const registerRateLimiter = createRateLimiter("register");
+export const passwordResetRateLimiter = createRateLimiter("passwordReset");
+export const apiRateLimiter = createRateLimiter("api");
