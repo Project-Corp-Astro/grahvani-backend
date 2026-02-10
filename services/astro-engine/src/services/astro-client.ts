@@ -308,6 +308,22 @@ export class AstroEngineClient {
     }
 
     /**
+     * Get Shadbala (Planetary Strength)
+     */
+    async getShadbala(data: BirthData): Promise<any> {
+        const system = this.getAyanamsa(data);
+        if (system !== 'lahiri') throw new Error('Shadbala is currently only available for Lahiri system.');
+
+        const cached = await cacheService.get<any>(`shadbala:${system}`, data);
+        if (cached) return { data: cached, cached: true };
+
+        const response = await this.client.post(`/${system}/calculate_shadbala`, this.buildPayload(data));
+        await cacheService.set(`shadbala:${system}`, data, response.data);
+
+        return { data: response.data, cached: false };
+    }
+
+    /**
      * Get Specialized Charts (Generic)
      */
     async getSpecialChart(data: BirthData, type: string): Promise<any> {

@@ -73,7 +73,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
             'moon', 'sun', 'sudarshana', 'transit', 'mandi', 'gulika', 'd40', 'd150',
             'ashtakavarga_sarva', 'ashtakavarga_bhinna', 'ashtakavarga_shodasha', 'shodasha_varga_signs',
             'arudha_lagna', 'bhava_lagna', 'hora_lagna', 'sripathi_bhava', 'kp_bhava', 'equal_bhava',
-            'karkamsha_d1', 'karkamsha_d9',
+            'karkamsha_d1', 'karkamsha_d9', 'shadbala',
             'numerology_chaldean', 'numerology_loshu', 'person_numerology',
             'dasha_vimshottari', 'dasha_chara', 'dasha_tribhagi', 'dasha_tribhagi_40',
             'dasha_shodashottari', 'dasha_dwadashottari', 'dasha_panchottari', 'dasha_chaturshitisama',

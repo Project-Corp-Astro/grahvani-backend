@@ -294,6 +294,39 @@ export class ChartController {
     }
 
     /**
+     * POST /internal/shadbala
+     */
+    async getShadbala(req: Request, res: Response): Promise<void> {
+        try {
+            const birthData: BirthData = req.body;
+            if (!this.validateBirthData(birthData, res)) return;
+
+            // Stabilize cache key: only use essential birth parameters + ayanamsa
+            const cacheKey = {
+                birthDate: birthData.birthDate,
+                birthTime: birthData.birthTime,
+                latitude: birthData.latitude,
+                longitude: birthData.longitude,
+                ayanamsa: birthData.ayanamsa || 'lahiri'
+            };
+
+            const cached = await cacheService.get<any>('shadbala', cacheKey);
+            if (cached) {
+                res.json({ success: true, data: cached, cached: true, calculatedAt: new Date().toISOString() });
+                return;
+            }
+
+            const data = await astroEngineClient.getShadbala(birthData);
+            await cacheService.set('shadbala', cacheKey, data);
+
+            res.json({ success: true, data, cached: false, calculatedAt: new Date().toISOString() });
+        } catch (error: any) {
+            logger.error({ error: error.message }, 'Shadbala calculation failed');
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    /**
      * POST /internal/ashtakavarga
      * Get Bhinna Ashtakavarga
      */
