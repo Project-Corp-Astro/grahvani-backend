@@ -12,7 +12,7 @@ jobs:
       - name: Check Auth Service
         run: |
           status=$(curl -s -o /dev/null -w "%{http_code}" \
-            "http://eg48400cgoc8cwocos8cosg8.147.93.30.201.sslip.io/health" \
+            "https://api-auth.grahvani.in/health" \
             --max-time 10)
           echo "Auth: $status"
           [ "$status" = "200" ] || exit 1
@@ -20,7 +20,7 @@ jobs:
       - name: Check User Service
         run: |
           status=$(curl -s -o /dev/null -w "%{http_code}" \
-            "http://jscos8kcwookg48ws8408o8g.147.93.30.201.sslip.io/health" \
+            "https://api-user.grahvani.in/health" \
             --max-time 10)
           echo "User: $status"
           [ "$status" = "200" ] || exit 1
@@ -28,7 +28,7 @@ jobs:
       - name: Check Client Service
         run: |
           status=$(curl -s -o /dev/null -w "%{http_code}" \
-            "http://r8wwc4cggko40cs0cs8s8ogs.147.93.30.201.sslip.io/health" \
+            "https://api-client.grahvani.in/health" \
             --max-time 10)
           echo "Client: $status"
           [ "$status" = "200" ] || exit 1
@@ -36,7 +36,7 @@ jobs:
       - name: Check Astro Engine
         run: |
           status=$(curl -s -o /dev/null -w "%{http_code}" \
-            "http://qkgsko0kkoc004w0w04okggk.147.93.30.201.sslip.io/health" \
+            "https://api-astro.grahvani.in/health" \
             --max-time 10)
           echo "Astro Engine: $status"
           [ "$status" = "200" ] || exit 1
@@ -44,7 +44,7 @@ jobs:
       - name: Check Frontend
         run: |
           status=$(curl -s -o /dev/null -w "%{http_code}" \
-            "http://147.93.30.201.sslip.io/api/health" \
+            "https://grahvani.in/api/health" \
             --max-time 10)
           echo "Frontend: $status"
           [ "$status" = "200" ] || exit 1
