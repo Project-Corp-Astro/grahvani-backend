@@ -2,6 +2,7 @@
 import { getRedisClient } from "../config/redis";
 import { TokenService } from "./token.service";
 import { getPrismaClient } from "../config/database";
+import { PrismaClient } from "../generated/prisma";
 import { DeviceUtils } from "../utils/device.utils";
 import { logger } from "../config/logger";
 
@@ -27,9 +28,15 @@ export interface CreateSessionData {
 }
 
 export class SessionService {
-  private prisma = getPrismaClient();
-  private redis = getRedisClient();
-  private tokenService = new TokenService();
+  private prisma: PrismaClient;
+  private redis: any;
+  private tokenService: TokenService;
+
+  constructor() {
+    this.prisma = getPrismaClient();
+    this.redis = getRedisClient();
+    this.tokenService = new TokenService();
+  }
 
   /**
    * Create a new session

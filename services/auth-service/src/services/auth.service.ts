@@ -61,13 +61,23 @@ export interface RequestMetadata {
 // ============ AUTH SERVICE ============
 
 export class AuthService {
-  private tokenService = new TokenService();
-  private sessionService = new SessionService();
-  private verificationService = new VerificationService();
-  private eventPublisher = new EventPublisher();
-  private prisma = getPrismaClient();
-  private redis = getRedisClient();
-  private supabase = getSupabaseClient();
+  private tokenService: TokenService;
+  private sessionService: SessionService;
+  private verificationService: VerificationService;
+  private eventPublisher: EventPublisher;
+  private prisma: any;
+  private redis: any;
+  private supabase: any;
+
+  constructor() {
+    this.tokenService = new TokenService();
+    this.sessionService = new SessionService();
+    this.verificationService = new VerificationService();
+    this.eventPublisher = new EventPublisher();
+    this.prisma = getPrismaClient();
+    this.redis = getRedisClient();
+    this.supabase = getSupabaseClient();
+  }
 
   /**
    * Register a new user
