@@ -1,14 +1,15 @@
 generator client {
-  provider      = "prisma-client-js"
-  output        = "../src/generated/prisma"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  provider        = "prisma-client-js"
+  output          = "../src/generated/prisma"
+  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-
+  schemas   = ["app_clients"]
 }
 
 // Enums
@@ -18,6 +19,7 @@ enum Gender {
   other
   prefer_not_to_say
 
+  @@schema("app_clients")
 }
 
 enum MaritalStatus {
@@ -26,6 +28,7 @@ enum MaritalStatus {
   divorced
   widowed
 
+  @@schema("app_clients")
 }
 
 enum ClientSource {
@@ -34,6 +37,7 @@ enum ClientSource {
   import
   ocr
 
+  @@schema("app_clients")
 }
 
 enum BirthTimeAccuracy {
@@ -42,6 +46,7 @@ enum BirthTimeAccuracy {
   rectified
   unknown
 
+  @@schema("app_clients")
 }
 
 enum RelationshipType {
@@ -57,6 +62,7 @@ enum RelationshipType {
   cousin
   other
 
+  @@schema("app_clients")
 }
 
 enum ConsultationType {
@@ -71,6 +77,7 @@ enum ConsultationType {
   transit
   other
 
+  @@schema("app_clients")
 }
 
 enum ConsultationStatus {
@@ -78,6 +85,7 @@ enum ConsultationStatus {
   pending_follow_up
   closed
 
+  @@schema("app_clients")
 }
 
 enum ChartType {
@@ -195,6 +203,8 @@ enum ChartType {
   gl_chart              // Gati Kalagna chart
   karaka_strength       // Karaka strength analysis
   yukteswar_transit     // Yukteswar system transit chart
+
+  @@schema("app_clients")
 }
 
 enum RemedyType {
@@ -207,6 +217,7 @@ enum RemedyType {
   fasting
   other
 
+  @@schema("app_clients")
 }
 
 enum RemedyStatus {
@@ -215,6 +226,7 @@ enum RemedyStatus {
   completed
   discontinued
 
+  @@schema("app_clients")
 }
 
 enum ImportStatus {
@@ -224,6 +236,7 @@ enum ImportStatus {
   failed
   partially_completed
 
+  @@schema("app_clients")
 }
 
 enum ChartGenerationStatus {
@@ -231,6 +244,8 @@ enum ChartGenerationStatus {
   processing
   completed
   failed
+
+  @@schema("app_clients")
 }
 
 enum ImportType {
@@ -238,6 +253,7 @@ enum ImportType {
   csv
   ocr
 
+  @@schema("app_clients")
 }
 
 // Models
@@ -322,7 +338,7 @@ model Client {
   @@index([tags], type: Gin)
   
   @@map("clients")
-
+  @@schema("app_clients")
 }
 
 model ClientFamilyLink {
@@ -348,7 +364,7 @@ model ClientFamilyLink {
   @@index([relatedClientId])
   
   @@map("client_family_links")
-
+  @@schema("app_clients")
 }
 
 model ClientConsultation {
@@ -378,7 +394,7 @@ model ClientConsultation {
   @@index([tenantId, consultationDate])
   
   @@map("client_consultations")
-
+  @@schema("app_clients")
 }
 
 model ClientSavedChart {
@@ -405,7 +421,7 @@ model ClientSavedChart {
   @@index([clientId, chartType])
   
   @@map("client_saved_charts")
-
+  @@schema("app_clients")
 }
 
 model ClientNote {
@@ -424,7 +440,7 @@ model ClientNote {
   @@unique([id, tenantId])
   @@index([clientId])
   @@map("client_notes")
-
+  @@schema("app_clients")
 }
 
 model ClientRemedy {
@@ -451,7 +467,7 @@ model ClientRemedy {
   @@unique([id, tenantId])
   @@index([clientId])
   @@map("client_remedies")
-
+  @@schema("app_clients")
 }
 
 model ClientImport {
@@ -474,7 +490,7 @@ model ClientImport {
 
   @@index([tenantId])
   @@map("client_imports")
-
+  @@schema("app_clients")
 }
 
 model ClientActivityLog {
@@ -498,5 +514,5 @@ model ClientActivityLog {
   @@index([userId])
   @@index([timestamp])
   @@map("client_activity_logs")
-
+  @@schema("app_clients")
 }
