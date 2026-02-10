@@ -1,13 +1,13 @@
-import pino from 'pino';
-import { config } from './index';
+import pino from "pino";
+import { config } from "./index";
 
 export const logger = pino({
-    level: config.logLevel,
-    transport: {
-        target: 'pino-pretty',
-        options: {
-            colorize: true,
-            translateTime: 'SYS:standard',
-        },
+  level: config.logLevel,
+  transport: {
+    target: "pino-pretty",
+    options: {
+      colorize: true,
+      translateTime: "SYS:standard",
     },
+  },
 });

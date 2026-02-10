@@ -1,0 +1,11 @@
+dist
+node_modules
+coverage
+*.sql
+*.log
+.turbo
+**/prisma/client
+**/generated
+**/dist
+**/*.sql
+**/*.log

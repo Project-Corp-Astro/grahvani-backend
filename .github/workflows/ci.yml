@@ -82,3 +82,5 @@ jobs:
             --filter=@grahvani/auth-service \
             --filter=@grahvani/user-service \
             --filter=@grahvani/astro-engine
+        env:
+          NODE_ENV: test

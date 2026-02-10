@@ -1,1 +1,4 @@
-export { ashtakavargaController, AshtakavargaController } from './ashtakavarga.controller';
+export {
+  ashtakavargaController,
+  AshtakavargaController,
+} from "./ashtakavarga.controller";
