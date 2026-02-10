@@ -21,6 +21,12 @@ jest.mock("../config/redis", () => ({
   getRedisClient: () => redisMock,
 }));
 
+jest.mock("../config/database", () => ({
+  getPrismaClient: () => prismaMock,
+  checkConnection: (jest.fn() as any).mockResolvedValue(true),
+  disconnect: (jest.fn() as any).mockResolvedValue(undefined),
+}));
+
 // Since services instantiate PrismaClient internally or use a shared one
 // We'll mock the generated prisma path
 jest.mock("../generated/prisma", () => ({

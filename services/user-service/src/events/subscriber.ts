@@ -1,6 +1,7 @@
 import { RedisClientType } from "redis";
 import { getRedisClient } from "../config/redis";
 import { getPrismaClient } from "../config/database";
+import { logger } from "../config/logger";
 
 // LAZY: Prisma is accessed via getPrismaClient() in handlers, NOT at module load time
 
@@ -145,7 +146,7 @@ export class EventSubscriber {
     if (this.isRunning) return;
     this.isRunning = true;
 
-    console.log("[EventSubscriber] Starting event listener...");
+    logger.info("[EventSubscriber] Starting event listener...");
 
     const subscriber = await this.getClient();
     const duplicate = subscriber.duplicate();
@@ -162,7 +163,7 @@ export class EventSubscriber {
       this.handleAuthEvent(message);
     });
 
-    console.log(
+    logger.info(
       "[EventSubscriber] Subscribed to grahvani:events:auth and grahvani:events:user",
     );
   }
@@ -200,12 +201,13 @@ export class EventSubscriber {
           await this.handlePasswordChanged(event);
           break;
         default:
-          console.warn(
-            `[EventSubscriber] Unknown event type: ${(event as any).type}`,
+          logger.warn(
+            { type: (event as any).type },
+            "[EventSubscriber] Unknown event type",
           );
       }
     } catch (error) {
-      console.error("[EventSubscriber] Failed to process event:", error);
+      logger.error({ error }, "[EventSubscriber] Failed to process event");
     }
   }
 
@@ -242,7 +244,7 @@ export class EventSubscriber {
         },
       });
 
-      console.log(`[EventSubscriber] User profile created/updated: ${userId}`);
+      logger.info({ userId }, "[EventSubscriber] User profile created/updated");
 
       // Log registration activity
       if (event.data.metadata) {
@@ -258,7 +260,10 @@ export class EventSubscriber {
         });
       }
     } catch (error) {
-      console.error(`[EventSubscriber] Failed to create user profile:`, error);
+      logger.error(
+        { userId, error },
+        "[EventSubscriber] Failed to create user profile",
+      );
       throw error;
     }
   }
@@ -279,10 +284,10 @@ export class EventSubscriber {
         },
       });
 
-      console.log(`[EventSubscriber] User profile synced: ${userId}`);
+      logger.info({ userId }, "[EventSubscriber] User profile synced");
     } catch {
       // User might not exist if event came before registration
-      console.warn(`[EventSubscriber] User not found for update: ${userId}`);
+      logger.warn({ userId }, "[EventSubscriber] User not found for update");
     }
   }
 
@@ -306,9 +311,9 @@ export class EventSubscriber {
         },
       });
 
-      console.log(`[EventSubscriber] User soft deleted: ${userId}`);
+      logger.info({ userId }, "[EventSubscriber] User soft deleted");
     } catch {
-      console.warn(`[EventSubscriber] User not found for deletion: ${userId}`);
+      logger.warn({ userId }, "[EventSubscriber] User not found for deletion");
     }
   }
 
@@ -330,11 +335,12 @@ export class EventSubscriber {
         },
       });
 
-      console.log(
-        `[EventSubscriber] Login activity logged for user: ${userId}`,
-      );
+      logger.info({ userId }, "[EventSubscriber] Login activity logged");
     } catch (error) {
-      console.error(`[EventSubscriber] Failed to log login activity:`, error);
+      logger.error(
+        { userId, error },
+        "[EventSubscriber] Failed to log login activity",
+      );
     }
   }
 
@@ -358,11 +364,12 @@ export class EventSubscriber {
         },
       });
 
-      console.log(
-        `[EventSubscriber] Logout activity logged for user: ${userId}`,
-      );
+      logger.info({ userId }, "[EventSubscriber] Logout activity logged");
     } catch (error) {
-      console.error(`[EventSubscriber] Failed to log logout activity:`, error);
+      logger.error(
+        { userId, error },
+        "[EventSubscriber] Failed to log logout activity",
+      );
     }
   }
 
@@ -388,13 +395,11 @@ export class EventSubscriber {
         },
       });
 
-      console.log(
-        `[EventSubscriber] Session revocation logged for user: ${userId}`,
-      );
+      logger.info({ userId }, "[EventSubscriber] Session revocation logged");
     } catch (error) {
-      console.error(
-        `[EventSubscriber] Failed to log session revocation:`,
-        error,
+      logger.error(
+        { userId, error },
+        "[EventSubscriber] Failed to log session revocation",
       );
     }
   }
@@ -419,11 +424,12 @@ export class EventSubscriber {
         },
       });
 
-      console.log(
-        `[EventSubscriber] Password reset logged for user: ${userId}`,
-      );
+      logger.info({ userId }, "[EventSubscriber] Password reset logged");
     } catch (error) {
-      console.error(`[EventSubscriber] Failed to log password reset:`, error);
+      logger.error(
+        { userId, error },
+        "[EventSubscriber] Failed to log password reset",
+      );
     }
   }
 
@@ -447,11 +453,12 @@ export class EventSubscriber {
         },
       });
 
-      console.log(
-        `[EventSubscriber] Password change logged for user: ${userId}`,
-      );
+      logger.info({ userId }, "[EventSubscriber] Password change logged");
     } catch (error) {
-      console.error(`[EventSubscriber] Failed to log password change:`, error);
+      logger.error(
+        { userId, error },
+        "[EventSubscriber] Failed to log password change",
+      );
     }
   }
 
@@ -460,7 +467,7 @@ export class EventSubscriber {
    */
   async stop(): Promise<void> {
     this.isRunning = false;
-    console.log("[EventSubscriber] Stopped");
+    logger.info("[EventSubscriber] Stopped");
   }
 }
 

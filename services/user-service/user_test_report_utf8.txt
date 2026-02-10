@@ -1,0 +1,103 @@
+﻿  console.log
+    [UserRepository.findById] Querying DB: {
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      tenantId: '550e8400-e29b-41d4-a716-446655440001'
+    }
+
+      at UserRepository.findById (src/repositories/user.repository.ts:70:13)
+
+node.exe : FAIL src/__tests__/user-sync.test.ts
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (FAIL src/ 
+   __tests__/user-sync.test.ts:String) [], RemoteExce  
+  ption
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  User Service Production Sync
+    ├ù should correctly update user profile with DOB 
+and Gender (145 ms)
+    ├ù should correctly process user.login event from 
+Auth Service (31 ms)
+
+  ΓùÅ User Service Production Sync ΓÇ║ should 
+correctly update user profile with DOB and Gender
+
+    DATABASE_URL not configured in environment
+
+    [0m [90m 57 |[39m
+     [90m 58 |[39m       [36mif[39m 
+([33m![39murl) {
+    [31m[1m>[22m[39m[90m 59 |[39m         
+[36mthrow[39m [36mnew[39m 
+[33mError[39m([32m"DATABASE_URL not configured in 
+environment"[39m)[33m;[39m
+     [90m    |[39m               [31m[1m^[22m[39m
+     [90m 60 |[39m       }
+     [90m 61 |[39m
+     [90m 62 |[39m       [90m// Auto-configure for 
+Supabase Transaction Pooler[39m[0m
+
+      at DatabaseManager.initializeClient 
+(src/config/db-pro.ts:59:15)
+      at new DatabaseManager 
+(src/config/db-pro.ts:47:10)
+      at getDatabaseManager 
+(src/config/db-pro.ts:231:31)
+      at getPrismaClient (src/config/database.ts:16:40)
+      at UserRepository.findById 
+(src/repositories/user.repository.ts:71:39)
+      at UserService.updateProfile 
+(src/services/user.service.ts:115:39)
+      at Object.<anonymous> 
+(src/__tests__/user-sync.test.ts:50:23)
+
+  ΓùÅ User Service Production Sync ΓÇ║ should 
+correctly process user.login event from Auth Service
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: ObjectContaining {"data": 
+ObjectContaining {"action": "user_login", 
+"deviceName": "Chrome on Windows", "deviceType": 
+"desktop", "ipAddress": "127.0.0.1", "userAgent": 
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64) 
+AppleWebKit/537.36 (KHTML, like Gecko) 
+Chrome/120.0.0.0 Safari/537.36", "userId": 
+"550e8400-e29b-41d4-a716-446655440000"}}
+
+    Number of calls: 0
+
+    [0m [90m 106 |[39m
+     [90m 107 |[39m     [90m// Verify forensic 
+metadata was mapped to UserActivityLog[39m
+    [31m[1m>[22m[39m[90m 108 |[39m     expect(pri
+smaMock[33m.[39muserActivityLog[33m.[39mcreate)[33
+m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                                  
+             [31m[1m^[22m[39m
+     [90m 109 |[39m       
+expect[33m.[39mobjectContaining({
+     [90m 110 |[39m         data[33m:[39m 
+expect[33m.[39mobjectContaining({
+     [90m 111 |[39m           userId[33m:[39m 
+testUserId[33m,[39m[0m
+
+      at Object.<anonymous> 
+(src/__tests__/user-sync.test.ts:108:47)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 2 total
+Snapshots:   0 total
+Time:        4.694 s, estimated 9 s
+Ran all test suites.
+[2026-02-10 19:27:14.688 +0530] [31mERROR[39m (11656): [36mFailed to initialize database client[39m
+    error: {}
+[2026-02-10 19:27:14.753 +0530] [31mERROR[39m (11656): [36mFailed to initialize database client[39m
+    error: {}
+[2026-02-10 19:27:14.754 +0530] [31mERROR[39m (11656): [36m[EventSubscriber] Failed to log login activity[39m
+    userId: "550e8400-e29b-41d4-a716-446655440000"
+    error: {}
