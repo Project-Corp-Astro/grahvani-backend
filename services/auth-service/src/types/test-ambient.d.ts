@@ -9,7 +9,7 @@ declare module "@jest/globals" {
 }
 
 declare module "jest-mock-extended" {
-  export function mockDeep<T>(): any;
+  export function mockDeep(): any;
 }
 
 declare module "../generated/prisma" {
@@ -18,7 +18,7 @@ declare module "../generated/prisma" {
 }
 
 // allow require in test setup without @types/node
-declare var require: any;
+declare const require: any;
 
 // global jest for older import styles
 declare const jest: any;
