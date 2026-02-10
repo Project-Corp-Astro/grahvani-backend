@@ -1,4 +1,4 @@
-# Client Service Dockerfile
+# Client Service Dockerfile (rebuilt: 2026-02-11)
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json turbo.json ./
