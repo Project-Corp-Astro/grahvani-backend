@@ -16,6 +16,7 @@
         "declarationMap": true,
         "sourceMap": true,
         "baseUrl": ".",
+        "types": [],
         "paths": {
             "@/*": [
                 "src/*"
