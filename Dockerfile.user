@@ -17,7 +17,7 @@ COPY package.json turbo.json ./
 COPY contracts/ ./contracts/
 RUN cd contracts && (tsc || test -d dist)
 COPY services/user-service/ ./services/user-service/
-RUN prisma generate --schema=services/user-service/prisma/schema.prisma
+RUN cat services/user-service/prisma/schema.prisma | head -5 && prisma generate --schema=services/user-service/prisma/schema.prisma
 RUN cd services/user-service && (tsc || test -d dist)
 
 FROM node:22-alpine AS pruner
