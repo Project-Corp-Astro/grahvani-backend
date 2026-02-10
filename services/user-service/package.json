@@ -1,5 +1,5 @@
 {
-  "name": "user-service",
+  "name": "@grahvani/user-service",
   "version": "1.0.0",
   "description": "User Service for Grahvani Platform",
   "main": "dist/index.js",

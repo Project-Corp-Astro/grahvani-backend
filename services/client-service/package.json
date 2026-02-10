@@ -1,5 +1,5 @@
 {
-  "name": "client-service",
+  "name": "@grahvani/client-service",
   "version": "1.0.0",
   "description": "Client Service for Grahvani Platform",
   "main": "dist/index.js",
