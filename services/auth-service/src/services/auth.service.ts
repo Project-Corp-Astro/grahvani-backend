@@ -1,5 +1,5 @@
 // Auth Service - Complete Implementation per LLD
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { getSupabaseClient, getSupabaseAdmin } from "../config/supabase";
 import { PrismaClient, User } from "../generated/prisma";
 import { getRedisClient } from "../config/redis";

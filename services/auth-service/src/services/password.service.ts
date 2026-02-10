@@ -1,5 +1,5 @@
 // Password Service - Complete Implementation per LLD
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { PrismaClient } from "../generated/prisma";
 import { getPrismaClient } from "../config/database";

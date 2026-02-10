@@ -3,7 +3,7 @@
 import { AuthService } from "../services/auth.service";
 import { describe, beforeEach, it, expect, jest } from "@jest/globals";
 import { prismaMock, redisMock, supabaseAdminMock } from "./setup";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 describe("Auth Service Production Lifecycle", () => {
   let authService: AuthService;
