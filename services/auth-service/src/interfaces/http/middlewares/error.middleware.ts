@@ -11,7 +11,7 @@ export function errorMiddleware(
   err: AppError,
   req: Request,
   res: Response,
-  next: NextFunction,
+  _next: NextFunction,
 ) {
   const statusCode = err.statusCode || 500;
   const code = err.code || "INTERNAL_ERROR";

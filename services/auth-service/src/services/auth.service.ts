@@ -1,7 +1,7 @@
 // Auth Service - Complete Implementation per LLD
 import bcrypt from "bcryptjs";
 import { getSupabaseClient, getSupabaseAdmin } from "../config/supabase";
-import { PrismaClient, User } from "../generated/prisma";
+import { User } from "../generated/prisma";
 import { getRedisClient } from "../config/redis";
 import { TokenService } from "@/services/token.service";
 import { SessionService } from "@/services/session.service";
@@ -15,7 +15,6 @@ import {
   UserExistsError,
   InvalidCredentialsError,
   AccountSuspendedError,
-  EmailNotVerifiedError,
   NotFoundError,
   RateLimitError,
 } from "../errors/auth.errors";

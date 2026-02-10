@@ -231,7 +231,7 @@ export class AuthController {
   /**
    * POST /forgot-password
    */
-  async forgotPassword(req: Request, res: Response, next: NextFunction) {
+  async forgotPassword(req: Request, res: Response, _next: NextFunction) {
     try {
       const parseResult = ForgotPasswordSchema.safeParse(req.body);
       if (!parseResult.success) {
@@ -259,7 +259,7 @@ export class AuthController {
   /**
    * POST /reset-password
    */
-  async resetPassword(req: Request, res: Response, next: NextFunction) {
+  async resetPassword(req: Request, res: Response, _next: NextFunction) {
     try {
       const parseResult = ResetPasswordSchema.safeParse(req.body);
       if (!parseResult.success) {
@@ -282,7 +282,7 @@ export class AuthController {
   /**
    * POST /change-password
    */
-  async changePassword(req: Request, res: Response, next: NextFunction) {
+  async changePassword(req: Request, res: Response, _next: NextFunction) {
     try {
       const user = (req as any).user;
 
@@ -320,7 +320,7 @@ export class AuthController {
   /**
    * POST /social-login
    */
-  async socialLogin(req: Request, res: Response, next: NextFunction) {
+  async socialLogin(req: Request, res: Response, _next: NextFunction) {
     try {
       const { accessToken } = req.body;
 
@@ -347,7 +347,7 @@ export class AuthController {
   /**
    * POST /oauth/link
    */
-  async linkOAuth(req: Request, res: Response, next: NextFunction) {
+  async linkOAuth(req: Request, res: Response, _next: NextFunction) {
     try {
       const user = (req as any).user;
       const { accessToken } = req.body;
@@ -380,7 +380,7 @@ export class AuthController {
   /**
    * DELETE /oauth/:provider
    */
-  async unlinkOAuth(req: Request, res: Response, next: NextFunction) {
+  async unlinkOAuth(req: Request, res: Response, _next: NextFunction) {
     try {
       const user = (req as any).user;
       const { provider } = req.params;
@@ -405,7 +405,7 @@ export class AuthController {
   /**
    * POST /verify-email
    */
-  async verifyEmail(req: Request, res: Response, next: NextFunction) {
+  async verifyEmail(req: Request, res: Response, _next: NextFunction) {
     try {
       const { token } = req.body;
 
@@ -454,7 +454,7 @@ export class AuthController {
   /**
    * POST /activate
    */
-  async activateAccount(req: Request, res: Response, next: NextFunction) {
+  async activateAccount(req: Request, res: Response, _next: NextFunction) {
     try {
       const { token, password } = req.body;
 

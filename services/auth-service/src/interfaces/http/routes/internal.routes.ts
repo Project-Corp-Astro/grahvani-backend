@@ -13,7 +13,7 @@ const tokenService = new TokenService();
  */
 router.post(
   "/token/introspect",
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const { token } = req.body;
 
@@ -39,7 +39,7 @@ router.post(
  */
 router.post(
   "/token/validate",
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const authHeader = req.headers.authorization || req.body.token;
       const token = authHeader?.startsWith("Bearer ")
@@ -187,7 +187,7 @@ const provisioningService = new ProvisioningService();
  */
 router.post(
   "/provision",
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     try {
       // Verify service key for security
       const serviceKey = req.headers["x-service-key"];
@@ -240,7 +240,7 @@ router.post(
  */
 router.post(
   "/resend-invitation",
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const serviceKey = req.headers["x-service-key"];
       if (!serviceKey || serviceKey !== process.env.INTERNAL_SERVICE_KEY) {

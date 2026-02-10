@@ -1,1 +1,6 @@
-export { kpPlanetsCuspsController, kpHoraryController, KpPlanetsCuspsController, KpHoraryController } from './planets-cusps.controller';
+export {
+  kpPlanetsCuspsController,
+  kpHoraryController,
+  KpPlanetsCuspsController,
+  KpHoraryController,
+} from "./planets-cusps.controller";

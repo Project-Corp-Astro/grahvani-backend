@@ -325,6 +325,6 @@ process.on("uncaughtException", async (error) => {
   process.exit(1);
 });
 
-process.on("unhandledRejection", (reason, promise) => {
+process.on("unhandledRejection", (reason, _promise) => {
   logger.error({ reason }, "Unhandled rejection");
 });

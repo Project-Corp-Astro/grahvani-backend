@@ -1,6 +1,5 @@
 import { ProvisioningService } from "../services/provision.service";
 import { prismaMock, supabaseAdminMock } from "./setup";
-import { jest } from "@jest/globals";
 
 describe("ProvisioningService", () => {
   let provisioningService: ProvisioningService;

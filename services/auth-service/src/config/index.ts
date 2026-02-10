@@ -24,17 +24,43 @@ const envSchema = z.object({
   PORT: z.string().transform(Number).default("3001"),
 
   // Supabase (Shared)
-  SUPABASE_URL: z.string().default(process.env.NODE_ENV === "test" ? "http://mock-supabase.local" : ""),
-  SUPABASE_ANON_KEY: z.string().default(process.env.NODE_ENV === "test" ? "mock-anon-key" : ""),
+  SUPABASE_URL: z
+    .string()
+    .default(
+      process.env.NODE_ENV === "test" ? "http://mock-supabase.local" : "",
+    ),
+  SUPABASE_ANON_KEY: z
+    .string()
+    .default(process.env.NODE_ENV === "test" ? "mock-anon-key" : ""),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
-  DATABASE_URL: z.string().default(process.env.NODE_ENV === "test" ? "postgresql://mock:mock@localhost:5432/mock" : ""),
+  DATABASE_URL: z
+    .string()
+    .default(
+      process.env.NODE_ENV === "test"
+        ? "postgresql://mock:mock@localhost:5432/mock"
+        : "",
+    ),
 
   // Redis (Shared)
   REDIS_URL: z.string().default("redis://localhost:6379"),
 
   // Auth-specific
-  JWT_SECRET: z.string().min(32).default(process.env.NODE_ENV === "test" ? "mock-secret-at-least-32-chars-long" : ""),
-  JWT_REFRESH_SECRET: z.string().min(32).default(process.env.NODE_ENV === "test" ? "mock-refresh-secret-at-least-32-chars-long" : ""),
+  JWT_SECRET: z
+    .string()
+    .min(32)
+    .default(
+      process.env.NODE_ENV === "test"
+        ? "mock-secret-at-least-32-chars-long"
+        : "",
+    ),
+  JWT_REFRESH_SECRET: z
+    .string()
+    .min(32)
+    .default(
+      process.env.NODE_ENV === "test"
+        ? "mock-refresh-secret-at-least-32-chars-long"
+        : "",
+    ),
   JWT_EXPIRES_IN: z.string().default("15m"),
   JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
   BCRYPT_ROUNDS: z.string().transform(Number).default("12"),

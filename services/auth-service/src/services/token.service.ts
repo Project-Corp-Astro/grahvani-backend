@@ -3,7 +3,6 @@
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { getRedisClient } from "../config/redis";
-import { TokenType } from "../generated/prisma";
 import { config } from "../config";
 import { logger } from "../config/logger";
 

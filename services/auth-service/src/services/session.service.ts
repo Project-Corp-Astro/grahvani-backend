@@ -1,7 +1,6 @@
 // Session Service - Complete Implementation per LLD
 import { getRedisClient } from "../config/redis";
 import { TokenService } from "./token.service";
-import { PrismaClient, Session } from "../generated/prisma";
 import { getPrismaClient } from "../config/database";
 import { DeviceUtils } from "../utils/device.utils";
 import { logger } from "../config/logger";

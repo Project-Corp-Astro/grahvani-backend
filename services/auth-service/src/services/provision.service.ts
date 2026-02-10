@@ -2,7 +2,6 @@
 // This service handles the "Invitation Pattern" for SAP-initiated user creation
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
-import { PrismaClient } from "../generated/prisma";
 import { getPrismaClient } from "../config/database";
 import { getRedisClient } from "../config/redis";
 import { getSupabaseAdmin } from "../config/supabase";

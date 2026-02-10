@@ -1,14 +1,14 @@
-import { Router } from 'express';
-import chartsRoutes from './charts.routes';
-import kpRoutes from './kp.routes';
-import dashaRoutes from './dasha.routes';
-import ashtakavargaRoutes from './ashtakavarga.routes';
-import ramanRoutes from './raman.routes';
-import compatibilityRoutes from './compatibility.routes';
-import numerologyRoutes from './numerology.routes';
-import analysisRoutes from './analysis.routes';
-import panchangaRoutes from './panchanga.routes';
-import { panchangaController } from '../controllers/panchanga/panchanga.controller';
+import { Router } from "express";
+import chartsRoutes from "./charts.routes";
+import kpRoutes from "./kp.routes";
+import dashaRoutes from "./dasha.routes";
+import ashtakavargaRoutes from "./ashtakavarga.routes";
+import ramanRoutes from "./raman.routes";
+import compatibilityRoutes from "./compatibility.routes";
+import numerologyRoutes from "./numerology.routes";
+import analysisRoutes from "./analysis.routes";
+import panchangaRoutes from "./panchanga.routes";
+import { panchangaController } from "../controllers/panchanga/panchanga.controller";
 
 const router = Router();
 
@@ -18,40 +18,55 @@ const router = Router();
 // =============================================================================
 
 // Charts: /api/charts/*
-router.use('/charts', chartsRoutes);
+router.use("/charts", chartsRoutes);
 
 // KP System: /api/kp/*
-router.use('/kp', kpRoutes);
+router.use("/kp", kpRoutes);
 
 // Dasha: /api/dasha/*
-router.use('/dasha', dashaRoutes);
+router.use("/dasha", dashaRoutes);
 
 // Ashtakavarga: /api/ashtakavarga/*
-router.use('/ashtakavarga', ashtakavargaRoutes);
+router.use("/ashtakavarga", ashtakavargaRoutes);
 
 // Raman Ayanamsa System: /api/raman/*
-router.use('/raman', ramanRoutes);
+router.use("/raman", ramanRoutes);
 
 // Compatibility & Relationship: /api/compatibility/*
-router.use('/compatibility', compatibilityRoutes);
+router.use("/compatibility", compatibilityRoutes);
 
 // Numerology: /api/numerology/*
-router.use('/numerology', numerologyRoutes);
+router.use("/numerology", numerologyRoutes);
 
 // Analysis (Yogas, Doshas, Remedies): /api/analysis/*
-router.use('/analysis', analysisRoutes);
+router.use("/analysis", analysisRoutes);
 
 // Panchanga: /api/panchanga/*
-router.use('/panchanga', panchangaRoutes);
+router.use("/panchanga", panchangaRoutes);
 
 // =============================================================================
 // UNIVERSAL PANCHANGA ROUTES (root-level, matching Python engine endpoints)
 // These are birth-date based and system-agnostic
 // =============================================================================
-router.post('/panchanga', panchangaController.getPanchanga.bind(panchangaController));
-router.post('/choghadiya_times', panchangaController.getChoghadiya.bind(panchangaController));
-router.post('/hora_times', panchangaController.getHora.bind(panchangaController));
-router.post('/lagna_times', panchangaController.getLagnaTimes.bind(panchangaController));
-router.post('/muhurat', panchangaController.getMuhurat.bind(panchangaController));
+router.post(
+  "/panchanga",
+  panchangaController.getPanchanga.bind(panchangaController),
+);
+router.post(
+  "/choghadiya_times",
+  panchangaController.getChoghadiya.bind(panchangaController),
+);
+router.post(
+  "/hora_times",
+  panchangaController.getHora.bind(panchangaController),
+);
+router.post(
+  "/lagna_times",
+  panchangaController.getLagnaTimes.bind(panchangaController),
+);
+router.post(
+  "/muhurat",
+  panchangaController.getMuhurat.bind(panchangaController),
+);
 
 export default router;

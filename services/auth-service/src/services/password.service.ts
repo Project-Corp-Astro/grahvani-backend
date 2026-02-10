@@ -1,7 +1,6 @@
 // Password Service - Complete Implementation per LLD
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { PrismaClient } from "../generated/prisma";
 import { getPrismaClient } from "../config/database";
 import { getRedisClient } from "../config/redis";
 import { SessionService } from "./session.service";
@@ -201,7 +200,7 @@ export class PasswordService {
 
   // ============ PRIVATE METHODS ============
 
-  private async generateResetToken(userId: string): Promise<string> {
+  private async generateResetToken(_userId: string): Promise<string> {
     const buffer = crypto.randomBytes(32);
     return buffer.toString("hex");
   }

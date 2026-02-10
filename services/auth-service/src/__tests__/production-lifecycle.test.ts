@@ -1,14 +1,14 @@
 // Mocks are handled in setup.ts
 
 import { AuthService } from "../services/auth.service";
-import { describe, beforeEach, it, expect, jest } from "@jest/globals";
+import { describe, beforeEach, it, expect } from "@jest/globals";
 import { prismaMock, redisMock, supabaseAdminMock } from "./setup";
 import bcrypt from "bcryptjs";
 
 describe("Auth Service Production Lifecycle", () => {
   let authService: AuthService;
-  const testUserId = "550e8400-e29b-41d4-a716-446655440000";
-  const testTenantId = "00000000-0000-0000-0000-000000000000";
+  // const testUserId = "550e8400-e29b-41d4-a716-446655440000";
+  // const testTenantId = "00000000-0000-0000-0000-000000000000";
   const testEmail = "naveenmotika143@gmail.com";
   const testPassword = "Naveen@143";
   const testName = "Naveen Motika";
