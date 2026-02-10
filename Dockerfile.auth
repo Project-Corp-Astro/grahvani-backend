@@ -29,7 +29,7 @@ COPY services/auth-service/package.json ./services/auth-service/
 COPY services/user-service/package.json ./services/user-service/
 COPY services/client-service/package.json ./services/client-service/
 COPY services/astro-engine/package.json ./services/astro-engine/
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev --ignore-scripts && npm rebuild bcrypt
 
 FROM node:22-alpine AS runner
 ENV NODE_ENV=production TZ=Asia/Kolkata
