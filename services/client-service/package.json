@@ -4,7 +4,7 @@
   "description": "Client Service for Grahvani Platform",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "lint": "eslint . --ext .ts",
@@ -44,6 +44,7 @@
     "prettier": "^3.0.0",
     "prisma": "^5.0.0",
     "ts-node-dev": "^2.0.0",
+    "tsc-alias": "^1.8.8",
     "typescript": "^5.1.6"
   }
 }
