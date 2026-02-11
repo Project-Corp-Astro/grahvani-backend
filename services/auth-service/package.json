@@ -9,6 +9,7 @@
         "test": "jest",
         "test:watch": "jest --watch",
         "db:generate": "prisma generate",
+        "prisma:generate": "prisma generate",
         "db:migrate": "prisma migrate dev",
         "db:push": "prisma db push",
         "lint": "eslint src"
