@@ -1,9 +1,19 @@
 version: '3.8'
 
-# NOTE: PostgreSQL is provided by Supabase (cloud)
-# Only Redis and Meilisearch run locally for development
-
 services:
+  # ======== DATABASE ========
+  postgres:
+    image: postgres:16-alpine
+    container_name: grahvani-pg
+    environment:
+      POSTGRES_USER: grahvani
+      POSTGRES_PASSWORD: grahvani2026prod
+      POSTGRES_DB: grahvani
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   # ======== CACHE & QUEUE ========
   redis:
     image: redis:7-alpine
@@ -25,5 +35,6 @@ services:
       - meilisearch_data:/meili_data
 
 volumes:
+  postgres_data:
   redis_data:
   meilisearch_data:
