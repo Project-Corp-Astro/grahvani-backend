@@ -509,6 +509,22 @@ export class ChartService {
     } else if (normalizedType === "yukteswar_transit") {
       chartData = await astroEngineClient.getYukteswarTransitChart(birthData);
       dbChartType = "yukteswar_transit";
+    } else if (normalizedType.startsWith("yoga_")) {
+      const yogaType = normalizedType.replace("yoga_", "");
+      chartData = await astroEngineClient.getYogaAnalysis(
+        birthData,
+        yogaType,
+        system,
+      );
+      dbChartType = normalizedType as any;
+    } else if (normalizedType.startsWith("dosha_")) {
+      const doshaType = normalizedType.replace("dosha_", "");
+      chartData = await astroEngineClient.getDoshaAnalysis(
+        birthData,
+        doshaType,
+        system,
+      );
+      dbChartType = normalizedType as any;
     } else {
       // Default to divisional chart generation
       chartData = await astroEngineClient.getDivisionalChart(
@@ -1145,13 +1161,13 @@ export class ChartService {
           const task =
             (this as any)[methodName] === this.generateAndSaveChart
               ? () =>
-                  this.generateAndSaveChart(
-                    tenantId,
-                    clientId,
-                    chartType,
-                    system,
-                    metadata,
-                  )
+                this.generateAndSaveChart(
+                  tenantId,
+                  clientId,
+                  chartType,
+                  system,
+                  metadata,
+                )
               : () => (this as any)[methodName](tenantId, clientId, metadata);
 
           operations.push(() =>

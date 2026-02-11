@@ -59,6 +59,16 @@ router.post(
   "/:id/charts/generate",
   chartController.generateChart.bind(chartController),
 );
+
+// Yoga and Dosha Analysis
+router.get(
+  "/:id/yoga/:yogaType",
+  chartController.getYogaAnalysis.bind(chartController),
+);
+router.get(
+  "/:id/dosha/:doshaType",
+  chartController.getDoshaAnalysis.bind(chartController),
+);
 router.post(
   "/:id/charts/generate-core",
   chartController.generateCoreCharts.bind(chartController),

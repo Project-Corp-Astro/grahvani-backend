@@ -927,6 +927,72 @@ export class ChartController {
       next(error);
     }
   }
+
+  /**
+   * GET /clients/:id/yoga/:yogaType
+   */
+  async getYogaAnalysis(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { id, yogaType } = req.params;
+      const ayanamsa = (req.query.ayanamsa as any) || "lahiri";
+      const tenantId = req.user!.tenantId;
+      const metadata = {
+        userId: req.user!.id,
+        ipAddress: req.ip,
+        userAgent: req.get("user-agent"),
+      };
+
+      const result = await chartService.generateAndSaveChart(
+        tenantId,
+        id,
+        `yoga_${yogaType}`,
+        ayanamsa,
+        metadata,
+      );
+
+      res.json({
+        success: true,
+        data: result.chartData,
+        cached: (result as any).cached,
+        calculatedAt: result.calculatedAt,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /clients/:id/dosha/:doshaType
+   */
+  async getDoshaAnalysis(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { id, doshaType } = req.params;
+      const ayanamsa = (req.query.ayanamsa as any) || "lahiri";
+      const tenantId = req.user!.tenantId;
+      const metadata = {
+        userId: req.user!.id,
+        ipAddress: req.ip,
+        userAgent: req.get("user-agent"),
+      };
+
+      const result = await chartService.generateAndSaveChart(
+        tenantId,
+        id,
+        `dosha_${doshaType}`,
+        ayanamsa,
+        metadata,
+      );
+
+      res.json({
+        success: true,
+        data: result.chartData,
+        cached: (result as any).cached,
+        calculatedAt: result.calculatedAt,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const chartController = new ChartController();
