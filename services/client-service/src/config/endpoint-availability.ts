@@ -176,6 +176,8 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "viparitha_raja",
       "kalpadruma",
       "rare",
+      "kala_sarpa",
+      "guru_mangal_only",
     ],
     // Doshas - verified endpoints lines 152-157
     doshas: [
@@ -187,7 +189,14 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "pitra",
     ],
     // Remedies - verified endpoints lines 159-164
-    remedies: ["yantra", "mantra", "general", "gemstone", "lal_kitab"],
+    remedies: [
+      "yantra",
+      "mantra",
+      "general",
+      "gemstone",
+      "lal_kitab",
+      "chart_remedies",
+    ],
     // Panchanga: Removed - now using birth_panchanga (universal, stored once per client)
     // Dashas - verified endpoints
     dashas: [
@@ -401,11 +410,18 @@ export function isChartAvailable(
     capabilities.specialCharts.some(
       (s) => s.toLowerCase() === normalizedType,
     ) ||
-    (capabilities.yogas?.some((s) => `yoga:${s}` === normalizedType) ??
+    (capabilities.yogas?.some(
+      (s) => `yoga:${s}` === normalizedType || `yoga_${s}` === normalizedType,
+    ) ??
       false) ||
-    (capabilities.doshas?.some((s) => `dosha:${s}` === normalizedType) ??
+    (capabilities.doshas?.some(
+      (s) => `dosha:${s}` === normalizedType || `dosha_${s}` === normalizedType,
+    ) ??
       false) ||
-    (capabilities.remedies?.some((s) => `remedy:${s}` === normalizedType) ??
+    (capabilities.remedies?.some(
+      (s) =>
+        `remedy:${s}` === normalizedType || `remedy_${s}` === normalizedType,
+    ) ??
       false) ||
     (capabilities.panchanga?.some((s) => `panchanga:${s}` === normalizedType) ??
       false) ||
