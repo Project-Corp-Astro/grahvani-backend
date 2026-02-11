@@ -419,7 +419,8 @@ export function isChartAvailable(
     ) ??
       false) ||
     (capabilities.remedies?.some(
-      (s) => `remedy:${s}` === normalizedType || `remedy_${s}` === normalizedType,
+      (s) =>
+        `remedy:${s}` === normalizedType || `remedy_${s}` === normalizedType,
     ) ??
       false) ||
     (capabilities.panchanga?.some((s) => `panchanga:${s}` === normalizedType) ??
