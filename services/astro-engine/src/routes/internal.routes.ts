@@ -10,7 +10,10 @@ const router = Router();
 // =============================================================================
 router.post("/natal", chartController.getNatalChart.bind(chartController));
 router.post("/transit", chartController.getTransitChart.bind(chartController));
-router.post("/daily-transit", chartController.getDailyTransit.bind(chartController));
+router.post(
+  "/daily-transit",
+  chartController.getDailyTransit.bind(chartController),
+);
 router.post("/moon-chart", chartController.getMoonChart.bind(chartController));
 router.post("/sun-chart", chartController.getSunChart.bind(chartController));
 router.post(

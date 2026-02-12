@@ -178,7 +178,9 @@ export class AstroEngineClient {
    * Daily Transit — dynamic date-range transit (Lahiri-only, no cache)
    * Calls /lahiri/daily_transit with transit_start_date and transit_end_date
    */
-  async getDailyTransit(data: BirthData & { transitStartDate: string; transitEndDate: string }): Promise<any> {
+  async getDailyTransit(
+    data: BirthData & { transitStartDate: string; transitEndDate: string },
+  ): Promise<any> {
     const endpoint = LAHIRI_ENDPOINTS.DAILY_TRANSIT;
 
     const response = await this.client.post(

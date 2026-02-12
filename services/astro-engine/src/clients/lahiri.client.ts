@@ -1,5 +1,10 @@
 import { BaseAstroClient } from "./base.client";
-import { BirthData, DailyTransitData, NumerologyData, SynastryData } from "../types";
+import {
+  BirthData,
+  DailyTransitData,
+  NumerologyData,
+  SynastryData,
+} from "../types";
 import { LAHIRI_ENDPOINTS, DIVISIONAL_CHART_MAP } from "../constants";
 
 // =============================================================================
