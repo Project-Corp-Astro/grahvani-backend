@@ -30,6 +30,15 @@ export interface HoraryData extends BirthData {
 }
 
 /**
+ * Daily transit data — extends BirthData with transit date range
+ * Used by /lahiri/daily_transit endpoint (Lahiri-only)
+ */
+export interface DailyTransitData extends BirthData {
+  transitStartDate: string; // YYYY-MM-DD format
+  transitEndDate: string; // YYYY-MM-DD format
+}
+
+/**
  * Synastry requires two birth data sets
  */
 export interface SynastryData {

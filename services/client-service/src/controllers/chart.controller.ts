@@ -77,7 +77,8 @@ export class ChartController {
     try {
       const { id } = req.params;
       const tenantId = req.user!.tenantId;
-      const { chartType, system, ayanamsa } = req.body;
+      const { chartType, system, ayanamsa, transitStartDate, transitEndDate } =
+        req.body;
       const metadata = {
         userId: req.user!.id,
         ipAddress: req.ip,
@@ -87,12 +88,18 @@ export class ChartController {
       // Use ayanamsa if provided, fallback to system, default to lahiri
       const selectedSystem = ayanamsa || system || "lahiri";
 
+      // Build optional extras for special chart types (e.g. daily_transit date range)
+      const extras: Record<string, any> = {};
+      if (transitStartDate) extras.transitStartDate = transitStartDate;
+      if (transitEndDate) extras.transitEndDate = transitEndDate;
+
       const chart = await chartService.generateAndSaveChart(
         tenantId,
         id,
         chartType || "D1",
         selectedSystem,
         metadata,
+        Object.keys(extras).length > 0 ? extras : undefined,
       );
 
       res.status(201).json(chart);

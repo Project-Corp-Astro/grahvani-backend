@@ -205,6 +205,7 @@ export class ChartService {
     chartType: string,
     system: AyanamsaSystem,
     metadata: RequestMetadata,
+    extras?: Record<string, any>,
   ) {
     // Validate chart type is available for this system
     if (!isChartAvailable(system as AyanamsaSystem, chartType)) {
@@ -282,6 +283,35 @@ export class ChartService {
       };
       chartData = await astroEngineClient.getTransitChart(transitData, system);
       dbChartType = "transit";
+    } else if (normalizedType === "daily_transit") {
+      // Daily Transit (Gochar Duration) — Lahiri-only, NO DB storage
+      // Dynamic data fetched live for a date range
+      const now = new Date();
+      const startDate =
+        extras?.transitStartDate || now.toISOString().split("T")[0];
+      const endDateObj = new Date(now);
+      endDateObj.setDate(endDateObj.getDate() + 7); // Default: 7 day range
+      const endDate =
+        extras?.transitEndDate || endDateObj.toISOString().split("T")[0];
+
+      const dailyTransitData = {
+        ...birthData,
+        transitStartDate: startDate,
+        transitEndDate: endDate,
+      };
+      const dailyData =
+        await astroEngineClient.getDailyTransit(dailyTransitData);
+
+      // Return directly — NO database save for dynamic transit data
+      return {
+        chartType: "daily_transit",
+        chartName: `${client.fullName} - Daily Transit (Lahiri)`,
+        chartData: dailyData.data,
+        chartConfig: { system: "lahiri" },
+        calculatedAt: new Date(),
+        cached: dailyData.cached,
+        success: true,
+      };
     } else if (
       normalizedType === "sudarshan" ||
       normalizedType === "sudarshana"

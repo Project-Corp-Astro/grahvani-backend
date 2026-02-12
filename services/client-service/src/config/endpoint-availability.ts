@@ -104,6 +104,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
     features: [
       "natal",
       "transit",
+      "daily_transit",
       "dasha",
       "ashtakavarga",
       "numerology",
@@ -117,6 +118,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "sun",
       "sudarshana",
       "transit",
+      "daily_transit",
       "mandi",
       "gulika",
       "d40",
