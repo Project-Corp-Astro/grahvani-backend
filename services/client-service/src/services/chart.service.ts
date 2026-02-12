@@ -287,17 +287,20 @@ export class ChartService {
       // Daily Transit (Gochar Duration) — Lahiri-only, NO DB storage
       // Dynamic data fetched live for a date range
       const now = new Date();
-      const startDate = extras?.transitStartDate || now.toISOString().split("T")[0];
+      const startDate =
+        extras?.transitStartDate || now.toISOString().split("T")[0];
       const endDateObj = new Date(now);
       endDateObj.setDate(endDateObj.getDate() + 7); // Default: 7 day range
-      const endDate = extras?.transitEndDate || endDateObj.toISOString().split("T")[0];
+      const endDate =
+        extras?.transitEndDate || endDateObj.toISOString().split("T")[0];
 
       const dailyTransitData = {
         ...birthData,
         transitStartDate: startDate,
         transitEndDate: endDate,
       };
-      const dailyData = await astroEngineClient.getDailyTransit(dailyTransitData);
+      const dailyData =
+        await astroEngineClient.getDailyTransit(dailyTransitData);
 
       // Return directly — NO database save for dynamic transit data
       return {
@@ -1188,13 +1191,13 @@ export class ChartService {
           const task =
             (this as any)[methodName] === this.generateAndSaveChart
               ? () =>
-                this.generateAndSaveChart(
-                  tenantId,
-                  clientId,
-                  chartType,
-                  system,
-                  metadata,
-                )
+                  this.generateAndSaveChart(
+                    tenantId,
+                    clientId,
+                    chartType,
+                    system,
+                    metadata,
+                  )
               : () => (this as any)[methodName](tenantId, clientId, metadata);
 
           operations.push(() =>

@@ -77,7 +77,8 @@ export class ChartController {
     try {
       const { id } = req.params;
       const tenantId = req.user!.tenantId;
-      const { chartType, system, ayanamsa, transitStartDate, transitEndDate } = req.body;
+      const { chartType, system, ayanamsa, transitStartDate, transitEndDate } =
+        req.body;
       const metadata = {
         userId: req.user!.id,
         ipAddress: req.ip,
