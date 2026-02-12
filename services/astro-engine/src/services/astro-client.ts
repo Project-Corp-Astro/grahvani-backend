@@ -175,6 +175,24 @@ export class AstroEngineClient {
   }
 
   /**
+   * Daily Transit — dynamic date-range transit (Lahiri-only, no cache)
+   * Calls /lahiri/daily_transit with transit_start_date and transit_end_date
+   */
+  async getDailyTransit(data: BirthData & { transitStartDate: string; transitEndDate: string }): Promise<any> {
+    const endpoint = LAHIRI_ENDPOINTS.DAILY_TRANSIT;
+
+    const response = await this.client.post(
+      endpoint,
+      this.buildPayload(data, {
+        transit_start_date: data.transitStartDate,
+        transit_end_date: data.transitEndDate,
+      }),
+    );
+
+    return { data: response.data, cached: false };
+  }
+
+  /**
    * Get Moon Chart
    */
   async getMoonChart(data: BirthData): Promise<any> {

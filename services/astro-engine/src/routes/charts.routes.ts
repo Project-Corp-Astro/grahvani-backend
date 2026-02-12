@@ -33,6 +33,12 @@ router.post(
   "/transit",
   specialChartsController.getTransitChart.bind(specialChartsController),
 );
+
+// NEW: Daily transit — Lahiri-only, dynamic date range
+router.post(
+  "/daily-transit",
+  specialChartsController.getDailyTransit.bind(specialChartsController),
+);
 router.post(
   "/moon",
   specialChartsController.getMoonChart.bind(specialChartsController),

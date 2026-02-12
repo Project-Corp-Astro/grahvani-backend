@@ -223,6 +223,23 @@ class AstroEngineClient {
   }
 
   /**
+   * Daily Transit — Lahiri-only, dynamic date range, no DB storage
+   * Returns transit positions for each day in the given date range
+   */
+  async getDailyTransit(
+    birthData: BirthData & { transitStartDate: string; transitEndDate: string },
+  ): Promise<AstroResponse> {
+    logger.info(
+      {
+        startDate: birthData.transitStartDate,
+        endDate: birthData.transitEndDate,
+      },
+      "Generating daily transit via proxy (Lahiri-only)",
+    );
+    return (await this.internalClient.post("/daily-transit", birthData)).data;
+  }
+
+  /**
    * Get Divisional Chart (D2-D60) for any Ayanamsa system
    */
   async getDivisionalChart(

@@ -94,6 +94,37 @@ export class ChartController {
   }
 
   /**
+   * POST /internal/daily-transit
+   * Dynamic daily transit — Lahiri-only, no cache, no DB storage
+   */
+  async getDailyTransit(req: Request, res: Response): Promise<void> {
+    try {
+      const body = req.body;
+      if (!this.validateBirthData(body, res)) return;
+
+      if (!body.transitStartDate || !body.transitEndDate) {
+        res.status(400).json({
+          success: false,
+          error: "Missing required fields: transitStartDate and transitEndDate",
+        });
+        return;
+      }
+
+      const data = await astroEngineClient.getDailyTransit(body);
+
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "Daily transit failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
    * POST /internal/divisional/:type
    * Generate Divisional chart (D2-D60)
    */

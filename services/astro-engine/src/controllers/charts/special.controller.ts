@@ -4,6 +4,7 @@ import {
   ramanClient,
   yukteswarClient,
   BirthData,
+  DailyTransitData,
   AyanamsaType,
 } from "../../clients";
 import { cacheService } from "../../services/cache.service";
@@ -55,6 +56,49 @@ export class SpecialChartsController {
       });
     } catch (error: any) {
       logger.error({ error: error.message }, "Transit chart failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/daily-transit
+   * Dynamic daily transit — Lahiri-only, no DB storage, no cache
+   * Returns transit positions for each day in the given date range
+   */
+  async getDailyTransit(req: Request, res: Response): Promise<void> {
+    try {
+      const transitData: DailyTransitData = req.body;
+
+      if (!this.validateBirthData(transitData, res)) return;
+
+      // Validate transit date range
+      if (!transitData.transitStartDate || !transitData.transitEndDate) {
+        res.status(400).json({
+          success: false,
+          error: "Missing required fields: transitStartDate and transitEndDate",
+        });
+        return;
+      }
+
+      logger.info(
+        {
+          startDate: transitData.transitStartDate,
+          endDate: transitData.transitEndDate,
+        },
+        "Daily transit request (Lahiri-only)",
+      );
+
+      // Lahiri-only — call lahiriClient directly
+      const data = await lahiriClient.getDailyTransit(transitData);
+
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "Daily transit failed");
       res.status(500).json({ success: false, error: error.message });
     }
   }

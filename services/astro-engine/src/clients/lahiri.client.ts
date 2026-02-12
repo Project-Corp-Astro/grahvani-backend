@@ -1,5 +1,5 @@
 import { BaseAstroClient } from "./base.client";
-import { BirthData, NumerologyData, SynastryData } from "../types";
+import { BirthData, DailyTransitData, NumerologyData, SynastryData } from "../types";
 import { LAHIRI_ENDPOINTS, DIVISIONAL_CHART_MAP } from "../constants";
 
 // =============================================================================
@@ -22,6 +22,14 @@ export class LahiriClient extends BaseAstroClient {
 
   async getTransitChart(data: BirthData) {
     return this.post(LAHIRI_ENDPOINTS.TRANSIT, data);
+  }
+
+  /** Daily Transit — dynamic date-range transit (Lahiri-only, no DB storage) */
+  async getDailyTransit(data: DailyTransitData) {
+    return this.post(LAHIRI_ENDPOINTS.DAILY_TRANSIT, data, {
+      transit_start_date: data.transitStartDate,
+      transit_end_date: data.transitEndDate,
+    });
   }
 
   async getMoonChart(data: BirthData) {

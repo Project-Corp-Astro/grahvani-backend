@@ -9,6 +9,7 @@ export const LAHIRI_ENDPOINTS = {
   // Natal & Transit
   NATAL: "/lahiri/natal",
   TRANSIT: "/lahiri/transit",
+  DAILY_TRANSIT: "/lahiri/daily_transit", // NEW: Dynamic daily transit (date range)
   MOON_CHART: "/lahiri/calculate_moon_chart",
   SUN_CHART: "/lahiri/calculate_sun_chart",
   SUDARSHAN_CHAKRA: "/lahiri/calculate_sudarshan_chakra",
