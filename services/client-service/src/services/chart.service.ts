@@ -530,6 +530,25 @@ export class ChartService {
         )),
         cached: chartData.cached,
       };
+    } else if (normalizedType === "avakhada_chakra") {
+      chartData = await astroEngineClient.getAvakhada(birthData);
+      dbChartType = "avakhada_chakra";
+      return {
+        ...(await this.saveChart(
+          tenantId,
+          clientId,
+          {
+            chartType: dbChartType as any,
+            chartName: `${client.fullName} - Avakhada Chakra`,
+            chartData: chartData.data,
+            chartConfig: { system: "universal" },
+            calculatedAt: new Date(),
+            system: "universal" as any,
+          },
+          metadata,
+        )),
+        cached: chartData.cached,
+      };
     } else if (normalizedType === "gl_chart") {
       chartData = await astroEngineClient.getGlChart(birthData, system);
       dbChartType = "gl_chart";

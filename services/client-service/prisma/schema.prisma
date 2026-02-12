@@ -150,11 +150,15 @@ enum ChartType {
   dosha_shrapit
   dosha_sade_sati
   dosha_pitra
+  dosha_dhaiya
+
   panchanga
   choghadiya
   hora_times
   lagna_times
   muhurat
+  avakhada_chakra
+
   remedy_yantra
   remedy_mantra
   remedy_general

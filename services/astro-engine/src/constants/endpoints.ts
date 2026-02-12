@@ -138,6 +138,10 @@ export const LAHIRI_ENDPOINTS = {
   // New integrated routes
   GL_CHART: "/lahiri/calculate_gl_chart",
   KARAKA_STRENGTH: "/lahiri/calculate_karaka_strength",
+
+  // New integrated routes
+  CALCULATE_DHAIYA: "/lahiri/calculate_dhaiya",
+  AVAKHADA_CHAKRA: "/lahiri/avakhada_chakra",
   // NOTE: birth_panchanga uses PANCHANGA endpoint (same /panchanga path)
 } as const;
 
