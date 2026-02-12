@@ -115,6 +115,9 @@ export class AnalysisController {
         case "pitra":
           data = await lahiriClient.getPitraDosha(birthData);
           break;
+        case "dhaiya":
+          data = await lahiriClient.getDhaiya(birthData);
+          break;
         default:
           res
             .status(400)

@@ -355,6 +355,18 @@ export class LahiriClient extends BaseAstroClient {
     return this.postUniversal(LAHIRI_ENDPOINTS.MUHURAT, data);
   }
 
+  async getAvakhadaChakra(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.AVAKHADA_CHAKRA, data);
+  }
+
+  // =========================================================================
+  // DOSHAS & REMEDIES (Extended)
+  // =========================================================================
+
+  async getDhaiya(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.CALCULATE_DHAIYA, data);
+  }
+
   // =========================================================================
   // EXTENDED DASHAS
   // =========================================================================

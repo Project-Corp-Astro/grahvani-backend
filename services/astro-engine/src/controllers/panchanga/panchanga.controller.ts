@@ -99,6 +99,24 @@ export class PanchangaController {
     }
   }
 
+  async getAvakhadaChakra(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const cacheKey = { ...birthData, type: "avakhada_chakra" };
+      const cached = await cacheService.get("avakhada_chakra", cacheKey);
+      if (cached)
+        return res.json({ success: true, data: cached, cached: true }) as any;
+
+      const data = await lahiriClient.getAvakhadaChakra(birthData);
+      await cacheService.set("avakhada_chakra", cacheKey, data);
+      res.json({ success: true, data, cached: false });
+    } catch (error: any) {
+      this.handleError(res, error, "Avakhada Chakra");
+    }
+  }
+
   private validateBirthData(data: BirthData, res: Response): boolean {
     if (!data.birthDate || !data.latitude || !data.longitude) {
       res

@@ -605,6 +605,14 @@ class AstroEngineClient {
     return (await this.internalClient.post(`/panchanga/${type}`, payload)).data;
   }
 
+  async getAvakhada(
+    birthData: BirthData,
+    ayanamsa: Ayanamsa = "lahiri",
+  ): Promise<AstroResponse> {
+    const payload = { ...birthData, ayanamsa: ayanamsa };
+    return (await this.apiClient.post("/avakhada_chakra", payload)).data;
+  }
+
   async getShadbala(
     birthData: BirthData,
     ayanamsa: Ayanamsa = "lahiri",

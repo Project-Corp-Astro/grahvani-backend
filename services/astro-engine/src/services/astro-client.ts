@@ -302,6 +302,7 @@ export class AstroEngineClient {
       shrapit: "calculate-shrapit-dosha",
       sade_sati: "calculate-sade-sati",
       pitra: "pitra-dosha",
+      dhaiya: "calculate_dhaiya",
     };
     const endpoint = endpointMap[doshaType] || doshaType;
 
@@ -366,6 +367,7 @@ export class AstroEngineClient {
       lagna_times: "/lagna_times",
       muhurat: "/muhurat",
       panchanga_month: "/panchanga/month",
+      avakhada_chakra: "/lahiri/avakhada_chakra",
     };
 
     const absoluteEndpoint = endpointMap[type];

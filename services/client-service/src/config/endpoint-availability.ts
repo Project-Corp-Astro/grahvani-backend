@@ -189,6 +189,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "shrapit",
       "sade_sati",
       "pitra",
+      "dhaiya",
     ],
     // Remedies - verified endpoints lines 159-164
     remedies: [
@@ -294,6 +295,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "chara_dasha",
       "shodasha_varga_signs",
       "muhurat",
+      "avakhada_chakra",
     ],
     // Dashas listed in KP section lines 188-192
     dashas: ["vimshottari", "chara"],
@@ -383,6 +385,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "hora_times",
       "lagna_times",
       "muhurat",
+      "avakhada_chakra",
     ],
     hasDivisional: false,
     hasAshtakavarga: false,

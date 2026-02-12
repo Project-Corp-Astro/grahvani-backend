@@ -17,5 +17,9 @@ router.post(
   "/muhurat",
   panchangaController.getMuhurat.bind(panchangaController),
 );
+router.post(
+  "/avakhada_chakra",
+  panchangaController.getAvakhadaChakra.bind(panchangaController),
+);
 
 export default router;
