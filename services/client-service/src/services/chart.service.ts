@@ -282,7 +282,19 @@ export class ChartService {
         birthTime: now.toTimeString().split(" ")[0], // HH:MM:SS
       };
       chartData = await astroEngineClient.getTransitChart(transitData, system);
-      dbChartType = "transit";
+
+      // RETURN DIRECTLY - NO DB STORAGE for dynamic transit data
+      return {
+        chartType: "transit",
+        chartName: `${client.fullName} - Transit (${system})`,
+        chartData: chartData.data,
+        chartConfig: { system },
+        calculatedAt: new Date(),
+        cached: chartData.cached,
+        success: true,
+        // Mock ID since we aren't saving
+        id: "dynamic_transit_" + Date.now(),
+      };
     } else if (normalizedType === "daily_transit") {
       // Daily Transit (Gochar Duration) — Lahiri-only, NO DB storage
       // Dynamic data fetched live for a date range
@@ -1216,13 +1228,13 @@ export class ChartService {
           const task =
             (this as any)[methodName] === this.generateAndSaveChart
               ? () =>
-                this.generateAndSaveChart(
-                  tenantId,
-                  clientId,
-                  chartType,
-                  system,
-                  metadata,
-                )
+                  this.generateAndSaveChart(
+                    tenantId,
+                    clientId,
+                    chartType,
+                    system,
+                    metadata,
+                  )
               : () => (this as any)[methodName](tenantId, clientId, metadata);
 
           operations.push(() =>
