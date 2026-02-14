@@ -574,6 +574,12 @@ export class ChartService {
         system,
       );
       dbChartType = normalizedType as any;
+    } else if (normalizedType === "mandi") {
+      chartData = await astroEngineClient.getMandi(birthData, system);
+      dbChartType = "mandi";
+    } else if (normalizedType === "gulika") {
+      chartData = await astroEngineClient.getGulika(birthData, system);
+      dbChartType = "gulika";
     } else {
       // Default to divisional chart generation
       chartData = await astroEngineClient.getDivisionalChart(
@@ -1210,13 +1216,13 @@ export class ChartService {
           const task =
             (this as any)[methodName] === this.generateAndSaveChart
               ? () =>
-                  this.generateAndSaveChart(
-                    tenantId,
-                    clientId,
-                    chartType,
-                    system,
-                    metadata,
-                  )
+                this.generateAndSaveChart(
+                  tenantId,
+                  clientId,
+                  chartType,
+                  system,
+                  metadata,
+                )
               : () => (this as any)[methodName](tenantId, clientId, metadata);
 
           operations.push(() =>
