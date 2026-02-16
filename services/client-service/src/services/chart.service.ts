@@ -375,7 +375,12 @@ export class ChartService {
         remedyType,
         system,
       );
-      dbChartType = `remedy_${remedyType}` as any;
+      // Map 'vedic' to the more specific 'remedy_vedic_remedies' database enum
+      if (remedyType === "vedic" || remedyType === "vedic_remedies") {
+        dbChartType = "remedy_vedic_remedies" as any;
+      } else {
+        dbChartType = `remedy_${remedyType}` as any;
+      }
       // NOTE: Old panchanga/choghadiya/hora_times/lagna_times/muhurat handlers removed
       // Use birth_panchanga instead (universal, birth-date based) - handled in NEW INTEGRATED ROUTES section
     } else if (normalizedType === "shadbala") {
@@ -1228,13 +1233,13 @@ export class ChartService {
           const task =
             (this as any)[methodName] === this.generateAndSaveChart
               ? () =>
-                  this.generateAndSaveChart(
-                    tenantId,
-                    clientId,
-                    chartType,
-                    system,
-                    metadata,
-                  )
+                this.generateAndSaveChart(
+                  tenantId,
+                  clientId,
+                  chartType,
+                  system,
+                  metadata,
+                )
               : () => (this as any)[methodName](tenantId, clientId, metadata);
 
           operations.push(() =>

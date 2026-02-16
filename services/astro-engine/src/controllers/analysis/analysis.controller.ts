@@ -162,9 +162,21 @@ export class AnalysisController {
           break;
         case "mantra":
           data = await lahiriClient.getMantraRemedies(birthData);
+          // Helper: Inject D1 Chart if missing (for UI dashboard)
+          if (!data.analysis?.chart) {
+            const chartData = await lahiriClient.getNatalChart(birthData);
+            if (!data.analysis) data.analysis = {};
+            data.analysis.chart = chartData.data;
+          }
           break;
         case "vedic":
           data = await lahiriClient.getVedicRemedies(birthData);
+          // Helper: Inject D1 Chart if missing (for UI dashboard)
+          if (!data.analysis?.chart) {
+            const chartData = await lahiriClient.getNatalChart(birthData);
+            if (!data.analysis) data.analysis = {};
+            data.analysis.chart = chartData.data;
+          }
           break;
         case "gemstone":
           data = await lahiriClient.getGemstoneRemedies(birthData);
