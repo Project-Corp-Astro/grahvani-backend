@@ -196,6 +196,8 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "yantra",
       "mantra",
       "general",
+      "vedic",
+      "vedic_remedies",
       "gemstone",
       "lal_kitab",
       "chart_remedies",

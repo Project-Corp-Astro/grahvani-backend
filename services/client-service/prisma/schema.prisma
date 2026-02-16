@@ -164,6 +164,7 @@ enum ChartType {
   remedy_general
   remedy_gemstone
   remedy_lal_kitab
+  remedy_vedic_remedies
   shadbala
   dasha_vimshottari
   dasha_chara

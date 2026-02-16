@@ -128,6 +128,7 @@ export class AstroEngineClient {
       longitude: String(data.longitude),
       timezone_offset: data.timezoneOffset,
       system: this.getAyanamsa(data), // Explicitly pass resolved system to Python
+      ayanamsa: this.getAyanamsa(data), // Added for redundancy
       ...extras,
     };
   }
@@ -324,7 +325,7 @@ export class AstroEngineClient {
   /**
    * Get Remedial Recommendations (Generic)
    */
-  async getRemedy(data: BirthData, remedyType: string): Promise<any> {
+  async getRemedy(data: BirthData, type: string): Promise<any> {
     const system = this.getAyanamsa(data);
     if (system !== "lahiri") {
       throw new Error(
@@ -336,11 +337,13 @@ export class AstroEngineClient {
       yantra: "yantra-recommendations",
       mantra: "mantra-analysis",
       general: "vedic_remedies",
+      vedic: "vedic_remedies",
+      vedic_remedies: "vedic_remedies",
       gemstone: "calculate-gemstone",
       lal_kitab: "lal-kitab-remedies",
       chart_remedies: "chart-with-remedies",
     };
-    const endpoint = endpointMap[remedyType] || remedyType;
+    const endpoint = endpointMap[type] || type;
     // Some remedies match /lahiri/ endpoint directly, others need specific paths
     const response = await this.client.post(
       `/${system}/${endpoint}`,
@@ -575,7 +578,9 @@ export class AstroEngineClient {
       time: data.birthTime,
       latitude: String(data.latitude),
       longitude: String(data.longitude),
-      tz_offset: data.timezoneOffset,
+      timezone_offset: data.timezoneOffset,
+      ayanamsa: data.ayanamsa || "lahiri",
+      system: data.ayanamsa || "lahiri", // Added for backward/forward compatibility
       question: data.question,
     };
 
