@@ -166,7 +166,7 @@ export class AnalysisController {
           if (!data.analysis?.chart) {
             const chartData = await lahiriClient.getNatalChart(birthData);
             if (!data.analysis) data.analysis = {};
-            data.analysis.chart = chartData.data;
+            data.analysis.chart = chartData.data || chartData;
           }
           break;
         case "vedic":
@@ -175,7 +175,7 @@ export class AnalysisController {
           if (!data.analysis?.chart) {
             const chartData = await lahiriClient.getNatalChart(birthData);
             if (!data.analysis) data.analysis = {};
-            data.analysis.chart = chartData.data;
+            data.analysis.chart = chartData.data || chartData;
           }
           break;
         case "gemstone":
