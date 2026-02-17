@@ -163,18 +163,20 @@ export class AnalysisController {
         case "mantra":
           data = await lahiriClient.getMantraRemedies(birthData);
           // Helper: Inject D1 Chart if missing (for UI dashboard)
-          if (!data.analysis?.chart) {
+          // Always ensure data.analysis exists for consistency
+          if (!data.analysis) data.analysis = {};
+          if (!data.analysis.chart) {
             const chartData = await lahiriClient.getNatalChart(birthData);
-            if (!data.analysis) data.analysis = {};
+            // Natal endpoint returns { success: true, data: { planets, ascendant, ... } }
             data.analysis.chart = chartData.data || chartData;
           }
           break;
         case "vedic":
           data = await lahiriClient.getVedicRemedies(birthData);
           // Helper: Inject D1 Chart if missing (for UI dashboard)
-          if (!data.analysis?.chart) {
+          if (!data.analysis) data.analysis = {};
+          if (!data.analysis.chart) {
             const chartData = await lahiriClient.getNatalChart(birthData);
-            if (!data.analysis) data.analysis = {};
             data.analysis.chart = chartData.data || chartData;
           }
           break;

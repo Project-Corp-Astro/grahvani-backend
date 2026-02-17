@@ -94,6 +94,10 @@ export class ChartController {
       if (transitStartDate) extras.transitStartDate = transitStartDate;
       if (transitEndDate) extras.transitEndDate = transitEndDate;
 
+      // CRITICAL FIX: Pass Lal Kitab params
+      if (req.body.planet) extras.planet = req.body.planet;
+      if (req.body.house) extras.house = req.body.house;
+
       const chart = await chartService.generateAndSaveChart(
         tenantId,
         id,

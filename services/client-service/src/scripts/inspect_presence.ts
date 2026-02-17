@@ -22,7 +22,18 @@ async function main() {
 
     if (items.length > 0) {
         console.log('\n--- Sample Data Analysis ---');
-        items.slice(0, 10).forEach(item => {
+
+        // Specific check for PITRA DOSHA
+        const pitra = items.find(i => i.type === 'pitra' && i.category === 'dosha');
+        if (pitra) {
+            console.log(`\n*** VERIFICATION TARGET: PITRA DOSHA ***`);
+            console.log(`Stored isPresent: ${pitra.isPresent}`);
+            console.log(`Calculated At: ${new Date().toISOString()}`); // approximated
+        } else {
+            console.log(`\n*** VERIFICATION TARGET: PITRA DOSHA NOT FOUND ***`);
+        }
+
+        items.slice(0, 5).forEach(item => {
             console.log(`\nType: ${item.type} | Category: ${item.category} | isPresent: ${item.isPresent}`);
             // Log top-level keys of analysisData to see structure
             const data = item.analysisData;
