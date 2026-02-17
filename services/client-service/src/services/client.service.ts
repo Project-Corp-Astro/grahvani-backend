@@ -386,12 +386,13 @@ export class ClientService {
       // PHASE 2: Perform permanent hard delete with high timeout
       await clientRepository.delete(tenantId, id);
 
-      // Record activity (pointing to a now-deleted record reference is fine for logs)
+      // Record activity (do NOT link clientId as FK, because it's deleted)
       await activityService.recordActivity({
         tenantId,
-        clientId: id,
+        clientId: undefined, // Prevent FK violation
         userId: metadata.userId,
         action: "client.deleted",
+        details: { deletedClientId: id },
         ipAddress: metadata.ipAddress,
         userAgent: metadata.userAgent,
         deviceType: metadata.deviceType,
