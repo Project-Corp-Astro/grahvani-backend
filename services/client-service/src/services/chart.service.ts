@@ -1242,13 +1242,13 @@ export class ChartService {
           const task =
             (this as any)[methodName] === this.generateAndSaveChart
               ? () =>
-                this.generateAndSaveChart(
-                  tenantId,
-                  clientId,
-                  chartType,
-                  system,
-                  metadata,
-                )
+                  this.generateAndSaveChart(
+                    tenantId,
+                    clientId,
+                    chartType,
+                    system,
+                    metadata,
+                  )
               : () => (this as any)[methodName](tenantId, clientId, metadata);
 
           operations.push(() =>
