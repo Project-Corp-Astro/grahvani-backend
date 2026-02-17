@@ -370,8 +370,17 @@ export class ChartService {
       const remedyType = normalizedType
         .replace("remedy_", "")
         .replace("remedy:", "");
+
+      // CRITICAL FIX: Lal Kitab requires planet/house from extras
+      // PLANET MUST BE TITLE CASE (e.g. "Sun", not "sun") for Python engine
+      const remedyBirthData = {
+        ...birthData,
+        planet: this.toTitleCase(extras?.planet),
+        house: extras?.house,
+      };
+
       chartData = await astroEngineClient.getRemedy(
-        birthData,
+        remedyBirthData,
         remedyType,
         system,
       );
@@ -1233,13 +1242,13 @@ export class ChartService {
           const task =
             (this as any)[methodName] === this.generateAndSaveChart
               ? () =>
-                  this.generateAndSaveChart(
-                    tenantId,
-                    clientId,
-                    chartType,
-                    system,
-                    metadata,
-                  )
+                this.generateAndSaveChart(
+                  tenantId,
+                  clientId,
+                  chartType,
+                  system,
+                  metadata,
+                )
               : () => (this as any)[methodName](tenantId, clientId, metadata);
 
           operations.push(() =>
@@ -2002,7 +2011,7 @@ export class ChartService {
     client: any,
     ayanamsa: AyanamsaSystem = "lahiri",
   ): any {
-    if (!client.birthDate || !client.birthTime) {
+    if (!client.birthDate) {
       throw new Error("Incomplete client birth details");
     }
 
@@ -2360,6 +2369,13 @@ export class ChartService {
       // If it's a universal type we just added, it's already in the expected list only if missing
       return !existingTypes.has(normalized);
     });
+  }
+
+  // Helper to ensure Title Case for planet names (e.g. "sun" -> "Sun")
+  private toTitleCase(str: string | undefined): string | undefined {
+    if (!str) return undefined;
+    if (str === "0") return "Sun"; // Map 0 to Sun if needed, but better to rely on string names
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   }
 }
 

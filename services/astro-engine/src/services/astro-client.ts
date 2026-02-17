@@ -27,6 +27,8 @@ export interface BirthData {
   timezoneOffset: number;
   userName?: string; // Optional user identifier
   ayanamsa?: "lahiri" | "kp" | "raman" | "yukteswar" | "western"; // Standardized field
+  planet?: string; // Optional planet for specific remedies (e.g., Lal Kitab)
+  house?: number; // Optional house for specific remedies
 }
 
 export interface HoraryData extends BirthData {
@@ -120,7 +122,7 @@ export class AstroEngineClient {
     data: BirthData,
     extras: Record<string, any> = {},
   ): Record<string, any> {
-    return {
+    const payload: Record<string, any> = {
       user_name: data.userName || "grahvani_client",
       birth_date: data.birthDate,
       birth_time: data.birthTime,
@@ -131,6 +133,11 @@ export class AstroEngineClient {
       ayanamsa: this.getAyanamsa(data), // Added for redundancy
       ...extras,
     };
+
+    if (data.planet) payload.planet = data.planet;
+    if (data.house) payload.house = data.house;
+
+    return payload;
   }
 
   // =========================================================================
