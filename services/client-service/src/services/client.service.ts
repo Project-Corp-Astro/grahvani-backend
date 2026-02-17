@@ -1,5 +1,6 @@
 import { clientRepository } from "../repositories/client.repository";
 import { chartRepository } from "../repositories/chart.repository";
+import { yogaDoshaRepository } from "../repositories/yoga-dosha.repository";
 import {
   ClientNotFoundError,
   DuplicateClientError,
@@ -312,6 +313,7 @@ export class ClientService {
         // If a generation is currently running, we can't easily stop it, but we can clear the data
         // Ideally we should wait, but for now we proceed with deletion
         await chartRepository.deleteByClientId(tenantId, id);
+        await yogaDoshaRepository.deleteByClientId(tenantId, id);
         logger.info({ tenantId, clientId: id }, "Verified: Old charts deleted");
 
         // Run full profile generation in background

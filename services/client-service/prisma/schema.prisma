@@ -144,6 +144,8 @@ enum ChartType {
   yoga_shubh
   yoga_viparitha_raja
   yoga_kalpadruma
+  yoga_kala_sarpa
+  yoga_guru_mangal_only
   dosha_kala_sarpa
   dosha_angarak
   dosha_guru_chandal
@@ -261,6 +263,13 @@ enum ImportType {
   @@schema("app_clients")
 }
 
+enum YogaDoshaCategory {
+  yoga
+  dosha
+
+  @@schema("app_clients")
+}
+
 // Models
 model Client {
   id            String    @id @default(uuid()) @db.Uuid
@@ -325,6 +334,7 @@ model Client {
   notes             ClientNote[]
   remedies          ClientRemedy[]
   activityLogs      ClientActivityLog[]
+  yogaDoshas        ClientYogaDosha[]
 
   // Indexes
   @@unique([id, tenantId])
@@ -426,6 +436,33 @@ model ClientSavedChart {
   @@index([clientId, chartType])
 
   @@map("client_saved_charts")
+  @@schema("app_clients")
+}
+
+model ClientYogaDosha {
+  id              String              @id @default(uuid()) @db.Uuid
+  tenantId        String              @map("tenant_id") @db.Uuid
+  clientId        String              @map("client_id") @db.Uuid
+  category        YogaDoshaCategory                                    // 'yoga' or 'dosha'
+  type            String              @db.VarChar(100)                  // 'budha_aditya', 'angarak', etc.
+  isPresent       Boolean             @default(false) @map("is_present")
+  system          String              @default("lahiri") @db.VarChar(20)
+  analysisData    Json                @map("analysis_data") @db.JsonB   // Full raw JSON from engine
+  calculatedAt    DateTime            @map("calculated_at")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  client          Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Constraints — one yoga/dosha type per client per system
+  @@unique([tenantId, clientId, category, type, system])
+  @@index([tenantId])
+  @@index([clientId])
+  @@index([clientId, isPresent])
+  @@index([clientId, category, isPresent])
+
+  @@map("client_yoga_doshas")
   @@schema("app_clients")
 }
 

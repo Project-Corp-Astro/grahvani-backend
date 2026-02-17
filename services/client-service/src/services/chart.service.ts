@@ -8,6 +8,7 @@ import { eventPublisher } from "./event.publisher";
 import { activityService } from "./activity.service";
 import { RequestMetadata } from "./client.service";
 import { astroEngineClient } from "../clients/astro-engine.client";
+import { yogaDoshaService } from "./yoga-dosha.service";
 import {
   logger,
   isChartAvailable,
@@ -620,6 +621,29 @@ export class ChartService {
       },
       metadata,
     );
+
+    // ADDITIONALLY store yoga/dosha in dedicated table (non-destructive, fire-and-forget)
+    if (dbChartType.startsWith("yoga_")) {
+      const yogaType = dbChartType.replace("yoga_", "");
+      yogaDoshaService.storeYogaDosha(
+        tenantId,
+        clientId,
+        "yoga",
+        yogaType,
+        system,
+        chartData.data,
+      );
+    } else if (dbChartType.startsWith("dosha_")) {
+      const doshaType = dbChartType.replace("dosha_", "");
+      yogaDoshaService.storeYogaDosha(
+        tenantId,
+        clientId,
+        "dosha",
+        doshaType,
+        system,
+        chartData.data,
+      );
+    }
 
     logger.info({ tenantId, clientId, chartType }, "Chart generated and saved");
 

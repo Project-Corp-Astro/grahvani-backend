@@ -1,5 +1,6 @@
 import { Response, NextFunction } from "express";
 import { chartService } from "../services/chart.service";
+import { yogaDoshaService } from "../services/yoga-dosha.service";
 import { AuthRequest } from "../middleware/auth.middleware";
 
 export class ChartController {
@@ -996,6 +997,77 @@ export class ChartController {
         cached: (result as any).cached,
         calculatedAt: result.calculatedAt,
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // =========================================================================
+  // YOGA & DOSHA DASHBOARD (from dedicated client_yoga_doshas table)
+  // =========================================================================
+
+  /**
+   * GET /clients/:id/yogas
+   * Get all present yogas for a client
+   */
+  async getYogas(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const system = req.query.system as string | undefined;
+      const tenantId = req.user!.tenantId;
+
+      const yogas = await yogaDoshaService.getPresentYogas(
+        tenantId,
+        id,
+        system,
+      );
+      res.json({ success: true, data: yogas, total: yogas.length });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /clients/:id/doshas
+   * Get all present doshas for a client
+   */
+  async getDoshas(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const system = req.query.system as string | undefined;
+      const tenantId = req.user!.tenantId;
+
+      const doshas = await yogaDoshaService.getPresentDoshas(
+        tenantId,
+        id,
+        system,
+      );
+      res.json({ success: true, data: doshas, total: doshas.length });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /clients/:id/yoga-dosha-summary
+   * Full dashboard of all yogas/doshas with presence status
+   */
+  async getYogaDoshaSummary(
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const { id } = req.params;
+      const system = req.query.system as string | undefined;
+      const tenantId = req.user!.tenantId;
+
+      const dashboard = await yogaDoshaService.getDashboard(
+        tenantId,
+        id,
+        system,
+      );
+      res.json({ success: true, data: dashboard });
     } catch (error) {
       next(error);
     }
