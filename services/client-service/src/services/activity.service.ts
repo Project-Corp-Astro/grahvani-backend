@@ -69,22 +69,48 @@ export class ActivityService {
     if (activityBuffer.length === 0) return;
 
     const toFlush = [...activityBuffer];
-    activityBuffer.length = 0; // Clear buffer
+    activityBuffer.length = 0; // Clear buffer immediately to prevent double-flushing
 
     try {
-      // Batch insert all activities
+      // 1. Try batch insert (efficient)
       await activityRepository.createMany(toFlush);
       logger.info(
         { count: toFlush.length },
         "Activity buffer flushed to database",
       );
-    } catch (error) {
-      logger.error(
-        { error, count: toFlush.length },
-        "Failed to flush activity buffer",
+    } catch (error: any) {
+      // 2. Fallback: If batch fails, try individual inserts to isolate "poison pills"
+      // This prevents one bad record (e.g. deleted clientId) from blocking ALL logs
+      logger.warn(
+        { error: error.message, count: toFlush.length },
+        "Batch activity flush failed - falling back to individual inserts",
       );
-      // Re-add failed items to buffer for retry
-      activityBuffer.push(...toFlush);
+
+      for (const data of toFlush) {
+        try {
+          await activityRepository.create(data);
+        } catch (individualError: any) {
+          // Handle Foreign Key Constraint Violation (P2003)
+          // This usually happens if the clientId was deleted while the log was in buffer
+          if (individualError.code === "P2003") {
+            logger.error(
+              {
+                action: data.action,
+                clientId: data.clientId,
+                error: "Foreign key constraint failed (P2003)",
+              },
+              "Dropping invalid activity log (Poison Pill detected)",
+            );
+          } else {
+            logger.error(
+              { action: data.action, error: individualError.message },
+              "Failed to save individual activity log",
+            );
+            // Optionally re-buffer non-P2003 errors, but for simplicity we drop them to avoid loops
+            // A senior dev approach: logs are "best effort" and shouldn't crash the service
+          }
+        }
+      }
     }
   }
 

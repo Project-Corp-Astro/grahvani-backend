@@ -905,28 +905,39 @@ class AstroEngineClient {
   }
 
   /**
-   * Gati Kalagna Chart (GL Chart) - currently Lahiri only
+   * Tatkalik Maitri Chakra - Lahiri-specific special chart
+   */
+  async getTatkalikMaitriChakra(
+    birthData: BirthData,
+    ayanamsa: Ayanamsa = "lahiri",
+  ): Promise<AstroResponse> {
+    if (ayanamsa !== "lahiri") {
+      throw new Error(
+        "Tatkalik Maitri Chakra is currently only available for Lahiri system",
+      );
+    }
+    return (await this.apiClient.post("/tatkalik_maitri_chakra", birthData))
+      .data;
+  }
+
+  /**
+   * Gati Kalagna Chart (GL Chart) - Specialist chart for Lahiri and Yukteswar systems
    */
   async getGlChart(
     birthData: BirthData,
     ayanamsa: Ayanamsa = "lahiri",
   ): Promise<AstroResponse> {
-    if (ayanamsa === "yukteswar") {
-      return (
-        await this.apiClient.post("/yukteswar/calculate_gl_chart", birthData)
-      ).data;
-    }
-    if (ayanamsa !== "lahiri") {
+    if (ayanamsa !== "lahiri" && ayanamsa !== "yukteswar") {
       throw new Error(
         "GL Chart is currently only available for Lahiri and Yukteswar systems",
       );
     }
-    return (await this.apiClient.post("/lahiri/calculate_gl_chart", birthData))
-      .data;
+    const payload = { ...birthData, ayanamsa: ayanamsa };
+    return (await this.apiClient.post("/gl_chart", payload)).data;
   }
 
   /**
-   * Karaka Strength Analysis - currently Lahiri only
+   * Karaka Strength Analysis - Specialist analysis for Lahiri system
    */
   async getKarakaStrength(
     birthData: BirthData,
@@ -937,9 +948,7 @@ class AstroEngineClient {
         "Karaka Strength is currently only available for Lahiri system",
       );
     }
-    return (
-      await this.apiClient.post("/lahiri/calculate_karaka_strength", birthData)
-    ).data;
+    return (await this.apiClient.post("/karaka_strength", birthData)).data;
   }
 
   /**

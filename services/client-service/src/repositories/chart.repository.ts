@@ -30,11 +30,37 @@ export class ChartRepository {
     return `charts:${tenantId}:${clientId}`;
   }
 
+  private getSingleChartCacheKey(
+    tenantId: string,
+    clientId: string,
+    type: string,
+    system: string,
+  ): string {
+    return `chart:single:${tenantId}:${clientId}:${type.toLowerCase()}:${(system || "lahiri").toLowerCase()}`;
+  }
+
   private async invalidateCache(tenantId: string, clientId: string) {
     try {
       const redis = getRedisClient();
       if (redis.isOpen) {
+        // Invalidate the full list cache
         await redis.del(this.getCacheKey(tenantId, clientId));
+
+        // Invalidate all single chart caches for this client using scan/pattern
+        // Note: For high-traffic production, consider using a Set to track keys
+        // or a Redis Hash to avoid SCAN overhead.
+        const pattern = `chart:single:${tenantId}:${clientId}:*`;
+        let cursor = 0;
+        do {
+          const reply = await redis.scan(cursor, {
+            MATCH: pattern,
+            COUNT: 100,
+          });
+          cursor = reply.cursor;
+          if (reply.keys.length > 0) {
+            await redis.del(reply.keys);
+          }
+        } while (cursor !== 0);
       }
     } catch (error) {
       logger.warn({ error, clientId }, "Failed to invalidate chart cache");
@@ -153,7 +179,7 @@ export class ChartRepository {
 
   /**
    * Highly Optimized: Find specific chart for a client by type and system.
-   * Uses the unique constraint [tenantId, clientId, chartType, system] for O(1) DB lookup.
+   * Uses Cache-Aside pattern with Redis for O(1) primary lookup.
    */
   async findOneByTypeAndSystem(
     tenantId: string,
@@ -161,6 +187,35 @@ export class ChartRepository {
     type: ChartType,
     system: string,
   ): Promise<ClientSavedChart | null> {
+    const cacheKey = this.getSingleChartCacheKey(
+      tenantId,
+      clientId,
+      type.toString(),
+      system,
+    );
+    const redis = getRedisClient();
+
+    // 1. Try Redis Cache first
+    try {
+      if (redis.isOpen) {
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+          const chart = JSON.parse(cached) as ClientSavedChart;
+          logger.debug(
+            { clientId, type, system, source: "REDIS" },
+            "[CACHE HIT] Single chart loaded from Redis",
+          );
+          return {
+            ...chart,
+            chartData: decompressChartData(chart.chartData),
+          };
+        }
+      }
+    } catch (error) {
+      logger.warn({ error, clientId, type }, "Redis single chart read failed");
+    }
+
+    // 2. Fallback to Database
     const chart = await this.prisma.clientSavedChart.findUnique({
       where: {
         tenantId_clientId_chartType_system: {
@@ -171,7 +226,20 @@ export class ChartRepository {
         },
       },
     });
+
     if (!chart) return null;
+
+    // 3. Populate Cache
+    if (redis.isOpen) {
+      try {
+        await redis.set(cacheKey, JSON.stringify(chart), {
+          EX: CACHE_TTL,
+        });
+      } catch (err) {
+        logger.warn({ err, clientId }, "Redis single chart write failed");
+      }
+    }
+
     return {
       ...chart,
       chartData: decompressChartData(chart.chartData),

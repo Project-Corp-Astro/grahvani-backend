@@ -437,6 +437,11 @@ export class LahiriClient extends BaseAstroClient {
   async getKarakaStrength(data: BirthData) {
     return this.post(LAHIRI_ENDPOINTS.KARAKA_STRENGTH, data);
   }
+
+  /** Tatkalik Maitri Chakra (Lahiri-specific special chart) */
+  async getTatkalikMaitriChakra(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.TATKALIK_MAITRI_CHAKRA, data);
+  }
   // NOTE: birth_panchanga uses getPanchanga() method (same /panchanga endpoint)
 }
 
