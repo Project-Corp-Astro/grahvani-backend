@@ -5,14 +5,9 @@ import { logger } from "../config/logger";
 export class YogaDoshaService {
   /**
    * Extract is_present from ANY yoga/dosha JSON structure.
-   * Scans all known field name patterns from the Astro Engine:
-   *   - *_present (e.g. yoga_present, pitra_dosha_present, kala_sarpa_present)
-   *   - has_* (e.g. has_angarak_dosha)
-   *   - *_active (e.g. sade_sati_active)
-   *   - present (literal boolean field)
-   * Returns false if no presence field is found (safe default).
+   * Scans for type-specific keys first, then falls back to generic scanners.
    */
-  extractPresence(data: any): boolean {
+  extractPresence(data: any, type?: string): boolean {
     if (!data) return false;
 
     // Unwrap Astro Engine response wrapper: {data: actualData, cached: bool}
@@ -20,6 +15,41 @@ export class YogaDoshaService {
       data.data && typeof data.data === "object" && "cached" in data
         ? data.data
         : data;
+
+    // 1. Try Specific Known Patterns (Based on analysis)
+    // Handle "overall_yoga_present" (e.g. guru_mangal)
+    if (unwrapped?.overall_yoga_present === true) return true;
+    if (unwrapped?.overall_yoga_present === false) return false;
+
+    // Handle "total_daridra_yogas" (count based presence)
+    if (typeof unwrapped?.total_daridra_yogas === 'number') {
+      return unwrapped.total_daridra_yogas > 0;
+    }
+
+    // Handle nested "yoga_analysis" object (e.g. gaja_kesari)
+    if (unwrapped?.yoga_analysis && typeof unwrapped.yoga_analysis === 'object') {
+      if (unwrapped.yoga_analysis.yoga_present === true) return true;
+      if (unwrapped.yoga_analysis.yoga_present === false) return false;
+    }
+
+    // 2. Try Specific Type Keys (if type provided)
+    if (type) {
+      const normalizedType = type.toLowerCase().replace(/-/g, '_');
+      const specificKeys = [
+        `${normalizedType}_present`,
+        `has_${normalizedType}`,
+        `${normalizedType}_active`,
+        `is_${normalizedType}`,
+        normalizedType // sometimes the key is just the name with a boolean value
+      ];
+
+      for (const key of specificKeys) {
+        if (key in unwrapped) {
+          const val = unwrapped[key];
+          if (val === true || val === 1 || val === "true" || val === "yes") return true;
+        }
+      }
+    }
 
     /**
      * Recursive scan that ONLY returns true if it finds a positive match.
@@ -30,17 +60,18 @@ export class YogaDoshaService {
 
       const keys = Object.keys(obj);
 
-      // Step 1: Scan all keys in this level for presence indicators
+      // Step 2: Scan all keys in this level for generic presence indicators
       for (const key of keys) {
         const val = obj[key];
+        const lowerKey = key.toLowerCase();
 
         const isPresenceKey =
-          key.endsWith("_present") ||
-          key.startsWith("has_") ||
-          key.endsWith("_active") ||
-          key === "present" ||
-          key === "is_present" ||
-          key === "status";
+          lowerKey.endsWith("_present") ||
+          lowerKey.startsWith("has_") ||
+          lowerKey.endsWith("_active") ||
+          lowerKey === "present" ||
+          lowerKey === "is_present" ||
+          lowerKey === "status";
 
         if (isPresenceKey) {
           // Robust check for truthy/boolean (including strings and numbers)
@@ -48,7 +79,7 @@ export class YogaDoshaService {
         }
       }
 
-      // Step 2: Recurse into nested objects ONLY IF no 'true' was found at this level
+      // Step 3: Recurse into nested objects ONLY IF no 'true' was found at this level
       for (const key of keys) {
         const val = obj[key];
         if (typeof val === "object" && val !== null && !Array.isArray(val)) {
@@ -69,13 +100,15 @@ export class YogaDoshaService {
       const keys = Object.keys(obj);
       for (const key of keys) {
         const val = obj[key];
+        const lowerKey = key.toLowerCase();
+
         if (
-          key.endsWith("_present") ||
-          key.startsWith("has_") ||
-          key.endsWith("_active") ||
-          key === "present" ||
-          key === "is_present" ||
-          key === "status"
+          lowerKey.endsWith("_present") ||
+          lowerKey.startsWith("has_") ||
+          lowerKey.endsWith("_active") ||
+          lowerKey === "present" ||
+          lowerKey === "is_present" ||
+          lowerKey === "status"
         ) {
           // Return the value immediately (even if false) as a candidate
           if (val === true || val === 1 || val === "true" || val === "yes") return true;
@@ -114,7 +147,7 @@ export class YogaDoshaService {
     system: string,
     analysisData: any,
   ) {
-    const isPresent = this.extractPresence(analysisData);
+    const isPresent = this.extractPresence(analysisData, type);
     console.log(`[STORES] ${category.toUpperCase()} | ${type} | isPresent: ${isPresent} | Keys: ${Object.keys(analysisData || {}).join(',')}`);
 
     // Unwrap engine response wrapper {data: actualData, cached: bool}
