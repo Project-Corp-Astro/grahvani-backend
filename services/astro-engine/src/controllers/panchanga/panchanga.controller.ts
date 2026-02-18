@@ -1,5 +1,11 @@
 import { Request, Response } from "express";
-import { lahiriClient, BirthData } from "../../clients";
+import {
+  lahiriClient,
+  ramanClient,
+  yukteswarClient,
+  BirthData,
+  AyanamsaType,
+} from "../../clients";
 import { cacheService } from "../../services/cache.service";
 import { logger } from "../../config/logger";
 
@@ -114,6 +120,93 @@ export class PanchangaController {
       res.json({ success: true, data, cached: false });
     } catch (error: any) {
       this.handleError(res, error, "Avakhada Chakra");
+    }
+  }
+
+  async getTatkalikMaitriChakra(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const cacheKey = { ...birthData, type: "tatkalik_maitri_chakra" };
+      const cached = await cacheService.get("tatkalik_maitri_chakra", cacheKey);
+      if (cached)
+        return res.json({ success: true, data: cached, cached: true }) as any;
+
+      const data = await lahiriClient.getTatkalikMaitriChakra(birthData);
+      await cacheService.set("tatkalik_maitri_chakra", cacheKey, data);
+      res.json({ success: true, data, cached: false });
+    } catch (error: any) {
+      this.handleError(res, error, "Tatkalik Maitri Chakra");
+    }
+  }
+
+  async getGlChart(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      const ayanamsa: AyanamsaType = birthData.ayanamsa || "lahiri";
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const cacheKey = { ...birthData, type: "gl_chart", ayanamsa };
+      const cached = await cacheService.get("gl_chart", cacheKey);
+      if (cached)
+        return res.json({ success: true, data: cached, cached: true }) as any;
+
+      const client = this.getClient(ayanamsa);
+      // GL Chart might not be available for all systems, handle potential error
+      if (typeof (client as any).getGlChart !== "function") {
+        res.status(400).json({
+          success: false,
+          error: `GL Chart is not available for ${ayanamsa} system`,
+        });
+        return;
+      }
+
+      const data = await (client as any).getGlChart(birthData);
+      await cacheService.set("gl_chart", cacheKey, data);
+      res.json({ success: true, data, cached: false });
+    } catch (error: any) {
+      this.handleError(res, error, "GL Chart");
+    }
+  }
+
+  async getKarakaStrength(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      const ayanamsa: AyanamsaType = birthData.ayanamsa || "lahiri";
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const cacheKey = { ...birthData, type: "karaka_strength", ayanamsa };
+      const cached = await cacheService.get("karaka_strength", cacheKey);
+      if (cached)
+        return res.json({ success: true, data: cached, cached: true }) as any;
+
+      const client = this.getClient(ayanamsa);
+      // Karaka Strength might not be available for all systems, handle potential error
+      if (typeof (client as any).getKarakaStrength !== "function") {
+        res.status(400).json({
+          success: false,
+          error: `Karaka Strength is not available for ${ayanamsa} system`,
+        });
+        return;
+      }
+
+      const data = await (client as any).getKarakaStrength(birthData);
+      await cacheService.set("karaka_strength", cacheKey, data);
+      res.json({ success: true, data, cached: false });
+    } catch (error: any) {
+      this.handleError(res, error, "Karaka Strength");
+    }
+  }
+
+  private getClient(ayanamsa: AyanamsaType) {
+    switch (ayanamsa) {
+      case "raman":
+        return ramanClient;
+      case "yukteswar":
+        return yukteswarClient;
+      default:
+        return lahiriClient;
     }
   }
 
