@@ -160,6 +160,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "hora_times",
       "lagna_times",
       "muhurat",
+      "tatkalik_maitri_chakra",
     ],
     // Yogas - verified endpoints from ApiEndPoints.txt lines 134-150
     yogas: [

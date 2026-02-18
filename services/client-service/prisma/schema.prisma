@@ -7,8 +7,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  url       = env("CLIENT_DATABASE_URL")
+  directUrl = env("CLIENT_DIRECT_URL")
   schemas   = ["app_clients"]
 }
 
@@ -208,6 +208,7 @@ enum ChartType {
   gl_chart              // Gati Kalagna chart
   karaka_strength       // Karaka strength analysis
   yukteswar_transit     // Yukteswar system transit chart
+  tatkalik_maitri_chakra // Tatkalik Maitri Chakra (Lahiri-specific)
 
   @@schema("app_clients")
 }

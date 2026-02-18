@@ -72,5 +72,17 @@ router.post(
   "/avakhada_chakra",
   panchangaController.getAvakhadaChakra.bind(panchangaController),
 );
+router.post(
+  "/tatkalik_maitri_chakra",
+  panchangaController.getTatkalikMaitriChakra.bind(panchangaController),
+);
+router.post(
+  "/gl_chart",
+  panchangaController.getGlChart.bind(panchangaController),
+);
+router.post(
+  "/karaka_strength",
+  panchangaController.getKarakaStrength.bind(panchangaController),
+);
 
 export default router;
