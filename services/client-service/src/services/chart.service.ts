@@ -581,6 +581,12 @@ export class ChartService {
     } else if (normalizedType === "karaka_strength") {
       chartData = await astroEngineClient.getKarakaStrength(birthData, system);
       dbChartType = "karaka_strength";
+    } else if (normalizedType === "tatkalik_maitri_chakra") {
+      chartData = await astroEngineClient.getTatkalikMaitriChakra(
+        birthData,
+        system,
+      );
+      dbChartType = "tatkalik_maitri_chakra";
     } else if (normalizedType === "yukteswar_transit") {
       chartData = await astroEngineClient.getYukteswarTransitChart(birthData);
       dbChartType = "yukteswar_transit";
