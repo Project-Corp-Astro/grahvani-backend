@@ -6,7 +6,10 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") }); // Root .env
 dotenv.config({ path: path.resolve(__dirname, "../.env"), override: true }); // Service .env
 
 export const config = {
-  port: parseInt(process.env.ASTRO_ENGINE_PORT || process.env.PORT || "3014", 10),
+  port: parseInt(
+    process.env.ASTRO_ENGINE_PORT || process.env.PORT || "3014",
+    10,
+  ),
   astroEngineUrl:
     process.env.ASTRO_ENGINE_EXTERNAL_URL || "https://astroengine.astrocorp.in",
   redis: {
