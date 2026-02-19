@@ -69,6 +69,15 @@ router.get(
   "/:id/dosha/:doshaType",
   chartController.getDoshaAnalysis.bind(chartController),
 );
+
+// Yoga & Dosha Dashboard Routes (from dedicated client_yoga_doshas table)
+router.get("/:id/yogas", chartController.getYogas.bind(chartController));
+router.get("/:id/doshas", chartController.getDoshas.bind(chartController));
+router.get(
+  "/:id/yoga-dosha-summary",
+  chartController.getYogaDoshaSummary.bind(chartController),
+);
+
 router.post(
   "/:id/charts/generate-core",
   chartController.generateCoreCharts.bind(chartController),
