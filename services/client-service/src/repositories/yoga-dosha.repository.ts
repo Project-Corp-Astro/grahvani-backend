@@ -14,7 +14,7 @@ export class YogaDoshaRepository {
       clientId: string;
       category: YogaDoshaCategory;
       type: string;
-      isPresent: boolean;
+      isPresent: boolean | null;
       system: string;
       analysisData: any;
       calculatedAt: Date;

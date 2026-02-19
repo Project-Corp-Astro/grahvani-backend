@@ -179,7 +179,6 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "viparitha_raja",
       "kalpadruma",
       "rare",
-      "kala_sarpa",
       "guru_mangal_only",
     ],
     // Doshas - verified endpoints lines 152-157

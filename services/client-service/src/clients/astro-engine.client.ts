@@ -573,7 +573,10 @@ class AstroEngineClient {
     ayanamsa: Ayanamsa = "lahiri",
   ): Promise<AstroResponse> {
     const payload = { ...birthData, ayanamsa: ayanamsa };
-    return (await this.internalClient.post(`/yoga/${yogaType}`, payload)).data;
+    const response = (
+      await this.internalClient.post(`/yoga/${yogaType}`, payload)
+    ).data;
+    return this.normalizeAnalysisResponse(response, yogaType);
   }
 
   async getDoshaAnalysis(
@@ -582,8 +585,17 @@ class AstroEngineClient {
     ayanamsa: Ayanamsa = "lahiri",
   ): Promise<AstroResponse> {
     const payload = { ...birthData, ayanamsa: ayanamsa };
-    return (await this.internalClient.post(`/dosha/${doshaType}`, payload))
-      .data;
+    const response = (
+      await this.internalClient.post(`/dosha/${doshaType}`, payload)
+    ).data;
+    return this.normalizeAnalysisResponse(response, doshaType);
+  }
+
+  private normalizeAnalysisResponse(
+    response: any,
+    _type: string,
+  ): AstroResponse {
+    return response;
   }
 
   async getRemedy(

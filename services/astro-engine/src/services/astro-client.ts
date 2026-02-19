@@ -273,7 +273,6 @@ export class AstroEngineClient {
       shubh: "shubh-yogas",
       viparitha_raja: "viparitha-raja-yoga",
       kalpadruma: "kalpadruma-yoga",
-      kala_sarpa: "kala-sarpa-fixed",
     };
     const endpoint = endpointMap[yogaType] || yogaType;
 

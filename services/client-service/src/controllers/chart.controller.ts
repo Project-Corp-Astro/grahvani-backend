@@ -1020,7 +1020,7 @@ export class ChartController {
       const system = req.query.system as string | undefined;
       const tenantId = req.user!.tenantId;
 
-      const yogas = await yogaDoshaService.getPresentYogas(
+      const yogas = await yogaDoshaService.getStoredYogas(
         tenantId,
         id,
         system,
@@ -1041,7 +1041,7 @@ export class ChartController {
       const system = req.query.system as string | undefined;
       const tenantId = req.user!.tenantId;
 
-      const doshas = await yogaDoshaService.getPresentDoshas(
+      const doshas = await yogaDoshaService.getStoredDoshas(
         tenantId,
         id,
         system,
