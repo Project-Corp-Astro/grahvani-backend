@@ -41,6 +41,14 @@ jobs:
           echo "Astro Engine: $status"
           [ "$status" = "200" ] || exit 1
 
+      - name: Check API Gateway
+        run: |
+          status=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://api-gateway.grahvani.in/health" \
+            --max-time 10)
+          echo "API Gateway: $status"
+          [ "$status" = "200" ] || exit 1
+
       - name: Check Frontend
         run: |
           status=$(curl -s -o /dev/null -w "%{http_code}" \
