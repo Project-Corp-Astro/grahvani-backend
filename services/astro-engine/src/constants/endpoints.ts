@@ -115,7 +115,7 @@ export const LAHIRI_ENDPOINTS = {
 
   // Doshas
   ANGARAK_DOSHA: "/lahiri/calculate-angarak-dosha",
-  GURU_CHANDAL_DOSHA: "/lahiri/guru-chandal-analysis",
+  GURU_CHANDAL_DOSHA: "/lahiri/guru-chandal-dosha-analysis",
   SHRAPIT_DOSHA: "/lahiri/calculate-shrapit-dosha",
   SADE_SATI: "/lahiri/calculate-sade-sati",
   PITRA_DOSHA: "/lahiri/pitra-dosha",
