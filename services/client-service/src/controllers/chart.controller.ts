@@ -1020,11 +1020,7 @@ export class ChartController {
       const system = req.query.system as string | undefined;
       const tenantId = req.user!.tenantId;
 
-      const yogas = await yogaDoshaService.getStoredYogas(
-        tenantId,
-        id,
-        system,
-      );
+      const yogas = await yogaDoshaService.getStoredYogas(tenantId, id, system);
       res.json({ success: true, data: yogas, total: yogas.length });
     } catch (error) {
       next(error);
@@ -1041,11 +1037,7 @@ export class ChartController {
       const system = req.query.system as string | undefined;
       const tenantId = req.user!.tenantId;
 
-      const doshas = await yogaDoshaService.getStoredDoshas(
-        tenantId,
-        id,
-        system,
-      );
+      const doshas = await yogaDoshaService.getStoredDoshas(tenantId, id, system);
       res.json({ success: true, data: doshas, total: doshas.length });
     } catch (error) {
       next(error);
