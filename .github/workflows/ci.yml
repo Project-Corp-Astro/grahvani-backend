@@ -46,6 +46,7 @@ jobs:
               - 'services/client-service/**'
               - 'contracts/**'
               - 'Dockerfile.client'
+            astro-engine:
               - 'services/astro-engine/**'
               - 'contracts/**'
               - 'Dockerfile.astro-engine'
@@ -110,9 +111,21 @@ jobs:
     steps:
       - name: Deploy ${{ matrix.service }}
         if: needs.detect-changes.outputs[matrix.service] == 'true'
+        env:
+          APP_UUID: ${{ secrets[matrix.uuid_secret] }}
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-            "http://147.93.30.201:8000/api/v1/applications/${{ secrets[matrix.uuid_secret] }}/restart" \
-            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}")
-          echo "Deploy ${{ matrix.service }}: HTTP $response"
-          [ "$response" = "200" ] || exit 1
+          if [ -z "$APP_UUID" ]; then
+            echo "⏭️ Skipping ${{ matrix.service }}: COOLIFY UUID secret not configured"
+            exit 0
+          fi
+
+          for attempt in 1 2 3; do
+            response=$(curl -s -o /dev/null -w "%{http_code}" \
+              --connect-timeout 10 --max-time 120 -X POST \
+              "http://147.93.30.201:8000/api/v1/applications/${APP_UUID}/restart" \
+              -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}")
+            echo "Deploy ${{ matrix.service }} (attempt $attempt): HTTP $response"
+            [ "$response" = "200" ] && exit 0
+            [ "$attempt" -lt 3 ] && echo "Retrying in 10s..." && sleep 10
+          done
+          exit 1
