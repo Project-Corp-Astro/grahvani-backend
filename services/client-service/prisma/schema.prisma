@@ -450,6 +450,7 @@ enum ChartType {
   yukteswar_transit
   tatkalik_maitri_chakra
   yoga_guru_mangal_only
+  pushkara_navamsha
 
   @@schema("app_clients")
 }

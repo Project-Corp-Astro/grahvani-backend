@@ -588,6 +588,9 @@ export class ChartService {
         system,
       );
       dbChartType = "tatkalik_maitri_chakra";
+    } else if (normalizedType === "pushkara_navamsha") {
+      chartData = await astroEngineClient.getPushkaraNavamsha(birthData);
+      dbChartType = "pushkara_navamsha";
     } else if (normalizedType === "yukteswar_transit") {
       chartData = await astroEngineClient.getYukteswarTransitChart(birthData);
       dbChartType = "yukteswar_transit";

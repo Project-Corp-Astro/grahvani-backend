@@ -84,5 +84,9 @@ router.post(
   "/karaka_strength",
   panchangaController.getKarakaStrength.bind(panchangaController),
 );
+router.post(
+  "/pushkara-navamsha",
+  panchangaController.getPushkaraNavamsha.bind(panchangaController),
+);
 
 export default router;

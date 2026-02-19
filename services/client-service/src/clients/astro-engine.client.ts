@@ -1000,6 +1000,13 @@ class AstroEngineClient {
   async getMuhurat(birthData: BirthData): Promise<AstroResponse> {
     return (await this.apiClient.post("/muhurat", birthData)).data;
   }
+
+  /**
+   * Pushkara Navamsha - Special Lahiri analysis
+   */
+  async getPushkaraNavamsha(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/pushkara-navamsha", birthData)).data;
+  }
 }
 
 export const astroEngineClient = new AstroEngineClient();

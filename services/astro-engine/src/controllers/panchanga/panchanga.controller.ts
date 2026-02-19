@@ -199,6 +199,24 @@ export class PanchangaController {
     }
   }
 
+  async getPushkaraNavamsha(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const cacheKey = { ...birthData, type: "pushkara-navamsha" };
+      const cached = await cacheService.get("pushkara-navamsha", cacheKey);
+      if (cached)
+        return res.json({ success: true, data: cached, cached: true }) as any;
+
+      const data = await lahiriClient.getPushkaraNavamsha(birthData);
+      await cacheService.set("pushkara-navamsha", cacheKey, data);
+      res.json({ success: true, data, cached: false });
+    } catch (error: any) {
+      this.handleError(res, error, "Pushkara Navamsha");
+    }
+  }
+
   private getClient(ayanamsa: AyanamsaType) {
     switch (ayanamsa) {
       case "raman":

@@ -161,6 +161,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "lagna_times",
       "muhurat",
       "tatkalik_maitri_chakra",
+      "pushkara_navamsha",
     ],
     // Yogas - verified endpoints from ApiEndPoints.txt lines 134-150
     yogas: [
