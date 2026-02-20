@@ -42,9 +42,6 @@ app.get("/health", (req, res) => {
 // Proxy Configurations
 const proxyOptions: Options = {
   changeOrigin: true,
-  pathRewrite: {
-    "^/api/v1": "/api/v1", // Keep the v1 prefix when forwarding
-  },
   on: {
     proxyReq: (_proxyReq: any, _req: any, _res: any) => {
       // Forward headers if needed
@@ -58,36 +55,36 @@ const proxyOptions: Options = {
 
 // 1. Auth Service Routes
 app.use(
-  "/api/v1/auth",
   createProxyMiddleware({
     ...proxyOptions,
+    pathFilter: "/api/v1/auth",
     target: AUTH_SERVICE_URL,
   }),
 );
 
 // 2. User Service Routes
 app.use(
-  "/api/v1/users",
   createProxyMiddleware({
     ...proxyOptions,
+    pathFilter: "/api/v1/users",
     target: USER_SERVICE_URL,
   }),
 );
 
 // 3. Client Service Routes
 app.use(
-  "/api/v1/clients",
   createProxyMiddleware({
     ...proxyOptions,
+    pathFilter: "/api/v1/clients",
     target: CLIENT_SERVICE_URL,
   }),
 );
 
 // 4. Client Service Geocode (Special Case)
 app.use(
-  "/api/v1/geocode",
   createProxyMiddleware({
     ...proxyOptions,
+    pathFilter: "/api/v1/geocode",
     target: CLIENT_SERVICE_URL,
   }),
 );

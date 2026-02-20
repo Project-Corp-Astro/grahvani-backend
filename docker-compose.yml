@@ -34,6 +34,23 @@ services:
     volumes:
       - meilisearch_data:/meili_data
 
+  # ======== API GATEWAY ========
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: grahvani-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - NODE_ENV=development
+      - AUTH_SERVICE_URL=http://host.docker.internal:3001
+      - USER_SERVICE_URL=http://host.docker.internal:3002
+      - CLIENT_SERVICE_URL=http://host.docker.internal:3008
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
 volumes:
   postgres_data:
   redis_data:
