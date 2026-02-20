@@ -53,10 +53,11 @@ The backend monorepo uses **service-specific Dockerfiles** for each deployed ser
 
 ```
 backend/
-  Dockerfile.auth          # Auth Service
-  Dockerfile.user          # User Service
-  Dockerfile.client        # Client Service
-  Dockerfile.astro-engine  # Astro Engine Service
+  Dockerfile.auth                     # Auth Service
+  Dockerfile.user                     # User Service
+  Dockerfile.client                   # Client Service
+  Dockerfile.astro-engine             # Astro Engine Service
+  services/api-gateway/Dockerfile     # API Gateway
 ```
 
 Each Dockerfile can also be configured using build arguments if a more generic approach is needed:
@@ -214,6 +215,34 @@ All services use `node:22-alpine` as the base image:
 
 Note: Astro Engine has a longer `start_period` (60s vs 40s) because it pre-loads calculation tables on startup.
 
+### API Gateway
+
+| Setting | Value |
+|---------|-------|
+| UUID | `eoc4w0ckg8gsw8o4kgkwsosw` |
+| Git Repository | `Project-Corp-Astro/grahvani-backend` |
+| Branch | `main` |
+| Dockerfile | `services/api-gateway/Dockerfile` |
+| Build Pack | dockerfile |
+| Base Directory | `/` |
+| Exposed Port | 8080 |
+| Domain | `https://api-gateway.grahvani.in` |
+| Memory Limit | 512m |
+| Auto-deploy | Disabled (CI triggers deploys) |
+| Watch Paths | `services/api-gateway/**`, `contracts/**`, `package.json` |
+| Health Check Path | `/health` |
+| Health Check Port | 8080 |
+| Health Check Interval | 30s |
+| Health Check Timeout | 5s |
+| Health Check Start Period | 15s |
+| Health Check Retries | 3 |
+
+The API Gateway is the single entry point for the frontend. It routes requests by path prefix:
+- `/api/v1/auth/*` → Auth Service (port 3001)
+- `/api/v1/users/*` → User Service (port 3002)
+- `/api/v1/clients/*` → Client Service (port 3008)
+- `/api/v1/geocode/*` → Client Service (port 3008)
+
 ### Frontend
 
 | Setting | Value |
@@ -328,6 +357,10 @@ curl -X POST "$BASE_URL/applications/r8wwc4cggko40cs0cs8s8ogs/restart" \
 curl -X POST "$BASE_URL/applications/qkgsko0kkoc004w0w04okggk/restart" \
   -H "$AUTH_HEADER"
 
+# API Gateway
+curl -X POST "$BASE_URL/applications/eoc4w0ckg8gsw8o4kgkwsosw/restart" \
+  -H "$AUTH_HEADER"
+
 # Frontend
 curl -X POST "$BASE_URL/applications/lk0cksw804s4oc4c4o88ws48/restart" \
   -H "$AUTH_HEADER"
@@ -340,7 +373,7 @@ curl -X POST "$BASE_URL/applications/lk0cksw804s4oc4c4o88ws48/restart" \
 AUTH_HEADER="Authorization: Bearer $COOLIFY_TOKEN"
 BASE_URL="http://147.93.30.201:8000/api/v1"
 
-for UUID in eg48400cgoc8cwocos8cosg8 jscos8kcwookg48ws8408o8g r8wwc4cggko40cs0cs8s8ogs qkgsko0kkoc004w0w04okggk; do
+for UUID in eg48400cgoc8cwocos8cosg8 jscos8kcwookg48ws8408o8g r8wwc4cggko40cs0cs8s8ogs qkgsko0kkoc004w0w04okggk eoc4w0ckg8gsw8o4kgkwsosw; do
   echo "Restarting $UUID..."
   curl -s -X POST "$BASE_URL/applications/$UUID/restart" -H "$AUTH_HEADER"
   echo ""
@@ -358,6 +391,7 @@ curl -s https://api-auth.grahvani.in/health | jq .
 curl -s https://api-user.grahvani.in/health | jq .
 curl -s https://api-client.grahvani.in/health | jq .
 curl -s https://api-astro.grahvani.in/health | jq .
+curl -s https://api-gateway.grahvani.in/health | jq .
 curl -s https://grahvani.in | head -20
 ```
 
@@ -419,12 +453,13 @@ The frontend follows the same CI/CD pipeline as backend services but with some d
 These MUST be set as `is_buildtime: true` in Coolify for the frontend:
 
 ```
-NEXT_PUBLIC_API_AUTH_URL=https://api-auth.grahvani.in
-NEXT_PUBLIC_API_USER_URL=https://api-user.grahvani.in
-NEXT_PUBLIC_API_CLIENT_URL=https://api-client.grahvani.in
-NEXT_PUBLIC_API_ASTRO_URL=https://api-astro.grahvani.in
+NEXT_PUBLIC_AUTH_SERVICE_URL=https://api-gateway.grahvani.in/api/v1
+NEXT_PUBLIC_USER_SERVICE_URL=https://api-gateway.grahvani.in/api/v1
+NEXT_PUBLIC_CLIENT_SERVICE_URL=https://api-gateway.grahvani.in/api/v1
 NEXT_PUBLIC_APP_URL=https://grahvani.in
 ```
+
+All three service URLs point to the API Gateway (`api-gateway.grahvani.in`), which routes requests by path prefix (`/api/v1/auth/*`, `/api/v1/users/*`, `/api/v1/clients/*`).
 
 If these are set as runtime-only, the frontend will build with `undefined` values and API calls will fail.
 

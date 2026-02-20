@@ -22,7 +22,8 @@ jobs:
       user: ${{ steps.filter.outputs.user }}
       client: ${{ steps.filter.outputs.client }}
       astro-engine: ${{ steps.filter.outputs.astro-engine }}
-      any-service: ${{ steps.filter.outputs.auth == 'true' || steps.filter.outputs.user == 'true' || steps.filter.outputs.client == 'true' || steps.filter.outputs.astro-engine == 'true' || steps.filter.outputs.contracts == 'true' }}
+      gateway: ${{ steps.filter.outputs.gateway }}
+      any-service: ${{ steps.filter.outputs.auth == 'true' || steps.filter.outputs.user == 'true' || steps.filter.outputs.client == 'true' || steps.filter.outputs.astro-engine == 'true' || steps.filter.outputs.contracts == 'true' || steps.filter.outputs.gateway == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -49,6 +50,10 @@ jobs:
               - 'services/astro-engine/**'
               - 'contracts/**'
               - 'Dockerfile.astro-engine'
+            gateway:
+              - 'services/api-gateway/**'
+              - 'contracts/**'
+
 
   lint-and-test:
     needs: detect-changes
@@ -101,12 +106,26 @@ jobs:
             uuid_secret: COOLIFY_CLIENT_UUID
           - service: astro-engine
             uuid_secret: COOLIFY_ASTRO_UUID
+          - service: gateway
+            uuid_secret: COOLIFY_GATEWAY_UUID
     steps:
       - name: Deploy ${{ matrix.service }}
         if: needs.detect-changes.outputs[matrix.service] == 'true'
+        env:
+          APP_UUID: ${{ secrets[matrix.uuid_secret] }}
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-            "http://147.93.30.201:8000/api/v1/applications/${{ secrets[matrix.uuid_secret] }}/restart" \
-            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}")
-          echo "Deploy ${{ matrix.service }}: HTTP $response"
-          [ "$response" = "200" ] || exit 1
+          if [ -z "$APP_UUID" ]; then
+            echo "⏭️ Skipping ${{ matrix.service }}: COOLIFY UUID secret not configured"
+            exit 0
+          fi
+
+          for attempt in 1 2 3; do
+            response=$(curl -s -o /dev/null -w "%{http_code}" \
+              --connect-timeout 10 --max-time 120 -X POST \
+              "http://147.93.30.201:8000/api/v1/applications/${APP_UUID}/restart" \
+              -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}")
+            echo "Deploy ${{ matrix.service }} (attempt $attempt): HTTP $response"
+            [ "$response" = "200" ] && exit 0
+            [ "$attempt" -lt 3 ] && echo "Retrying in 10s..." && sleep 10
+          done
+          exit 1

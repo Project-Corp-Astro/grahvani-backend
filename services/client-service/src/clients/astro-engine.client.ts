@@ -573,7 +573,10 @@ class AstroEngineClient {
     ayanamsa: Ayanamsa = "lahiri",
   ): Promise<AstroResponse> {
     const payload = { ...birthData, ayanamsa: ayanamsa };
-    return (await this.internalClient.post(`/yoga/${yogaType}`, payload)).data;
+    const response = (
+      await this.internalClient.post(`/yoga/${yogaType}`, payload)
+    ).data;
+    return this.normalizeAnalysisResponse(response, yogaType);
   }
 
   async getDoshaAnalysis(
@@ -582,8 +585,17 @@ class AstroEngineClient {
     ayanamsa: Ayanamsa = "lahiri",
   ): Promise<AstroResponse> {
     const payload = { ...birthData, ayanamsa: ayanamsa };
-    return (await this.internalClient.post(`/dosha/${doshaType}`, payload))
-      .data;
+    const response = (
+      await this.internalClient.post(`/dosha/${doshaType}`, payload)
+    ).data;
+    return this.normalizeAnalysisResponse(response, doshaType);
+  }
+
+  private normalizeAnalysisResponse(
+    response: any,
+    _type: string,
+  ): AstroResponse {
+    return response;
   }
 
   async getRemedy(
@@ -987,6 +999,13 @@ class AstroEngineClient {
    */
   async getMuhurat(birthData: BirthData): Promise<AstroResponse> {
     return (await this.apiClient.post("/muhurat", birthData)).data;
+  }
+
+  /**
+   * Pushkara Navamsha - Special Lahiri analysis
+   */
+  async getPushkaraNavamsha(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/pushkara-navamsha", birthData)).data;
   }
 }
 

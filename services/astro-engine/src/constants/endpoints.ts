@@ -115,7 +115,7 @@ export const LAHIRI_ENDPOINTS = {
 
   // Doshas
   ANGARAK_DOSHA: "/lahiri/calculate-angarak-dosha",
-  GURU_CHANDAL_DOSHA: "/lahiri/guru-chandal-analysis",
+  GURU_CHANDAL_DOSHA: "/lahiri/guru-chandal-dosha-analysis",
   SHRAPIT_DOSHA: "/lahiri/calculate-shrapit-dosha",
   SADE_SATI: "/lahiri/calculate-sade-sati",
   PITRA_DOSHA: "/lahiri/pitra-dosha",
@@ -143,6 +143,7 @@ export const LAHIRI_ENDPOINTS = {
   CALCULATE_DHAIYA: "/lahiri/calculate_dhaiya",
   AVAKHADA_CHAKRA: "/lahiri/avakhada_chakra",
   TATKALIK_MAITRI_CHAKRA: "/lahiri/calculate_Tatkalik_maitri_Chakra",
+  PUSHKARA_NAVAMSHA: "/lahiri/pushkara-navamsha",
   // NOTE: birth_panchanga uses PANCHANGA endpoint (same /panchanga path)
 } as const;
 

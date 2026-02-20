@@ -442,6 +442,10 @@ export class LahiriClient extends BaseAstroClient {
   async getTatkalikMaitriChakra(data: BirthData) {
     return this.post(LAHIRI_ENDPOINTS.TATKALIK_MAITRI_CHAKRA, data);
   }
+
+  async getPushkaraNavamsha(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.PUSHKARA_NAVAMSHA, data);
+  }
   // NOTE: birth_panchanga uses getPanchanga() method (same /panchanga endpoint)
 }
 
