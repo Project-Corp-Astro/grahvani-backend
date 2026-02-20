@@ -9,7 +9,7 @@ Enterprise microservices backend using **proper service isolation**.
 | **Service Autonomy** | Each service owns its own code, database schema, and DTOs |
 | **Shared Events Only** | Only event schemas are shared (in `contracts/`) |
 | **Independent Deployment** | Each service can be deployed separately |
-| **API Gateway** | Single entry point for all frontend requests |
+| **API Gateway** | Single entry point for all frontend requests (Port 8080) |
 
 ## Folder Structure
 
@@ -59,7 +59,7 @@ service-name/
 ## Quick Start
 
 ```bash
-# Start local databases
+# Start local infrastructure (DBs, Cache, Gateway)
 docker-compose up -d
 
 # Run auth-service
@@ -73,6 +73,6 @@ npm run dev
 
 | Type | Technology | Use Case |
 |------|------------|----------|
-| Sync | REST via Gateway | External API calls |
+| Sync | REST via Gateway | External API calls (Port 8080) |
 | Async | Redis Pub/Sub | Events between services |
 | Internal | HTTP | Service-to-service validation |

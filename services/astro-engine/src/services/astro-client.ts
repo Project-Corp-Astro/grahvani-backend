@@ -121,11 +121,20 @@ export class AstroEngineClient {
   private buildPayload(
     data: BirthData,
     extras: Record<string, any> = {},
+    options: { shortTime?: boolean } = {},
   ): Record<string, any> {
+    let birthTime = data.birthTime;
+    if (options.shortTime && birthTime && birthTime.includes(":")) {
+      const parts = birthTime.split(":");
+      if (parts.length >= 2) {
+        birthTime = `${parts[0]}:${parts[1]}`;
+      }
+    }
+
     const payload: Record<string, any> = {
       user_name: data.userName || "grahvani_client",
       birth_date: data.birthDate,
-      birth_time: data.birthTime,
+      birth_time: birthTime,
       latitude: String(data.latitude),
       longitude: String(data.longitude),
       timezone_offset: data.timezoneOffset,
@@ -305,7 +314,7 @@ export class AstroEngineClient {
     const endpointMap: Record<string, string> = {
       kala_sarpa: "kala-sarpa-fixed",
       angarak: "calculate-angarak-dosha",
-      guru_chandal: "guru-chandal-analysis",
+      guru_chandal: "guru-chandal-dosha-analysis",
       shrapit: "calculate-shrapit-dosha",
       sade_sati: "calculate-sade-sati",
       pitra: "pitra-dosha",
@@ -350,10 +359,24 @@ export class AstroEngineClient {
       chart_remedies: "chart-with-remedies",
     };
     const endpoint = endpointMap[type] || type;
-    // Some remedies match /lahiri/ endpoint directly, others need specific paths
+
+    // Specific formatting and parameter requirements for upstream endpoints
+    const options: { shortTime?: boolean } = {};
+    const extras: Record<string, any> = {};
+
+    if (type === "chart_remedies") {
+      options.shortTime = true;
+    }
+
+    if (type === "lal_kitab") {
+      // Lal Kitab requires planet and house. Provide defaults if missing.
+      if (!data.planet) extras.planet = "Sun";
+      if (!data.house) extras.house = 1;
+    }
+
     const response = await this.client.post(
       `/${system}/${endpoint}`,
-      this.buildPayload(data),
+      this.buildPayload(data, extras, options),
     );
     return response.data;
   }
