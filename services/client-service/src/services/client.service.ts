@@ -122,7 +122,10 @@ export class ClientService {
     const clientData = { ...validatedData };
     if (
       clientData.birthPlace &&
-      (!clientData.birthLatitude || !clientData.birthLongitude)
+      (clientData.birthLatitude === undefined ||
+        clientData.birthLatitude === null ||
+        clientData.birthLongitude === undefined ||
+        clientData.birthLongitude === null)
     ) {
       try {
         const geo = await geocodeService.geocodeBirthPlace(
