@@ -349,16 +349,15 @@ export class AstroEngineClient {
     }
 
     const endpointMap: Record<string, string> = {
-      yantra: "yantra-recommendations",
-      mantra: "mantra-analysis",
-      general: "vedic_remedies",
-      vedic: "vedic_remedies",
-      vedic_remedies: "vedic_remedies",
-      gemstone: "calculate-gemstone",
-      lal_kitab: "lal-kitab-remedies",
-      chart_remedies: "chart-with-remedies",
+      yantra: LAHIRI_ENDPOINTS.YANTRA_REMEDIES,
+      mantra: LAHIRI_ENDPOINTS.MANTRA_REMEDIES,
+      vedic_remedies: LAHIRI_ENDPOINTS.VEDIC_REMEDIES,
+      gemstone: LAHIRI_ENDPOINTS.GEMSTONE_REMEDIES,
+      lal_kitab: LAHIRI_ENDPOINTS.LAL_KITAB_REMEDIES,
+      lal_kitab_chart: LAHIRI_ENDPOINTS.CALCULATE_CHART,
+      chart_remedies: LAHIRI_ENDPOINTS.CHART_WITH_REMEDIES,
     };
-    const endpoint = endpointMap[type] || type;
+    const endpoint = endpointMap[type] || `/${system}/${type}`;
 
     // Specific formatting and parameter requirements for upstream endpoints
     const options: { shortTime?: boolean } = {};
@@ -375,7 +374,7 @@ export class AstroEngineClient {
     }
 
     const response = await this.client.post(
-      `/${system}/${endpoint}`,
+      endpoint,
       this.buildPayload(data, extras, options),
     );
     return response.data;
