@@ -10,8 +10,7 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-# CI gates PRs with lint/test. On push to main, deploys changed services via Coolify API.
-# Auto-deploy is disabled in Coolify — only this workflow triggers deploys.
+# CI gates PRs with lint/test/build. On push to main, builds images → pushes to GHCR → deploys via Coolify.
 
 jobs:
   detect-changes:
@@ -34,6 +33,9 @@ jobs:
               - 'contracts/**'
               - 'package.json'
               - 'package-lock.json'
+              - 'tsconfig.json'
+              - 'turbo.json'
+              - '.eslintrc.js'
             auth:
               - 'services/auth-service/**'
               - 'contracts/**'
@@ -54,9 +56,20 @@ jobs:
               - 'services/api-gateway/**'
               - 'contracts/**'
 
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   lint-and-test:
-    needs: detect-changes
+    needs: [detect-changes, secrets-scan]
     if: needs.detect-changes.outputs.any-service == 'true'
     runs-on: ubuntu-latest
     steps:
@@ -78,6 +91,9 @@ jobs:
       - name: Build contracts
         run: npx turbo run build --filter=@grahvani/contracts
 
+      - name: Build all services (type-check)
+        run: npx turbo run build
+
       - name: Lint
         run: npx turbo run lint
 
@@ -86,12 +102,71 @@ jobs:
           npx turbo run test \
             --filter=@grahvani/auth-service \
             --filter=@grahvani/user-service \
+            --filter=@grahvani/client-service \
             --filter=@grahvani/astro-engine
         env:
           NODE_ENV: test
 
-  deploy:
+  build-and-push:
     needs: [detect-changes, lint-and-test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - service: auth
+            dockerfile: Dockerfile.auth
+            image: grahvani-auth-service
+          - service: user
+            dockerfile: Dockerfile.user
+            image: grahvani-user-service
+          - service: client
+            dockerfile: Dockerfile.client
+            image: grahvani-client-service
+          - service: astro-engine
+            dockerfile: Dockerfile.astro-engine
+            image: grahvani-astro-engine
+          - service: gateway
+            dockerfile: Dockerfile.gateway
+            image: grahvani-api-gateway
+    steps:
+      - name: Skip if no changes
+        if: needs.detect-changes.outputs[matrix.service] != 'true'
+        run: echo "No changes in ${{ matrix.service }}, skipping build"
+
+      - uses: actions/checkout@v4
+        if: needs.detect-changes.outputs[matrix.service] == 'true'
+
+      - name: Set up Docker Buildx
+        if: needs.detect-changes.outputs[matrix.service] == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        if: needs.detect-changes.outputs[matrix.service] == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        if: needs.detect-changes.outputs[matrix.service] == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: [detect-changes, build-and-push]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     strategy:
@@ -100,22 +175,28 @@ jobs:
         include:
           - service: auth
             uuid_secret: COOLIFY_AUTH_UUID
+            health_url: https://api-auth.grahvani.in/health
           - service: user
             uuid_secret: COOLIFY_USER_UUID
+            health_url: https://api-user.grahvani.in/health
           - service: client
             uuid_secret: COOLIFY_CLIENT_UUID
+            health_url: https://api-client.grahvani.in/health
           - service: astro-engine
             uuid_secret: COOLIFY_ASTRO_UUID
+            health_url: https://api-astro.grahvani.in/health
           - service: gateway
             uuid_secret: COOLIFY_GATEWAY_UUID
+            health_url: https://api-gateway.grahvani.in/health
     steps:
       - name: Deploy ${{ matrix.service }}
         if: needs.detect-changes.outputs[matrix.service] == 'true'
         env:
           APP_UUID: ${{ secrets[matrix.uuid_secret] }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
         run: |
           if [ -z "$APP_UUID" ]; then
-            echo "⏭️ Skipping ${{ matrix.service }}: COOLIFY UUID secret not configured"
+            echo "Skipping deploy: COOLIFY UUID secret not configured"
             exit 0
           fi
 
@@ -123,9 +204,35 @@ jobs:
             response=$(curl -s -o /dev/null -w "%{http_code}" \
               --connect-timeout 10 --max-time 120 -X POST \
               "http://147.93.30.201:8000/api/v1/applications/${APP_UUID}/restart" \
-              -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}")
-            echo "Deploy ${{ matrix.service }} (attempt $attempt): HTTP $response"
-            [ "$response" = "200" ] && exit 0
+              -H "Authorization: Bearer ${COOLIFY_TOKEN}")
+            echo "Deploy attempt $attempt: HTTP $response"
+            [ "$response" = "200" ] && break
             [ "$attempt" -lt 3 ] && echo "Retrying in 10s..." && sleep 10
           done
+
+          if [ "$response" != "200" ]; then
+            echo "Deploy failed after 3 attempts"
+            exit 1
+          fi
+
+      - name: Post-deploy smoke test
+        if: needs.detect-changes.outputs[matrix.service] == 'true'
+        env:
+          HEALTH_URL: ${{ matrix.health_url }}
+        run: |
+          echo "Waiting 30s for service to start..."
+          sleep 30
+
+          for attempt in 1 2 3 4 5; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$HEALTH_URL" 2>/dev/null || echo "000")
+            echo "Health check attempt $attempt: HTTP $status"
+            if [ "$status" = "200" ]; then
+              echo "Service is healthy"
+              exit 0
+            fi
+            echo "Retrying in 10s..."
+            sleep 10
+          done
+
+          echo "Service failed health check after 5 attempts"
           exit 1

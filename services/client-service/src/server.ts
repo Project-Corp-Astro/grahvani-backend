@@ -8,17 +8,18 @@ dotenv.config({ path: path.resolve(__dirname, "../.env"), override: true }); // 
 
 import app from "./app";
 import { chartService } from "./services/chart.service";
+import { logger } from "./config/logger";
 
 const PORT = process.env.PORT || 3008;
 
 app.listen(PORT, () => {
-  console.log(`[Client Service] Listening on port ${PORT}`);
+  logger.info({ port: PORT }, "Client Service started");
 
   // Startup Recovery: Resume any interrupted chart generations
   // Small delay to ensure DB connection is warm
   setTimeout(() => {
     chartService.resumeInterruptedGenerations().catch((err) => {
-      console.error("[Startup] Recovery failed:", err);
+      logger.error({ err }, "Startup recovery failed");
     });
   }, 1000);
 });

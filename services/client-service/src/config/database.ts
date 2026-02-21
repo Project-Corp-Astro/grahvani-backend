@@ -5,6 +5,7 @@
  */
 import { PrismaClient } from "../generated/prisma";
 import { getDatabaseManager } from "./db-pro";
+import { logger } from "./logger";
 
 let prismaInstance: PrismaClient | undefined;
 
@@ -27,7 +28,7 @@ export const checkConnection = async (): Promise<boolean> => {
     await client.$queryRaw`SELECT 1`;
     return true;
   } catch (error) {
-    console.error("[ClientService] DB connection check failed:", error);
+    logger.error({ err: error }, "DB connection check failed");
     return false;
   }
 };

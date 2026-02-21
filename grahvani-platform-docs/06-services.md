@@ -8,6 +8,7 @@
 | User | 3002 | app_users | Dockerfile.user | /health | 512m |
 | Client | 3008 | app_clients | Dockerfile.client | /health | 512m |
 | Astro Engine | 3014 | None (Redis only) | Dockerfile.astro-engine | /health | 1024m |
+| API Gateway | 8080 | None | Dockerfile.gateway | /health | 256m |
 | Frontend | 3000 | None | Dockerfile (Next.js) | /api/health | 768m |
 
 ---
@@ -246,7 +247,7 @@ Astrologer's client CRM — profiles, charts, consultations, remedies, bulk impo
 - Raman endpoints use B.V. Raman ayanamsa (alternate to default Lahiri)
 - KP endpoints implement full Krishnamurti Paddhati system for predictive astrology
 - Meilisearch env vars are set but search is NOT yet wired in code
-- NO tests exist for this service
+- 52 unit tests (Jest + jest-mock-extended for Prisma mocking)
 
 ---
 
@@ -297,6 +298,62 @@ This service does not use PostgreSQL or Prisma. It is a pure proxy that:
 
 ---
 
+## API Gateway (port 8080)
+
+### Purpose
+Unified reverse proxy for frontend-to-backend communication. Routes requests by path prefix to the appropriate backend service.
+
+### Domain
+- Production: https://api-gateway.grahvani.in
+- Coolify UUID: See Coolify dashboard
+
+### Key Files
+- Entry: `services/api-gateway/src/server.ts`
+- Logger: `services/api-gateway/src/config/logger.ts`
+- Metrics: `services/api-gateway/src/middleware/metrics.middleware.ts`
+- Dockerfile: `Dockerfile.gateway` (root) or `services/api-gateway/Dockerfile` (legacy)
+
+### API Routes (Proxied)
+| Path Prefix | Target Service | Internal URL |
+|-------------|---------------|--------------|
+| `/api/v1/auth/*` | Auth Service | `http://auth-service:3001` |
+| `/api/v1/users/*` | User Service | `http://user-service:3002` |
+| `/api/v1/clients/*` | Client Service | `http://client-service:3008` |
+| `/api/v1/geocode/*` | Client Service | `http://client-service:3008` |
+
+### Direct Endpoints
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | /health | Gateway health check |
+| GET | /metrics | Prometheus metrics |
+
+### Environment Variables
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| PORT / GATEWAY_PORT | No | 8080 | Service port |
+| NODE_ENV | No | development | Environment |
+| AUTH_SERVICE_URL | No | http://localhost:3001 | Auth service internal URL |
+| USER_SERVICE_URL | No | http://localhost:3002 | User service internal URL |
+| CLIENT_SERVICE_URL | No | http://localhost:3008 | Client service internal URL |
+
+### Features
+- Helmet security headers
+- CORS enforcement (grahvani.in domains in production)
+- Request compression (gzip)
+- Request body limit (10KB)
+- Rate limiting (1000 requests / 15 min)
+- Request ID forwarding (`x-request-id`)
+- Structured logging (Pino)
+- Prometheus metrics (`api_gateway_` prefix)
+
+### Notes
+- No database, no Redis — pure HTTP proxy
+- Uses `http-proxy-middleware` for proxying
+- In production, all three `*_SERVICE_URL` vars should point to Docker-internal hostnames (e.g., `http://auth-service:3001`)
+- The frontend routes all API calls through the gateway in production
+
+---
+
 ## Frontend (port 3000)
 
 ### Purpose
@@ -320,11 +377,17 @@ Next.js web application for astrologers.
 - Health: `src/app/api/health/route.ts`
 
 ### Environment Variables (Coolify build-time)
-| Variable | Value |
-|----------|-------|
-| NEXT_PUBLIC_AUTH_SERVICE_URL | https://api-auth.grahvani.in/api/v1 |
-| NEXT_PUBLIC_USER_SERVICE_URL | https://api-user.grahvani.in/api/v1 |
-| NEXT_PUBLIC_CLIENT_SERVICE_URL | https://api-client.grahvani.in/api/v1 |
+| Variable | Value | Description |
+|----------|-------|-------------|
+| NEXT_PUBLIC_AUTH_SERVICE_URL | https://api-gateway.grahvani.in/api/v1 | Routed through API Gateway |
+| NEXT_PUBLIC_USER_SERVICE_URL | https://api-gateway.grahvani.in/api/v1 | Routed through API Gateway |
+| NEXT_PUBLIC_CLIENT_SERVICE_URL | https://api-gateway.grahvani.in/api/v1 | Routed through API Gateway |
+
+All three service URLs point to the API Gateway, which routes by path prefix (`/api/v1/auth/*`, `/api/v1/users/*`, `/api/v1/clients/*`).
+
+### Testing
+- 31 unit tests (Vitest + React Testing Library)
+- Test files: `src/**/*.test.ts` and `src/**/*.test.tsx`
 
 ### Health Endpoint
 ```

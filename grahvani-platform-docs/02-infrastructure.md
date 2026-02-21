@@ -40,7 +40,7 @@ Coolify is an open-source, self-hosted PaaS (Platform as a Service) -- essential
 
 ## Resource Inventory
 
-Grahvani has **7 resources** deployed on KVM4 via Coolify:
+Grahvani has **8 resources** deployed on KVM4 via Coolify:
 
 | Resource | Type | UUID | Domain | Port | Memory | Status |
 |----------|------|------|--------|------|--------|--------|
@@ -48,6 +48,7 @@ Grahvani has **7 resources** deployed on KVM4 via Coolify:
 | User Service | App | `jscos8kcwookg48ws8408o8g` | api-user.grahvani.in | 3002 | 512m | running:healthy |
 | Client Service | App | `r8wwc4cggko40cs0cs8s8ogs` | api-client.grahvani.in | 3008 | 512m | running:healthy |
 | Astro Engine | App | `qkgsko0kkoc004w0w04okggk` | api-astro.grahvani.in | 3014 | 1024m | running:healthy |
+| API Gateway | App | See Coolify | api-gateway.grahvani.in | 8080 | 256m | running:healthy |
 | Frontend | App | `lk0cksw804s4oc4c4o88ws48` | grahvani.in | 3000 | 768m | running:healthy |
 | PostgreSQL | DB | `nwwokgkgwgg04cok0wsc408g` | internal:5432 | 5433 ext | 1024m | running:healthy |
 | Redis | DB | `eg448oos8kos08000w0k40wk` | internal:6379 | - | 256m | running:healthy |
@@ -62,6 +63,7 @@ AUTH_UUID=eg48400cgoc8cwocos8cosg8
 USER_UUID=jscos8kcwookg48ws8408o8g
 CLIENT_UUID=r8wwc4cggko40cs0cs8s8ogs
 ASTRO_UUID=qkgsko0kkoc004w0w04okggk
+GATEWAY_UUID=<check Coolify dashboard>
 FRONTEND_UUID=lk0cksw804s4oc4c4o88ws48
 ```
 
@@ -86,8 +88,9 @@ Backend Services:
   User Service .......... 512m
   Client Service ........ 512m
   Astro Engine ......... 1024m   (largest -- handles chart calculations)
+  API Gateway ........... 256m
                         ------
-  Backend subtotal:     2560m (2.5 GB)
+  Backend subtotal:     2816m (2.75 GB)
 
 Frontend:
   Next.js Frontend ...... 768m
@@ -101,12 +104,12 @@ Databases:
   Database subtotal:    1280m (1.25 GB)
 
 =============================================
-GRAHVANI TOTAL:         4608m (4.5 GB)
+GRAHVANI TOTAL:         4864m (4.75 GB)
 
 KVM4 Total:            16384m (16.0 GB)
-Grahvani Usage:         4608m ( 4.5 GB)  ~28%
-Other AstroCorp Apps:  ~5000m ( 4.9 GB)  ~31%
-OS + Overhead:         ~6776m ( 6.6 GB)  ~41% free
+Grahvani Usage:         4864m ( 4.75 GB)  ~30%
+Other AstroCorp Apps:  ~5000m ( 4.9 GB)   ~31%
+OS + Overhead:         ~6520m ( 6.37 GB)  ~39% free
 ```
 
 The Astro Engine gets 1024m because it handles computationally intensive birth chart calculations (47 chart types, Dasha systems, Yogas, Doshas). All other backend services get 512m which is sufficient for standard CRUD + auth operations.
@@ -129,12 +132,15 @@ KVM4 (147.93.30.201)
    |
 Traefik :80/:443
    |
-   +-- grahvani.in -----------> Frontend container :3000
-   +-- api-auth.grahvani.in --> Auth Service container :3001
-   +-- api-user.grahvani.in --> User Service container :3002
-   +-- api-client.grahvani.in -> Client Service container :3008
-   +-- api-astro.grahvani.in -> Astro Engine container :3014
+   +-- grahvani.in ------------> Frontend container :3000
+   +-- api-gateway.grahvani.in -> API Gateway container :8080 ─┐
+   +-- api-auth.grahvani.in ---> Auth Service container :3001 <┤
+   +-- api-user.grahvani.in ---> User Service container :3002 <┤
+   +-- api-client.grahvani.in -> Client Service container :3008<┘
+   +-- api-astro.grahvani.in --> Astro Engine container :3014
 ```
+
+**Note:** The API Gateway proxies to auth, user, and client services internally via Docker networking. Direct subdomain access to individual services is also available via Traefik.
 
 ### Key Points
 
@@ -160,6 +166,7 @@ Cloudflare manages all DNS for `grahvani.in`.
 | A | `api-user.grahvani.in` | 147.93.30.201 | Proxied (orange cloud) | Auto |
 | A | `api-client.grahvani.in` | 147.93.30.201 | Proxied (orange cloud) | Auto |
 | A | `api-astro.grahvani.in` | 147.93.30.201 | Proxied (orange cloud) | Auto |
+| A | `api-gateway.grahvani.in` | 147.93.30.201 | Proxied (orange cloud) | Auto |
 
 All records point to the same KVM4 IP. Traefik differentiates by the `Host` header.
 
@@ -169,6 +176,68 @@ All records point to the same KVM4 IP. Traefik differentiates by the `Host` head
 - **Certificates**: Cloudflare-issued edge certificates (auto-renewal, no manual cert management)
 - **Origin certificates**: Managed by Coolify/Traefik (Let's Encrypt or Cloudflare origin certs)
 - **Always HTTPS**: Enabled -- all HTTP requests are redirected to HTTPS at the Cloudflare edge
+
+---
+
+## Docker Networking
+
+### Network Topology
+
+All Grahvani services share a `grahvani` Docker bridge network for internal communication. This enables services to reach each other via container names (Docker DNS) instead of external URLs.
+
+```
+grahvani (bridge network)
+   |
+   +-- grahvani-auth         (auth-service:3001)
+   +-- grahvani-user         (user-service:3002)
+   +-- grahvani-client       (client-service:3008)
+   +-- grahvani-astro-engine (astro-engine:3014)
+   +-- grahvani-gateway      (api-gateway:8080)
+   |
+   +-- grahvani-pg           (postgres:5432)   [database network]
+   +-- grahvani-redis        (redis:6379)      [database network]
+```
+
+### Internal Service URLs
+
+When services communicate internally, they use Docker container names, NOT external domains:
+
+| Service | Internal URL | Used By |
+|---------|-------------|---------|
+| Auth | `http://auth-service:3001` | API Gateway |
+| User | `http://user-service:3002` | API Gateway |
+| Client | `http://client-service:3008` | API Gateway |
+| Astro Engine | `http://astro-engine:3014` | Client Service |
+| PostgreSQL | `postgres://grahvani:***@grahvani-pg:5432/grahvani` | Auth, User, Client |
+| Redis | `redis://grahvani-redis:6379` | All services |
+
+### Coolify Network Considerations
+
+In Coolify, each application runs in its own container. To ensure internal DNS resolution works:
+
+1. All Grahvani apps must be on the same Docker network
+2. In Coolify, either:
+   - Deploy all services via a single Docker Compose resource, OR
+   - Manually connect apps to a shared network: `docker network connect <network> <container>`
+3. Verify connectivity: `docker exec grahvani-gateway wget -qO- http://auth-service:3001/health`
+
+### Audit Commands
+
+```bash
+# List all Docker networks
+docker network ls
+
+# Inspect the Grahvani network
+docker network inspect grahvani
+
+# Check which network a container is on
+docker inspect grahvani-gateway --format '{{json .NetworkSettings.Networks}}' | jq .
+
+# Test internal connectivity from gateway
+docker exec grahvani-gateway wget -qO- http://auth-service:3001/health
+docker exec grahvani-gateway wget -qO- http://user-service:3002/health
+docker exec grahvani-gateway wget -qO- http://client-service:3008/health
+```
 
 ---
 
@@ -378,7 +447,7 @@ Grahvani shares KVM4 with other AstroCorp projects. For awareness:
 
 | Project | Resources | Memory |
 |---------|-----------|--------|
-| Grahvani | 5 apps + 2 DBs | ~4.6 GB |
+| Grahvani | 6 apps + 2 DBs | ~4.75 GB |
 | CorpAstro | 4 apps + 2 DBs | ~3.3 GB |
 | Gowraj | 3 apps + 1 DB | ~2.6 GB |
 | Astro Ratan Web Chat | 1 app | ~0.5 GB |

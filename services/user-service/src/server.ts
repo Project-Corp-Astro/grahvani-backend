@@ -10,26 +10,27 @@ process.env.TZ = "Asia/Kolkata";
 // Now import app after env vars are loaded
 import app from "./app";
 import { eventSubscriber } from "./events/subscriber";
+import { logger } from "./config/logger";
 
 const PORT = process.env.PORT || 3002;
 
 // Start the HTTP server
 app.listen(PORT, async () => {
-  console.log(`[User Service] Listening on port ${PORT}`);
+  logger.info({ port: PORT }, "User Service started");
 
   // Start event subscriber for Auth Service events
   try {
     await eventSubscriber.start();
-    console.log("[User Service] Event subscriber started");
+    logger.info("Event subscriber started");
   } catch (error) {
-    console.error("[User Service] Failed to start event subscriber:", error);
+    logger.error({ err: error }, "Failed to start event subscriber");
     // Service continues without event sync (degraded mode)
   }
 });
 
 // Graceful shutdown
 process.on("SIGTERM", async () => {
-  console.log("[User Service] Shutting down...");
+  logger.info("SIGTERM received, shutting down");
   await eventSubscriber.stop();
   process.exit(0);
 });

@@ -2,7 +2,7 @@
 
 > Complete knowledge base for the Grahvani platform — architecture, deployment, operations, and development.
 
-Last updated: 2026-02-11
+Last updated: 2026-02-22
 
 ## What is Grahvani?
 
@@ -26,6 +26,9 @@ All secrets, credentials, and connection strings are stored in the `.env` file (
 | 8 | [Monitoring & Health](./08-monitoring.md) | Health checks, monitoring, logging, alerting |
 | 9 | [Developer Guide](./09-developer-guide.md) | Local setup, running services, debugging, workflows |
 | 10 | [Troubleshooting](./10-troubleshooting.md) | Common issues, fixes, operational runbook |
+| 12 | [Incident Response](./12-incident-response.md) | Severity levels, diagnosis, rollback, communication |
+| 13 | [On-Call Guide](./13-on-call-guide.md) | Quick reference for responding to alerts and outages |
+| 14 | [Sprint Changelog](./14-sprint-changelog.md) | Detailed record of all 4 production-readiness sprints |
 
 ## Quick Links
 - Backend repo: `Project-Corp-Astro/grahvani-backend` (branch: main)
@@ -36,6 +39,7 @@ All secrets, credentials, and connection strings are stored in the `.env` file (
 - API User: https://api-user.grahvani.in
 - API Client: https://api-client.grahvani.in
 - API Astro: https://api-astro.grahvani.in
+- API Gateway: https://api-gateway.grahvani.in
 
 ## Team & Access
 - GitHub Org: Project-Corp-Astro

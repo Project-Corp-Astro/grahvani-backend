@@ -1,0 +1,71 @@
+# Grahvani Promtail Configuration
+# Scrapes Docker container logs and ships to Loki
+# Parses Pino JSON logs for structured label extraction
+
+server:
+  http_listen_port: 9080
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+        filters:
+          - name: name
+            values:
+              - grahvani-auth
+              - grahvani-user
+              - grahvani-client
+              - grahvani-astro-engine
+              - grahvani-gateway
+              - grahvani-pg
+              - grahvani-redis
+              - grahvani-meilisearch
+
+    relabel_configs:
+      # Extract container name as "container" label
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/(.*)"
+        target_label: container
+
+      # Map container names to service names
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/grahvani-(.*)"
+        target_label: service
+
+      # Add job label
+      - target_label: job
+        replacement: grahvani
+
+    pipeline_stages:
+      # Try to parse Pino JSON logs
+      - json:
+          expressions:
+            level: level
+            msg: msg
+            service: service
+            requestId: requestId
+            err_message: "err.message"
+
+      # Map Pino numeric levels to human-readable names
+      - template:
+          source: level
+          template: >-
+            {{ if eq .Value "10" }}trace{{ else if eq .Value "20" }}debug{{ else if eq .Value "30" }}info{{ else if eq .Value "40" }}warn{{ else if eq .Value "50" }}error{{ else if eq .Value "60" }}fatal{{ else }}{{ .Value }}{{ end }}
+
+      # Set parsed fields as labels (only level for cardinality control)
+      - labels:
+          level:
+
+      # Add detected_level for Grafana log level visualization
+      - label_drop:
+          - __meta_docker_container_log_stream
+
+      - output:
+          source: msg

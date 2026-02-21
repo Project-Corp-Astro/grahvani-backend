@@ -98,6 +98,7 @@ npm run dev --workspace=@grahvani/auth-service
 npm run dev --workspace=@grahvani/user-service
 npm run dev --workspace=@grahvani/client-service
 npm run dev --workspace=@grahvani/astro-engine
+npm run dev --workspace=@grahvani/api-gateway
 ```
 
 ### 8. Verify everything works
@@ -107,6 +108,7 @@ curl http://localhost:3001/health  # Auth
 curl http://localhost:3002/health  # User
 curl http://localhost:3008/health  # Client
 curl http://localhost:3014/health  # Astro Engine
+curl http://localhost:8080/health  # API Gateway
 
 # Test login
 curl -X POST http://localhost:3001/api/v1/auth/login \
@@ -136,6 +138,7 @@ curl -X POST http://localhost:3001/api/v1/auth/login \
 | User profiles, preferences | user-service | services/user-service/ |
 | Client management, charts | client-service | services/client-service/ |
 | Chart calculation caching | astro-engine | services/astro-engine/ |
+| API routing, CORS, rate limiting | api-gateway | services/api-gateway/ |
 | Shared types/events | contracts | contracts/ |
 | Web UI | frontend | (separate repo) |
 
@@ -175,19 +178,27 @@ npx turbo run test
 ```bash
 npx turbo run test --filter=@grahvani/auth-service
 npx turbo run test --filter=@grahvani/user-service
+npx turbo run test --filter=@grahvani/client-service
 npx turbo run test --filter=@grahvani/astro-engine
 ```
 
 ### Test framework
-- Jest with ts-jest preset
+
+**Backend:** Jest with ts-jest preset
 - Test files in: `services/{service}/src/__tests__/`
 - Pattern: `**/__tests__/**/*.test.ts`
+- Prisma mocking via `jest-mock-extended`
 
-### Current test coverage
-- auth-service: 1 test file (production-lifecycle.test.ts)
-- user-service: 1 test file (user-sync.test.ts)
-- client-service: NO tests
-- astro-engine: runs with --passWithNoTests (no actual tests)
+**Frontend:** Vitest with React Testing Library
+- Test files in: `src/**/*.test.ts` and `src/**/*.test.tsx`
+- Run: `npx vitest run`
+
+### Current test coverage (81 backend + 31 frontend = 112 total)
+- auth-service: 1 test (production lifecycle)
+- user-service: 2 tests (user sync)
+- client-service: 52 tests (CRUD, charts, family, geocoding, validators)
+- astro-engine: 26 tests (cache, circuit breaker, health, API clients)
+- frontend: 31 tests (utils, API, store, components)
 
 ---
 
@@ -234,10 +245,12 @@ npm run prisma:generate  # Generate Prisma clients
 
 ### Frontend
 ```bash
-npm run dev      # Start Next.js dev server (port 3000)
-npm run build    # Production build
-npm run lint     # ESLint
-npx tsc --noEmit # Type check only
+npm run dev       # Start Next.js dev server (port 3000)
+npm run build     # Production build
+npm run lint      # ESLint
+npm run test      # Run Vitest tests
+npm run analyze   # Bundle analysis (ANALYZE=true next build)
+npx tsc --noEmit  # Type check only
 ```
 
 ### Docker

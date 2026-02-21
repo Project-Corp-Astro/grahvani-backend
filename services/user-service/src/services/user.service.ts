@@ -2,6 +2,7 @@
 import { User } from "../generated/prisma";
 import { userRepository } from "../repositories";
 import { eventPublisher } from "../events";
+import { logger } from "../config/logger";
 import {
   GetUsersQuery,
   UpdateProfileRequest,
@@ -203,10 +204,7 @@ export class UserService {
       changedFields,
     });
 
-    console.log(
-      `[UserService] Profile updated for user ${userId}:`,
-      changedFields,
-    );
+    logger.info({ userId, changedFields }, "Profile updated");
 
     return this.toUserProfileResponse(updatedUser);
   }
@@ -238,7 +236,7 @@ export class UserService {
     // Publish event
     await eventPublisher.publish("user.deleted", { userId, tenantId });
 
-    console.log(`[UserService] User account deleted: ${userId}`);
+    logger.info({ userId }, "User account deleted");
   }
 
   /**

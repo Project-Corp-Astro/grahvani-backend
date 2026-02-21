@@ -1,23 +1,24 @@
 // Global Error Middleware
 import { Request, Response, NextFunction } from "express";
+import { BaseError } from "@grahvani/contracts";
 import { logger } from "../../../config/logger";
 
-interface AppError extends Error {
-  statusCode?: number;
-  code?: string;
-}
-
 export function errorMiddleware(
-  err: AppError,
+  err: any,
   req: Request,
   res: Response,
   _next: NextFunction,
 ) {
-  const statusCode = err.statusCode || 500;
-  const code = err.code || "INTERNAL_ERROR";
+  const requestId =
+    (req as any).requestId || req.headers["x-request-id"] || "unknown";
+  const statusCode =
+    err instanceof BaseError ? err.statusCode : err.statusCode || 500;
+  const code =
+    err instanceof BaseError ? err.code : err.code || "INTERNAL_ERROR";
 
   logger.error({
     err,
+    requestId,
     method: req.method,
     path: req.path,
     statusCode,
@@ -26,10 +27,11 @@ export function errorMiddleware(
   res.status(statusCode).json({
     error: {
       code,
-      message: err.message || "An unexpected error occurred",
+      message:
+        statusCode === 500 ? "An unexpected error occurred" : err.message,
+      requestId,
       timestamp: new Date().toISOString(),
       path: req.path,
-      method: req.method,
     },
   });
 }

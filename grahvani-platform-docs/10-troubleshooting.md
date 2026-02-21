@@ -317,10 +317,11 @@ free -h
 docker stats --no-stream
 ```
 
-5. **Restart all services**
+5. **Restart all services** (update UUIDs from Coolify dashboard, including API Gateway)
 ```bash
 TOKEN='$COOLIFY_TOKEN'
 BASE="http://147.93.30.201:8000/api/v1"
+# Auth, User, Client, Astro Engine, Frontend (add Gateway UUID when available)
 for UUID in eg48400cgoc8cwocos8cosg8 jscos8kcwookg48ws8408o8g r8wwc4cggko40cs0cs8s8ogs qkgsko0kkoc004w0w04okggk lk0cksw804s4oc4c4o88ws48; do
   curl -s -X POST "$BASE/applications/$UUID/restart" -H "Authorization: Bearer $TOKEN"
   echo ""
@@ -335,16 +336,20 @@ done
 ### Daily Checks
 - [ ] GitHub Actions monitor workflow is green (check every few hours)
 - [ ] No failed CI runs on main branch
+- [ ] Check Grafana for error rate spikes (Loki: `{job="grahvani", level="error"}`)
 
 ### Weekly Checks
 - [ ] Verify at least 1 daily backup exists: check via Coolify API
 - [ ] Review Coolify dashboard for any warnings
 - [ ] Check disk usage on KVM4 (`df -h` via SSH)
+- [ ] Review Prometheus metrics: p95 latency, error rates per service
+- [ ] Verify Loki log retention is working (oldest logs should be ~7 days)
 
 ### Monthly Checks
 - [ ] Review memory allocation across all services
 - [ ] Update Node.js / dependencies if security patches available
 - [ ] Rotate secrets if needed (JWT_SECRET, API keys)
+- [ ] Clean up old Docker images: `docker image prune -a --filter "until=720h"`
 
 ### After Incidents
 - [ ] Document what happened and root cause

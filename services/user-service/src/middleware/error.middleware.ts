@@ -1,17 +1,18 @@
 // Global Error Handling Middleware
 import { Request, Response, NextFunction } from "express";
-import { BaseError } from "../errors";
-import { v4 as uuidv4 } from "uuid";
+import { BaseError } from "@grahvani/contracts";
+import { logger } from "../config/logger";
 
 export const errorMiddleware = (
-  error: Error,
+  error: any,
   req: Request,
   res: Response,
   _next: NextFunction,
 ) => {
-  const requestId = uuidv4();
+  const requestId =
+    (req as any).requestId || req.headers["x-request-id"] || "unknown";
 
-  console.error(`[Error] ${requestId}:`, error);
+  logger.error({ err: error, requestId }, "Request error");
 
   if (error instanceof BaseError) {
     return res.status(error.statusCode).json({

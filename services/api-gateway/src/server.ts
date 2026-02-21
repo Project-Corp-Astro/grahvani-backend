@@ -2,9 +2,12 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
-import morgan from "morgan";
+
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
+import { randomUUID } from "crypto";
 import rateLimit from "express-rate-limit";
+import { metricsMiddleware, metricsHandler } from "./middleware/metrics.middleware";
+import { logger } from "./config/logger";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -22,9 +25,30 @@ const CLIENT_SERVICE_URL =
 
 // Security & Optimization Middleware
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? [
+            "https://grahvani.in",
+            "https://www.grahvani.in",
+            "https://admin.grahvani.in",
+          ]
+        : "*",
+    credentials: true,
+  }),
+);
 app.use(compression());
-app.use(morgan("dev"));
+app.use(express.json({ limit: "10kb" }));
+app.use(metricsMiddleware);
+
+// Request ID — generate or forward
+app.use((req, res, next) => {
+  const requestId = (req.headers["x-request-id"] as string) || randomUUID();
+  req.headers["x-request-id"] = requestId;
+  res.setHeader("x-request-id", requestId);
+  next();
+});
 
 // Rate Limiting
 const limiter = rateLimit({
@@ -33,6 +57,9 @@ const limiter = rateLimit({
   message: { error: "Too many requests, please try again later." },
 });
 app.use(limiter);
+
+// Metrics Endpoint
+app.get("/metrics", metricsHandler);
 
 // Health Check
 app.get("/health", (req, res) => {
@@ -43,11 +70,15 @@ app.get("/health", (req, res) => {
 const proxyOptions: Options = {
   changeOrigin: true,
   on: {
-    proxyReq: (_proxyReq: any, _req: any, _res: any) => {
-      // Forward headers if needed
+    proxyReq: (proxyReq: any, req: any, _res: any) => {
+      // Forward request ID to downstream services
+      const requestId = req.headers["x-request-id"];
+      if (requestId) {
+        proxyReq.setHeader("x-request-id", requestId);
+      }
     },
     error: (err: Error, _req: any, res: any) => {
-      console.error("Proxy Error:", err);
+      logger.error({ err }, "Proxy error");
       res.status(502).json({ error: "Service Unavailable (Gateway Error)" });
     },
   },
@@ -95,8 +126,5 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 API Gateway running on port ${PORT}`);
-  console.log(`   - Auth Mapping: /api/v1/auth -> ${AUTH_SERVICE_URL}`);
-  console.log(`   - User Mapping: /api/v1/users -> ${USER_SERVICE_URL}`);
-  console.log(`   - Client Mapping: /api/v1/clients -> ${CLIENT_SERVICE_URL}`);
+  logger.info({ port: PORT, routes: { auth: AUTH_SERVICE_URL, user: USER_SERVICE_URL, client: CLIENT_SERVICE_URL } }, "API Gateway started");
 });

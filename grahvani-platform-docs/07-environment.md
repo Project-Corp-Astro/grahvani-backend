@@ -86,13 +86,26 @@ In production (NODE_ENV=production): dotenv is NOT loaded at all.
 | CACHE_TTL_SECONDS | number | 86400 | Redis cache TTL (24h) |
 | LOG_LEVEL | string | info | Pino log level |
 
+### API Gateway Only
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| PORT / GATEWAY_PORT | number | 8080 | Service port |
+| AUTH_SERVICE_URL | string | http://localhost:3001 | Auth service internal URL |
+| USER_SERVICE_URL | string | http://localhost:3002 | User service internal URL |
+| CLIENT_SERVICE_URL | string | http://localhost:3008 | Client service internal URL |
+
+In production, these should use Docker-internal hostnames (e.g., `http://auth-service:3001`).
+
 ### Frontend (Coolify build-time)
 
 | Variable | Value | Description |
 |----------|-------|-------------|
-| NEXT_PUBLIC_AUTH_SERVICE_URL | https://api-auth.grahvani.in/api/v1 | Auth API base |
-| NEXT_PUBLIC_USER_SERVICE_URL | https://api-user.grahvani.in/api/v1 | User API base |
-| NEXT_PUBLIC_CLIENT_SERVICE_URL | https://api-client.grahvani.in/api/v1 | Client API base |
+| NEXT_PUBLIC_AUTH_SERVICE_URL | https://api-gateway.grahvani.in/api/v1 | Auth API via Gateway |
+| NEXT_PUBLIC_USER_SERVICE_URL | https://api-gateway.grahvani.in/api/v1 | User API via Gateway |
+| NEXT_PUBLIC_CLIENT_SERVICE_URL | https://api-gateway.grahvani.in/api/v1 | Client API via Gateway |
+
+All three point to the API Gateway — it routes by path prefix.
 
 ---
 
@@ -109,9 +122,10 @@ All production env var values are in the master `.env` file (Section 10) and in 
 |---------|-----------|-------|
 | Auth | PORT, NODE_ENV, DATABASE_URL, DIRECT_URL, REDIS_URL, JWT_SECRET, JWT_REFRESH_SECRET, BCRYPT_ROUNDS, INTERNAL_SERVICE_KEY, SUPABASE_URL, SUPABASE_ANON_KEY | Supabase vars are legacy placeholders |
 | User | PORT, NODE_ENV, DATABASE_URL, DIRECT_URL, REDIS_URL, JWT_SECRET, JWT_REFRESH_SECRET, INTERNAL_SERVICE_KEY | Shares JWT secrets with Auth |
-| Client | PORT, NODE_ENV, DATABASE_URL, DIRECT_URL, REDIS_URL, MEILISEARCH_URL, MEILISEARCH_KEY, JWT_SECRET, JWT_REFRESH_SECRET, INTERNAL_SERVICE_KEY, ASTRO_ENGINE_URL | ASTRO_ENGINE_URL points to Astro Engine's internal hostname |
+| Client | PORT, NODE_ENV, DATABASE_URL, DIRECT_URL, REDIS_URL, MEILISEARCH_URL, MEILISEARCH_KEY, JWT_SECRET, JWT_REFRESH_SECRET, INTERNAL_SERVICE_KEY, ASTRO_ENGINE_URL | ASTRO_ENGINE_URL points to Astro Engine's Docker hostname |
 | Astro Engine | PORT, NODE_ENV, REDIS_URL, ASTRO_ENGINE_EXTERNAL_URL | No database — Redis-only cache |
-| Frontend | NEXT_PUBLIC_AUTH_SERVICE_URL, NEXT_PUBLIC_USER_SERVICE_URL, NEXT_PUBLIC_CLIENT_SERVICE_URL | Must be `is_buildtime: true` in Coolify |
+| API Gateway | PORT, NODE_ENV, AUTH_SERVICE_URL, USER_SERVICE_URL, CLIENT_SERVICE_URL | URLs must use Docker-internal hostnames in production |
+| Frontend | NEXT_PUBLIC_AUTH_SERVICE_URL, NEXT_PUBLIC_USER_SERVICE_URL, NEXT_PUBLIC_CLIENT_SERVICE_URL | Must be `is_buildtime: true` in Coolify; all point to API Gateway |
 
 ### Key Pattern for Production URLs
 

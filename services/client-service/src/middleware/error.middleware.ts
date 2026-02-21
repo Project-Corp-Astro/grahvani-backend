@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { BaseError } from "../errors/client.errors";
+import { BaseError } from "@grahvani/contracts";
 import { logger } from "../config";
 
 export const errorMiddleware = (
@@ -8,19 +8,22 @@ export const errorMiddleware = (
   res: Response,
   _next: NextFunction,
 ) => {
-  // If it's our custom base error
+  const requestId =
+    (req as any).requestId || req.headers["x-request-id"] || "unknown";
+
+  // Custom base error
   if (err instanceof BaseError) {
     return res.status(err.statusCode).json({
       error: {
         code: err.code,
         message: err.message,
-        requestId: `req_${Math.random().toString(36).substring(2, 11)}`,
+        requestId,
         timestamp: new Date().toISOString(),
       },
     });
   }
 
-  // Handle Zod validation errors
+  // Zod validation errors
   if (err.name === "ZodError") {
     const details: Record<string, string> = {};
     err.errors.forEach((e: any) => {
@@ -32,20 +35,20 @@ export const errorMiddleware = (
         code: "VALIDATION_ERROR",
         message: "Data validation failed",
         details,
-        requestId: `req_${Math.random().toString(36).substring(2, 11)}`,
+        requestId,
         timestamp: new Date().toISOString(),
       },
     });
   }
 
-  // Handle Prisma unique constraint errors (P2002)
+  // Prisma unique constraint errors (P2002)
   if (err.code === "P2002") {
     const target = err.meta?.target || "fields";
     return res.status(409).json({
       error: {
         code: "DUPLICATE_RECORD",
         message: `A record with this ${target} already exists.`,
-        requestId: `req_${Math.random().toString(36).substring(2, 11)}`,
+        requestId,
         timestamp: new Date().toISOString(),
       },
     });
@@ -58,6 +61,7 @@ export const errorMiddleware = (
       stack: err.stack,
       path: req.path,
       method: req.method,
+      requestId,
     },
     "Unhandled Exception",
   );
@@ -67,7 +71,7 @@ export const errorMiddleware = (
     error: {
       code: "INTERNAL_SERVER_ERROR",
       message: "An unexpected error occurred",
-      requestId: `req_${Math.random().toString(36).substring(2, 11)}`,
+      requestId,
       timestamp: new Date().toISOString(),
     },
   });

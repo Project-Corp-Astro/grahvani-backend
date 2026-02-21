@@ -1,6 +1,7 @@
 import { User } from "../generated/prisma";
 import { getRedisClient } from "../config/redis";
 import { getPrismaClient } from "../config/database";
+import { logger } from "../config/logger";
 
 const CACHE_TTL = 3600; // 1 hour
 
@@ -16,7 +17,7 @@ export class UserRepository {
         await redis.del(this.getCacheKey(id));
       }
     } catch (error) {
-      console.error("Failed to invalidate user cache", error);
+      logger.error({ err: error }, "Failed to invalidate user cache");
     }
   }
 
@@ -61,13 +62,10 @@ export class UserRepository {
         }
       }
     } catch (error) {
-      console.warn(
-        "[UserRepository] Redis cache read failed, falling back to DB",
-        error,
-      );
+      logger.warn({ err: error }, "Redis cache read failed, falling back to DB");
     }
 
-    console.log("[UserRepository.findById] Querying DB:", { id, tenantId });
+    logger.debug({ id, tenantId }, "Querying DB for user");
     const user = await getPrismaClient().user.findFirst({
       where: { id, tenantId, deletedAt: null },
       include: {
@@ -81,7 +79,7 @@ export class UserRepository {
         await redis.set(cacheKey, JSON.stringify(user), { EX: CACHE_TTL });
       }
     } catch (error) {
-      console.warn("[UserRepository] Redis cache write failed", error);
+      logger.warn({ err: error }, "Redis cache write failed");
     }
 
     return user;

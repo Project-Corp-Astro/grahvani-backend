@@ -1,0 +1,47 @@
+# API Gateway Dockerfile (for GHCR builds via CI)
+FROM node:22-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json turbo.json ./
+COPY contracts/package.json ./contracts/
+COPY services/api-gateway/package.json ./services/api-gateway/
+COPY services/auth-service/package.json ./services/auth-service/
+COPY services/user-service/package.json ./services/user-service/
+COPY services/client-service/package.json ./services/client-service/
+COPY services/astro-engine/package.json ./services/astro-engine/
+RUN npm ci --ignore-scripts
+
+FROM node:22-alpine AS builder
+RUN npm install -g typescript@5.7.3 tsc-alias
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json turbo.json ./
+COPY contracts/ ./contracts/
+RUN cd contracts && (tsc || test -d dist)
+COPY services/api-gateway/ ./services/api-gateway/
+RUN cd services/api-gateway && (tsc || test -d dist)
+
+FROM node:22-alpine AS pruner
+WORKDIR /app
+COPY package.json package-lock.json turbo.json ./
+COPY contracts/package.json ./contracts/
+COPY services/api-gateway/package.json ./services/api-gateway/
+COPY services/auth-service/package.json ./services/auth-service/
+COPY services/user-service/package.json ./services/user-service/
+COPY services/client-service/package.json ./services/client-service/
+COPY services/astro-engine/package.json ./services/astro-engine/
+RUN npm ci --omit=dev --ignore-scripts
+
+FROM node:22-alpine AS runner
+ENV NODE_ENV=production TZ=Asia/Kolkata
+WORKDIR /app
+RUN addgroup --system --gid 1001 grahvani && adduser --system --uid 1001 grahvani
+COPY --from=pruner --chown=grahvani:grahvani /app/node_modules ./node_modules
+COPY --from=builder --chown=grahvani:grahvani /app/package.json ./
+COPY --from=builder --chown=grahvani:grahvani /app/contracts/dist ./contracts/dist
+COPY --from=builder --chown=grahvani:grahvani /app/contracts/package.json ./contracts/
+COPY --from=builder --chown=grahvani:grahvani /app/services/api-gateway/dist ./services/api-gateway/dist
+COPY --from=builder --chown=grahvani:grahvani /app/services/api-gateway/package.json ./services/api-gateway/
+USER grahvani
+WORKDIR /app/services/api-gateway
+EXPOSE 8080
+CMD ["node", "dist/server.js"]

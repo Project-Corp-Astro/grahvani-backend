@@ -7,7 +7,7 @@ services:
     container_name: grahvani-pg
     environment:
       POSTGRES_USER: grahvani
-      POSTGRES_PASSWORD: grahvani2026prod
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: grahvani
     ports:
       - "5432:5432"
@@ -28,7 +28,7 @@ services:
     image: getmeili/meilisearch:v1.6
     container_name: grahvani-meilisearch
     environment:
-      MEILI_MASTER_KEY: grahvani_search_key
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
     ports:
       - "7700:7700"
     volumes:

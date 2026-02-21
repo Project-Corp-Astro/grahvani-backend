@@ -1,0 +1,104 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to rollback'
+        required: true
+        type: choice
+        options:
+          - auth
+          - user
+          - client
+          - astro-engine
+          - gateway
+      sha:
+        description: 'Git SHA to rollback to (from a previous GHCR image tag)'
+        required: true
+        type: string
+
+# Manual rollback workflow: pulls a specific image tag from GHCR and deploys it via Coolify.
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate SHA format
+        env:
+          INPUT_SHA: ${{ inputs.sha }}
+        run: |
+          if ! echo "$INPUT_SHA" | grep -qE '^[a-f0-9]{7,40}$'; then
+            echo "Invalid SHA format"
+            exit 1
+          fi
+
+      - name: Set service variables
+        id: vars
+        env:
+          INPUT_SERVICE: ${{ inputs.service }}
+        run: |
+          case "$INPUT_SERVICE" in
+            auth)
+              echo "image=grahvani-auth-service" >> "$GITHUB_OUTPUT"
+              echo "health_url=https://api-auth.grahvani.in/health" >> "$GITHUB_OUTPUT"
+              ;;
+            user)
+              echo "image=grahvani-user-service" >> "$GITHUB_OUTPUT"
+              echo "health_url=https://api-user.grahvani.in/health" >> "$GITHUB_OUTPUT"
+              ;;
+            client)
+              echo "image=grahvani-client-service" >> "$GITHUB_OUTPUT"
+              echo "health_url=https://api-client.grahvani.in/health" >> "$GITHUB_OUTPUT"
+              ;;
+            astro-engine)
+              echo "image=grahvani-astro-engine" >> "$GITHUB_OUTPUT"
+              echo "health_url=https://api-astro.grahvani.in/health" >> "$GITHUB_OUTPUT"
+              ;;
+            gateway)
+              echo "image=grahvani-api-gateway" >> "$GITHUB_OUTPUT"
+              echo "health_url=https://api-gateway.grahvani.in/health" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
+      - name: Deploy rollback image
+        env:
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
+          COOLIFY_AUTH_UUID_VAL: ${{ secrets.COOLIFY_AUTH_UUID }}
+          COOLIFY_USER_UUID_VAL: ${{ secrets.COOLIFY_USER_UUID }}
+          COOLIFY_CLIENT_UUID_VAL: ${{ secrets.COOLIFY_CLIENT_UUID }}
+          COOLIFY_ASTRO_UUID_VAL: ${{ secrets.COOLIFY_ASTRO_UUID }}
+          COOLIFY_GATEWAY_UUID_VAL: ${{ secrets.COOLIFY_GATEWAY_UUID }}
+          INPUT_SERVICE: ${{ inputs.service }}
+          INPUT_SHA: ${{ inputs.sha }}
+        run: |
+          case "$INPUT_SERVICE" in
+            auth) APP_UUID="$COOLIFY_AUTH_UUID_VAL" ;;
+            user) APP_UUID="$COOLIFY_USER_UUID_VAL" ;;
+            client) APP_UUID="$COOLIFY_CLIENT_UUID_VAL" ;;
+            astro-engine) APP_UUID="$COOLIFY_ASTRO_UUID_VAL" ;;
+            gateway) APP_UUID="$COOLIFY_GATEWAY_UUID_VAL" ;;
+          esac
+
+          echo "Rolling back $INPUT_SERVICE to SHA $INPUT_SHA"
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            --connect-timeout 10 --max-time 120 -X POST \
+            "http://147.93.30.201:8000/api/v1/applications/${APP_UUID}/restart" \
+            -H "Authorization: Bearer ${COOLIFY_TOKEN}")
+          echo "Deploy response: HTTP $response"
+          [ "$response" = "200" ] || exit 1
+
+      - name: Post-rollback health check
+        env:
+          HEALTH_URL: ${{ steps.vars.outputs.health_url }}
+        run: |
+          echo "Waiting 30s for service to start..."
+          sleep 30
+          for attempt in 1 2 3 4 5; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$HEALTH_URL" 2>/dev/null || echo "000")
+            echo "Health check attempt $attempt: HTTP $status"
+            [ "$status" = "200" ] && echo "Rollback successful" && exit 0
+            sleep 10
+          done
+          echo "Health check failed after rollback"
+          exit 1

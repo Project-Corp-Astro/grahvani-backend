@@ -7,6 +7,8 @@ import { config } from "./config";
 import { authRoutes } from "./interfaces/http/routes/auth.routes";
 import { internalRoutes } from "./interfaces/http/routes/internal.routes";
 import { errorMiddleware } from "./interfaces/http/middlewares/error.middleware";
+import { metricsMiddleware, metricsHandler } from "./interfaces/http/middlewares/metrics.middleware";
+import { requestIdMiddleware } from "@grahvani/contracts";
 import { logger } from "./config/logger";
 import { getDatabaseManager } from "./config/db-pro";
 
@@ -39,7 +41,9 @@ app.use(
     credentials: true,
   }),
 );
-app.use(express.json({ limit: "10kb" })); // Limit body size
+app.use(express.json({ limit: "10kb" }));
+app.use(requestIdMiddleware);
+app.use(metricsMiddleware);
 
 // ============ REQUEST LOGGING ============
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -55,6 +59,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   });
   next();
 });
+
+// ============ METRICS ENDPOINT ============
+app.get("/metrics", metricsHandler);
 
 // ============ HEALTH CHECK ============
 app.get("/health", (_req: Request, res: Response) => {

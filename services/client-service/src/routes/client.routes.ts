@@ -6,6 +6,12 @@ import { chartController } from "../controllers/chart.controller";
 
 import { authMiddleware } from "../middleware/auth.middleware";
 import { tenantMiddleware } from "../middleware/tenant.middleware";
+import { validateBody } from "@grahvani/contracts";
+import {
+  CreateClientSchema,
+  UpdateClientSchema,
+  FamilyLinkSchema,
+} from "../validators/client.validator";
 
 const router = Router();
 
@@ -13,14 +19,23 @@ router.use(authMiddleware);
 router.use(tenantMiddleware); // Strict tenant enforcement
 
 router.get("/", clientController.getClients.bind(clientController));
-router.post("/", clientController.createClient.bind(clientController));
+router.post(
+  "/",
+  validateBody(CreateClientSchema),
+  clientController.createClient.bind(clientController),
+);
 router.get("/:id", clientController.getClient.bind(clientController));
-router.patch("/:id", clientController.updateClient.bind(clientController));
+router.patch(
+  "/:id",
+  validateBody(UpdateClientSchema),
+  clientController.updateClient.bind(clientController),
+);
 router.delete("/:id", clientController.deleteClient.bind(clientController));
 
 // Family Relationships
 router.post(
   "/:id/family-link",
+  validateBody(FamilyLinkSchema),
   familyController.linkFamilyMember.bind(familyController),
 );
 router.get(

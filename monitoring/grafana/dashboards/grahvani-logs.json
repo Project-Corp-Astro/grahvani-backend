@@ -1,0 +1,92 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "Log Volume by Service",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({job=\"grahvani\"} [$__interval])) by (service)",
+          "legendFormat": "{{service}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" } }
+        }
+      }
+    },
+    {
+      "title": "Error Logs",
+      "type": "logs",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 6 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [
+        {
+          "expr": "{job=\"grahvani\", level=~\"error|fatal\"} | json",
+          "legendFormat": ""
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true,
+        "enableLogDetails": true
+      }
+    },
+    {
+      "title": "All Logs",
+      "type": "logs",
+      "gridPos": { "h": 14, "w": 24, "x": 0, "y": 16 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [
+        {
+          "expr": "{job=\"grahvani\", service=~\"$service\"} | json",
+          "legendFormat": ""
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true,
+        "enableLogDetails": true
+      }
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "type": "custom",
+        "current": { "text": "All", "value": ".*" },
+        "options": [
+          { "text": "All", "value": ".*", "selected": true },
+          { "text": "Auth", "value": "auth" },
+          { "text": "User", "value": "user" },
+          { "text": "Client", "value": "client" },
+          { "text": "Astro Engine", "value": "astro-engine" },
+          { "text": "Gateway", "value": "gateway" },
+          { "text": "PostgreSQL", "value": "pg" },
+          { "text": "Redis", "value": "redis" }
+        ],
+        "query": "",
+        "includeAll": false,
+        "multi": false
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Grahvani Logs",
+  "uid": "grahvani-logs",
+  "version": 1,
+  "schemaVersion": 39
+}

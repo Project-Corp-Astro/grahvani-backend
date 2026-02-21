@@ -1,6 +1,7 @@
 // Preferences Service - Business Logic
 import { preferencesRepository } from "../repositories/preferences.repository";
 import { eventPublisher } from "../events";
+import { logger } from "../config/logger";
 import {
   PreferencesResponse,
   PreferenceUpdateResponse,
@@ -49,9 +50,7 @@ export class PreferencesService {
       changedFields: [`preferences.${category}.${key}`],
     });
 
-    console.log(
-      `[PreferencesService] Updated preference: ${category}.${key} for user ${userId}`,
-    );
+    logger.info({ userId, category, key }, "Preference updated");
 
     return {
       updated: [{ category, key }],
@@ -76,9 +75,7 @@ export class PreferencesService {
       changedFields,
     });
 
-    console.log(
-      `[PreferencesService] Bulk updated ${preferences.length} preferences for user ${userId}`,
-    );
+    logger.info({ userId, count: preferences.length }, "Preferences bulk updated");
 
     return {
       updated: preferences.map((p) => ({ category: p.category, key: p.key })),
@@ -94,9 +91,7 @@ export class PreferencesService {
     key: string,
   ): Promise<void> {
     await preferencesRepository.delete(userId, category, key);
-    console.log(
-      `[PreferencesService] Deleted preference: ${category}.${key} for user ${userId}`,
-    );
+    logger.info({ userId, category, key }, "Preference deleted");
   }
 
   /**

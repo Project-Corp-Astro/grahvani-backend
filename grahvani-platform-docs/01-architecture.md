@@ -1,7 +1,7 @@
 # 1. Architecture
 
 ## System Overview
-Grahvani is a microservice-based platform with 5 deployed services + 2 databases, all running on a single KVM4 server managed by Coolify.
+Grahvani is a microservice-based platform with 6 deployed services (5 backend + API Gateway) + 2 databases, all running on a single KVM4 server managed by Coolify.
 
 ## Tech Stack
 
@@ -12,7 +12,9 @@ Grahvani is a microservice-based platform with 5 deployed services + 2 databases
 - ORM: Prisma 6 with multiSchema
 - Build: Turborepo + NPM Workspaces
 - Testing: Jest
-- Validation: Zod (auth-service)
+- Validation: Zod (shared via @grahvani/contracts)
+- Logging: Pino (structured JSON)
+- Metrics: Prometheus (prom-client)
 
 ### Frontend
 - Framework: Next.js 16.1
@@ -49,14 +51,20 @@ Grahvani is a microservice-based platform with 5 deployed services + 2 databases
               +-------------------+-------------------+
               |                   |                    |
      +--------+--------+ +-------+--------+  +--------+--------+
-     |    Frontend      | |   Backend      |  |   Backend       |
-     |    (Next.js)     | |   Services     |  |   Services      |
-     |    :3000         | |   Auth :3001   |  |   Astro :3014   |
-     |    grahvani.in   | |   User :3002   |  |   api-astro.    |
-     +-----------------+  |   Client:3008  |  |   grahvani.in   |
-                          +-------+--------+  +--------+--------+
+     |    Frontend      | |  API Gateway   |  |   Astro Engine  |
+     |    (Next.js)     | |   :8080        |  |   :3014         |
+     |    :3000         | |   api-gateway. |  |   api-astro.    |
+     |    grahvani.in   | |   grahvani.in  |  |   grahvani.in   |
+     +-----------------+  +-------+--------+  +--------+--------+
                                   |                    |
-                     +------------+------------+       |
+                         +--------+--------+           |
+                         |        |        |           |
+                    +----+--+ +---+---+ +--+----+      |
+                    | Auth  | | User  | |Client |      |
+                    | :3001 | | :3002 | | :3008 |      |
+                    +---+---+ +---+---+ +---+---+      |
+                        |         |         |          |
+                     +--+---------+---------+--+       |
                      |            |            |       |
               +------+----+ +----+------+ +---+-----+ |
               |PostgreSQL | |   Redis   | |Meili-   | |
@@ -110,6 +118,14 @@ Grahvani is a microservice-based platform with 5 deployed services + 2 databases
 - Health monitoring with degraded state detection
 - Proxies to https://astroengine.astrocorp.in
 
+### API Gateway (port 8080)
+- Reverse proxy routing requests to backend services
+- CORS enforcement with origin whitelist
+- Request ID forwarding (`x-request-id`)
+- Prometheus metrics (`/metrics` endpoint)
+- Structured logging with Pino
+- Routes: `/api/v1/auth/*` → auth-service, `/api/v1/users/*` → user-service, `/api/v1/clients/*` → client-service
+
 ### Frontend (port 3000)
 - Next.js 16.1 App Router
 - 40+ pages, 73+ components
@@ -148,7 +164,7 @@ grahvani-backend/
 │   ├── user-service/      # User profiles (Prisma: app_users)
 │   ├── client-service/    # Client CRM (Prisma: app_clients)
 │   ├── astro-engine/      # Proxy/cache (no database)
-│   ├── api-gateway/       # STUB -- not deployed
+│   ├── api-gateway/       # Reverse proxy (deployed, routes to auth/user/client)
 │   ├── ai-service/        # STUB
 │   ├── booking-service/   # STUB
 │   ├── content-service/   # STUB

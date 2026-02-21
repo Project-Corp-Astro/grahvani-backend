@@ -2,16 +2,20 @@ import express, { Express, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import pino from "pino-http";
+import rateLimit from "express-rate-limit";
 
 import routes from "./routes";
 import { errorMiddleware } from "./middleware/error.middleware";
+import { metricsMiddleware, metricsHandler } from "./middleware/metrics.middleware";
+import { requestIdMiddleware } from "@grahvani/contracts";
 import { getDatabaseManager } from "./config/db-pro";
 
 const app: Express = express();
 
 // Initialize Database Manager
 getDatabaseManager();
-console.log("✅ Database manager initialized (Standardized Port 6543)");
+import { logger } from "./config/logger";
+logger.info("Database manager initialized (Standardized Port 6543)");
 
 // Trust proxy configuration for Rate Limiting
 // Dev: false (Direct access, no proxy) | Prod: 1 (Behind single Reverse Proxy)
@@ -23,8 +27,38 @@ if (process.env.NODE_ENV === "production") {
 
 // Middleware
 app.use(helmet());
-app.use(cors());
-app.use(express.json());
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? [
+            "https://grahvani.in",
+            "https://www.grahvani.in",
+            "https://admin.grahvani.in",
+          ]
+        : "*",
+    credentials: true,
+  }),
+);
+app.use(express.json({ limit: "10kb" }));
+app.use(requestIdMiddleware);
+
+// Rate Limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 500,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: {
+      code: "TOO_MANY_REQUESTS",
+      message: "Too many requests, please try again later.",
+    },
+  },
+});
+app.use(limiter);
+
+app.use(metricsMiddleware);
 app.use(pino());
 
 // API Routes
@@ -34,6 +68,9 @@ app.use("/api/v1", routes);
 app.get("/", (req: Request, res: Response) => {
   res.json({ message: "User Service API" });
 });
+
+// Metrics Endpoint
+app.get("/metrics", metricsHandler);
 
 // Health Check
 app.get("/health", (req: Request, res: Response) => {

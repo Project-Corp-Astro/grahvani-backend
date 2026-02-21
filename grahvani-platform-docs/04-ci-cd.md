@@ -6,11 +6,12 @@ Grahvani uses GitHub Actions for CI/CD across two repositories:
 
 | Repository | Workflow | Purpose |
 |-----------|---------|---------|
-| `Project-Corp-Astro/grahvani-backend` | `ci.yml` | Lint, test, deploy 4 backend services |
+| `Project-Corp-Astro/grahvani-backend` | `ci.yml` | Lint, test, build → GHCR push → deploy 5 services + smoke test |
 | `Project-Corp-Astro/grahvani-backend` | `monitor.yml` | Health check all endpoints every 15 min |
+| `Project-Corp-Astro/grahvani-backend` | `rollback.yml` | Manual rollback to a specific GHCR image tag |
 | `Project-Corp-Astro/frontend-grahvani-software` | `ci.yml` | Lint, type-check, build, deploy frontend |
 
-**Key Design Decision**: Coolify's auto-deploy webhooks are **disabled** on all 5 apps. Only GitHub Actions triggers deploys via Coolify API calls after CI passes. This prevents untested code from reaching production.
+**Key Design Decision**: Coolify's auto-deploy webhooks are **disabled** on all 6 apps. Only GitHub Actions triggers deploys via Coolify API calls after CI passes. This prevents untested code from reaching production.
 
 ---
 
@@ -20,145 +21,82 @@ Grahvani uses GitHub Actions for CI/CD across two repositories:
 **Triggers**: Pull requests to `main`, pushes to `main`
 **Concurrency**: Cancels in-progress runs for the same branch
 
-### Full Workflow YAML
+### Pipeline Jobs
 
-```yaml
-name: CI
+The CI workflow (`ci.yml`) runs 5 jobs in sequence:
 
-on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
-  detect-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      contracts: ${{ steps.filter.outputs.contracts }}
-      auth: ${{ steps.filter.outputs.auth }}
-      user: ${{ steps.filter.outputs.user }}
-      client: ${{ steps.filter.outputs.client }}
-      astro-engine: ${{ steps.filter.outputs.astro-engine }}
-      any-service: ${{ steps.filter.outputs.auth == 'true' || steps.filter.outputs.user == 'true' || steps.filter.outputs.client == 'true' || steps.filter.outputs.astro-engine == 'true' || steps.filter.outputs.contracts == 'true' }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            contracts:
-              - 'contracts/**'
-              - 'package.json'
-              - 'package-lock.json'
-            auth:
-              - 'services/auth-service/**'
-              - 'contracts/**'
-              - 'Dockerfile.auth'
-            user:
-              - 'services/user-service/**'
-              - 'contracts/**'
-              - 'Dockerfile.user'
-            client:
-              - 'services/client-service/**'
-              - 'contracts/**'
-              - 'Dockerfile.client'
-            astro-engine:
-              - 'services/astro-engine/**'
-              - 'contracts/**'
-              - 'Dockerfile.astro-engine'
-
-  lint-and-test:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.any-service == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - run: npm ci --ignore-scripts
-
-      - name: Generate Prisma clients
-        run: |
-          npx prisma generate --schema=services/auth-service/prisma/schema.prisma
-          npx prisma generate --schema=services/user-service/prisma/schema.prisma
-          npx prisma generate --schema=services/client-service/prisma/schema.prisma
-
-      - name: Build contracts
-        run: npx turbo run build --filter=@grahvani/contracts
-
-      - name: Lint
-        run: npx turbo run lint
-
-      - name: Test
-        run: |
-          npx turbo run test \
-            --filter=@grahvani/auth-service \
-            --filter=@grahvani/user-service \
-            --filter=@grahvani/astro-engine
-        env:
-          NODE_ENV: test
-
-  deploy:
-    needs: [detect-changes, lint-and-test]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 2
-      matrix:
-        include:
-          - service: auth
-            uuid_secret: COOLIFY_AUTH_UUID
-          - service: user
-            uuid_secret: COOLIFY_USER_UUID
-          - service: client
-            uuid_secret: COOLIFY_CLIENT_UUID
-          - service: astro-engine
-            uuid_secret: COOLIFY_ASTRO_UUID
-    steps:
-      - name: Deploy ${{ matrix.service }}
-        if: needs.detect-changes.outputs[matrix.service] == 'true'
-        run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-            "http://147.93.30.201:8000/api/v1/applications/${{ secrets[matrix.uuid_secret] }}/restart" \
-            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}")
-          echo "Deploy ${{ matrix.service }}: HTTP $response"
-          [ "$response" = "200" ] || exit 1
 ```
+detect-changes → secrets-scan → lint-and-test → build-and-push → deploy (+ smoke test)
+```
+
+**Key features:**
+- **Gitleaks secrets scan** runs before lint/test to catch exposed credentials
+- **Turbo build step** catches TypeScript errors beyond what lint detects
+- **All 4 backend services** are tested (auth, user, client, astro-engine)
+- **GHCR image push** on main — tagged with `:{sha}` and `:latest`
+- **Docker layer caching** via GitHub Actions cache
+- **Post-deploy smoke tests** — waits 30s, then retries health endpoint 5x at 10s intervals
+- **API Gateway** included in path detection, build, and deploy matrix
+- **Root config changes** (`tsconfig.json`, `turbo.json`, `.eslintrc.js`) trigger contracts rebuild
+
+### Path Filter Mapping
+
+| Service | Triggers on changes to |
+|---------|----------------------|
+| contracts | `contracts/**`, `package.json`, `package-lock.json`, `tsconfig.json`, `turbo.json`, `.eslintrc.js` |
+| auth | `services/auth-service/**`, `contracts/**`, `Dockerfile.auth` |
+| user | `services/user-service/**`, `contracts/**`, `Dockerfile.user` |
+| client | `services/client-service/**`, `contracts/**`, `Dockerfile.client` |
+| astro-engine | `services/astro-engine/**`, `contracts/**`, `Dockerfile.astro-engine` |
+| gateway | `services/api-gateway/**`, `contracts/**` |
+
+### Deploy Matrix (5 services)
+
+| Service | Coolify Secret | Health URL |
+|---------|---------------|------------|
+| auth | `COOLIFY_AUTH_UUID` | `https://api-auth.grahvani.in/health` |
+| user | `COOLIFY_USER_UUID` | `https://api-user.grahvani.in/health` |
+| client | `COOLIFY_CLIENT_UUID` | `https://api-client.grahvani.in/health` |
+| astro-engine | `COOLIFY_ASTRO_UUID` | `https://api-astro.grahvani.in/health` |
+| gateway | `COOLIFY_GATEWAY_UUID` | `https://api-gateway.grahvani.in/health` |
+
+Deploy uses `max-parallel: 2` with retry logic (3 attempts, 10s between retries).
 
 ### Job Details
 
 **Job 1: detect-changes**
 - Uses `dorny/paths-filter@v3` to determine which services were modified
 - Each service filter includes its own directory + `contracts/**` (shared dependency) + its Dockerfile
-- Outputs a boolean per service and an `any-service` flag
+- Outputs a boolean per service (including gateway) and an `any-service` flag
+- Root config files (`tsconfig.json`, `turbo.json`, `.eslintrc.js`) trigger contracts rebuild
 - If no service code changed (e.g., only docs were updated), the entire pipeline skips
 
-**Job 2: lint-and-test**
-- Only runs if `any-service == 'true'`
-- `npm ci --ignore-scripts` — installs dependencies without running postinstall scripts (faster, more predictable)
-- Generates all 3 Prisma clients (auth, user, client schemas) — required for TypeScript compilation
-- Builds the `contracts` package first (other services depend on it)
-- Runs ESLint across all services via Turborepo
-- Runs Jest tests for auth-service, user-service, and astro-engine
-  - **client-service is excluded** because it has no tests yet
-  - **astro-engine** runs with `--passWithNoTests` (no actual test files)
+**Job 2: secrets-scan**
+- Runs `gitleaks/gitleaks-action@v2` with full history (`fetch-depth: 0`)
+- Detects hardcoded secrets, API keys, passwords in code and git history
+- Blocks the pipeline if secrets are found
+- Runs in parallel with `detect-changes`
 
-**Job 3: deploy**
-- Only runs on push to `main` (not on PRs)
-- Requires both `detect-changes` and `lint-and-test` to succeed
-- Uses a matrix strategy with `max-parallel: 2` to limit simultaneous deploys
-- Each matrix entry checks if its service changed before deploying
+**Job 3: lint-and-test**
+- Requires both `detect-changes` and `secrets-scan` to pass
+- Only runs if `any-service == 'true'`
+- Generates all 3 Prisma clients (auth, user, client schemas)
+- Builds contracts, then runs `npx turbo run build` (full type-check across all services)
+- Runs ESLint across all services via Turborepo
+- Runs Jest tests for all 4 services: auth-service, user-service, client-service, astro-engine
+
+**Job 4: build-and-push**
+- Builds Docker images for changed services
+- Pushes to GHCR: `ghcr.io/<org>/<image>:{sha}` and `ghcr.io/<org>/<image>:latest`
+- Uses Docker layer caching via GitHub Actions cache (`cache-from: type=gha`)
+- 5-service matrix: auth, user, client, astro-engine, gateway
+
+**Job 5: deploy**
+- Requires `build-and-push` to succeed
 - Deploys via `POST /api/v1/applications/{uuid}/restart` to Coolify API
-- Fails the job if Coolify returns non-200
+- Retry logic: 3 attempts with 10s delay between retries
+- Post-deploy smoke test: waits 30s, then checks health endpoint 5x at 10s intervals
+- Fails the pipeline if the service doesn't become healthy
 
 ---
 
@@ -322,6 +260,7 @@ jobs:
 | `COOLIFY_USER_UUID` | User service Coolify app UUID | See 02-infrastructure.md resource inventory |
 | `COOLIFY_CLIENT_UUID` | Client service Coolify app UUID | See 02-infrastructure.md resource inventory |
 | `COOLIFY_ASTRO_UUID` | Astro Engine Coolify app UUID | See 02-infrastructure.md resource inventory |
+| `COOLIFY_GATEWAY_UUID` | API Gateway Coolify app UUID | See 02-infrastructure.md resource inventory |
 
 ### Frontend Repo (`Project-Corp-Astro/frontend-grahvani-software`)
 
@@ -349,20 +288,46 @@ gh secret set COOLIFY_FRONTEND_UUID -R Project-Corp-Astro/frontend-grahvani-soft
 
 ---
 
+## Rollback Workflow
+
+**File**: `backend/.github/workflows/rollback.yml`
+**Trigger**: Manual dispatch only (`workflow_dispatch`)
+
+### Usage
+
+```bash
+# Rollback auth-service to a specific commit
+gh workflow run rollback.yml \
+  -R Project-Corp-Astro/grahvani-backend \
+  -f service=auth \
+  -f sha=abc1234
+
+# Available services: auth, user, client, astro-engine, gateway
+```
+
+### How It Works
+
+1. Validates SHA format (7-40 hex characters)
+2. Maps service name to GHCR image and Coolify UUID
+3. Triggers Coolify restart (which pulls the tagged image from GHCR)
+4. Runs post-rollback health check (30s wait + 5 retries at 10s intervals)
+
+### Finding Available Image Tags
+
+```bash
+# List recent GHCR image tags for a service
+gh api /orgs/Project-Corp-Astro/packages/container/grahvani-auth-service/versions \
+  --jq '.[].metadata.container.tags[]' | head -20
+```
+
+---
+
 ## Selective Deploys (How Only Changed Services Rebuild)
 
 Selective deploys work through **two layers**:
 
 ### Layer 1: GitHub Actions (`dorny/paths-filter`)
 The CI workflow detects which files changed and sets boolean outputs per service. The deploy job only calls the Coolify restart API for services that actually changed.
-
-**Path filter mapping:**
-| Service | Triggers on changes to |
-|---------|----------------------|
-| auth | `services/auth-service/**`, `contracts/**`, `Dockerfile.auth` |
-| user | `services/user-service/**`, `contracts/**`, `Dockerfile.user` |
-| client | `services/client-service/**`, `contracts/**`, `Dockerfile.client` |
-| astro-engine | `services/astro-engine/**`, `contracts/**`, `Dockerfile.astro-engine` |
 
 ### Layer 2: Coolify (`watch_paths`)
 Even if CI triggers a restart, Coolify has its own `watch_paths` configured per app. This serves as a backup filter.
@@ -371,12 +336,12 @@ Even if CI triggers a restart, Coolify has its own `watch_paths` configured per 
 1. Developer pushes changes to `services/auth-service/src/services/auth.service.ts`
 2. `detect-changes` sets `auth=true`, all others `false`
 3. `lint-and-test` runs (tests all services together)
-4. `deploy` matrix runs 4 jobs, but only auth's `if` condition is `true`
-5. Only auth-service calls Coolify restart API
-6. Only auth-service rebuilds and redeploys
+4. `build-and-push` builds and pushes only auth-service image to GHCR
+5. `deploy` matrix runs 5 jobs, but only auth's `if` condition is `true`
+6. Only auth-service calls Coolify restart API and runs smoke test
 
 **Special case: contracts/ changes**
-If `contracts/**` is modified, ALL 4 services are marked as changed because contracts is a shared dependency. All 4 will rebuild (with `max-parallel: 2`).
+If `contracts/**` is modified, ALL 5 services are marked as changed because contracts is a shared dependency. All 5 will rebuild (with `max-parallel: 2`).
 
 ---
 
@@ -400,27 +365,34 @@ If `contracts/**` is modified, ALL 4 services are marked as changed because cont
               detect-changes                   detect-changes
               (paths-filter)                   (paths-filter)
                        |                                |
+                  secrets-scan                    secrets-scan
+                  (gitleaks)                      (gitleaks)
+                       |                                |
                        v                                v
               lint-and-test                    lint-and-test
-           (if any service changed)         (if any service changed)
+           (build + lint + test)            (build + lint + test)
               |              |                          |
               v              v                          v
-           PR Check       PR Check              deploy (matrix)
-           (pass/fail)   (block merge           max-parallel: 2
+           PR Check       PR Check             build-and-push
+           (pass/fail)   (block merge          (GHCR images)
                           if fail)                      |
-                                           +-----+-----+-----+
-                                           |     |     |     |
-                                          auth  user client astro
-                                        (only if changed in this push)
-                                           |     |     |     |
-                                           v     v     v     v
-                                        Coolify restart API calls
-                                           |     |     |     |
-                                           v     v     v     v
-                                        Docker rebuild + deploy
-                                           |     |     |     |
-                                           v     v     v     v
-                                        Health check → Live
+                                                        v
+                                                 deploy (matrix)
+                                                 max-parallel: 2
+                                                        |
+                                        +-----+-----+-----+-----+
+                                        |     |     |     |     |
+                                       auth  user client astro gateway
+                                      (only if changed in this push)
+                                        |     |     |     |     |
+                                        v     v     v     v     v
+                                     Coolify restart API (3 retries)
+                                        |     |     |     |     |
+                                        v     v     v     v     v
+                                     Smoke test (30s wait + 5 checks)
+                                        |     |     |     |     |
+                                        v     v     v     v     v
+                                     Health check → Live
 ```
 
 ---

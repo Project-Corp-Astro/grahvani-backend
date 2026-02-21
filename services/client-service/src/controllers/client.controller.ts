@@ -2,6 +2,7 @@ import { Response, NextFunction } from "express";
 import { clientService } from "../services/client.service";
 import { chartService } from "../services/chart.service";
 import { AuthRequest } from "../middleware/auth.middleware";
+import { logger } from "../config/logger";
 
 /**
  * Transform client data to ensure birthTime is formatted correctly.
@@ -90,7 +91,7 @@ export class ClientController {
         .ensureFullVedicProfile(tenantId, id, metadata)
         .catch((err) => {
           // Log but don't crash request
-          console.error(`[AutoHeal] Failed for client ${id}:`, err);
+          logger.error({ err, clientId: id }, "AutoHeal failed");
         });
 
       const client = await clientService.getClient(tenantId, id, metadata);

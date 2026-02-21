@@ -1,0 +1,58 @@
+# Grahvani Log Aggregation Stack
+# Deploy via Coolify or standalone: docker compose -f docker-compose.logging.yml up -d
+#
+# Memory budget: Loki ~512MB, Promtail ~128MB (total ~640MB)
+# Retention: 7 days
+#
+# After deploying, add Loki as a Grafana datasource:
+#   URL: http://loki:3100 (if same Docker network) or http://<host>:3100
+
+services:
+  loki:
+    image: grafana/loki:3.4.2
+    container_name: grahvani-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    networks:
+      - logging
+
+  promtail:
+    image: grafana/promtail:3.4.2
+    container_name: grahvani-promtail
+    restart: unless-stopped
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/config.yml
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    depends_on:
+      loki:
+        condition: service_healthy
+    networks:
+      - logging
+
+volumes:
+  loki_data:
+
+networks:
+  logging:
+    driver: bridge

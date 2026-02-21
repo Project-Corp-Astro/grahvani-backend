@@ -1,5 +1,6 @@
 // Event Publisher for User Service
 import { createClient, RedisClientType } from "redis";
+import { logger } from "../config/logger";
 
 export type UserEventType =
   | "user.created"
@@ -42,9 +43,9 @@ export class EventPublisher {
       });
 
       await client.publish(channel, message);
-      console.log(`[EventPublisher] Published ${eventType}:`, payload.userId);
+      logger.debug({ eventType, userId: payload.userId }, "Event published");
     } catch (error) {
-      console.error("[EventPublisher] Failed to publish event:", error);
+      logger.error({ err: error, eventType }, "Failed to publish event");
       // Don't throw - events are non-critical
     }
   }

@@ -8,6 +8,7 @@ import {
   ErrorResponse,
 } from "../dtos";
 import { BaseError, ValidationError } from "../errors";
+import { logger } from "../config/logger";
 import { v4 as uuidv4 } from "uuid";
 import { addressService } from "../services/address.service";
 import {
@@ -67,25 +68,18 @@ export const UserController = {
       const tenantId = req.user!.tenantId;
       const userId = req.user!.id;
 
-      console.log("[UserController.getMe] Request received:", {
-        userId,
-        tenantId,
-        email: req.user!.email,
-      });
+      logger.debug({ userId, tenantId }, "getMe request");
 
       const user = await userService.getCurrentUser(tenantId, userId);
 
       // Update last active (non-blocking)
-      userService.updateLastActive(tenantId, userId).catch(console.error);
+      userService.updateLastActive(tenantId, userId).catch((err) => logger.error({ err }, "Failed to update last active"));
 
-      console.log("[UserController.getMe] User found:", {
-        id: user.id,
-        email: user.email,
-      });
+      logger.debug({ userId: user.id }, "getMe user found");
 
       res.json(user);
     } catch (error) {
-      console.error("[UserController.getMe] Error:", error);
+      logger.error({ err: error }, "getMe error");
       if (error instanceof BaseError) {
         return res
           .status(error.statusCode)
@@ -246,9 +240,7 @@ export const UserController = {
         newValues: { status, reason, changedBy: adminId },
       });
 
-      console.log(
-        `[Admin] User ${id} status changed to ${status} by ${adminId}`,
-      );
+      logger.info({ userId: id, status, adminId }, "User status changed");
 
       res.json({
         id,
@@ -328,7 +320,7 @@ export const UserController = {
         newValues: { role, previousRole: user.role, changedBy: adminId },
       });
 
-      console.log(`[Admin] User ${id} role changed to ${role} by ${adminId}`);
+      logger.info({ userId: id, role, adminId }, "User role changed");
 
       res.json({
         id,

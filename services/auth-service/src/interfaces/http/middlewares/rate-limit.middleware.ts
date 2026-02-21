@@ -10,25 +10,27 @@ interface RateLimitConfig {
   keyPrefix: string; // Redis key prefix
 }
 
+const isProd = process.env.NODE_ENV === "production";
+
 const RATE_LIMITS: Record<string, RateLimitConfig> = {
   login: {
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 50, // Increased from 5 to 50 for better dev experience
+    maxRequests: isProd ? 10 : 50, // Strict in prod, relaxed in dev
     keyPrefix: "rate:login",
   },
   register: {
-    windowMs: 60 * 1000, // 1 minute (dev only)
-    maxRequests: 1000, // Relaxed for dev
+    windowMs: 60 * 60 * 1000, // 1 hour
+    maxRequests: isProd ? 5 : 100, // 5 registrations/hour in prod
     keyPrefix: "rate:register",
   },
   passwordReset: {
-    windowMs: 60 * 1000, // 1 minute (dev only)
-    maxRequests: 1000, // Relaxed for dev
+    windowMs: 60 * 60 * 1000, // 1 hour
+    maxRequests: isProd ? 5 : 100, // 5 resets/hour in prod
     keyPrefix: "rate:reset",
   },
   api: {
     windowMs: 60 * 1000, // 1 minute
-    maxRequests: 5000, // Relaxed for dev
+    maxRequests: isProd ? 100 : 5000,
     keyPrefix: "rate:api",
   },
 };
