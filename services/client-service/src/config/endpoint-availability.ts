@@ -196,11 +196,10 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
     remedies: [
       "yantra",
       "mantra",
-      "general",
-      "vedic",
       "vedic_remedies",
       "gemstone",
       "lal_kitab",
+      "lal_kitab_chart",
       "chart_remedies",
     ],
     // Panchanga: Removed - now using birth_panchanga (universal, stored once per client)

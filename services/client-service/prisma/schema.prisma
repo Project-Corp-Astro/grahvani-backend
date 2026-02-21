@@ -402,12 +402,16 @@ enum ChartType {
   lagna_times
   muhurat
   avakhada_chakra
+  // Traditional Vedic Remedies
   remedy_yantra
   remedy_mantra
-  remedy_general
   remedy_gemstone
   remedy_lal_kitab
+  remedy_lal_kitab_chart
   remedy_vedic_remedies
+  remedy_chart_remedies
+
+  // Strength & Dignity
   shadbala
   dasha_vimshottari
   dasha_chara
