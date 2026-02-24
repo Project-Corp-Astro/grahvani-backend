@@ -12,10 +12,7 @@ async function debugV2() {
   };
 
   console.log("Fetching Level 1 (Maha)...");
-  const res1 = await astroEngineClient.getVimshottariDasha(
-    birthData,
-    "mahadasha",
-  );
+  const res1 = await astroEngineClient.getVimshottariDasha(birthData, "mahadasha");
   const data1 = res1.data || {};
   const list1 = data1.dasha_list || data1.mahadashas || [];
 
@@ -25,21 +22,15 @@ async function debugV2() {
     console.log(`Maha[0]: ${m.planet} (${m.start_date} - ${m.end_date})`);
 
     // Check for nested antardashas
-    if (m.antardashas)
-      console.log(`  Has nested antardashas: ${m.antardashas.length}`);
-    if (m.sublevels)
-      console.log(`  Has nested sublevels: ${m.sublevels.length}`); // unlikely from engine
+    if (m.antardashas) console.log(`  Has nested antardashas: ${m.antardashas.length}`);
+    if (m.sublevels) console.log(`  Has nested sublevels: ${m.sublevels.length}`); // unlikely from engine
 
     console.log("\nFetching Level 2 (Antar) for " + m.planet + "...");
-    const res2 = await astroEngineClient.getVimshottariDasha(
-      birthData,
-      "antardasha",
-      { mahaLord: m.planet },
-    );
+    const res2 = await astroEngineClient.getVimshottariDasha(birthData, "antardasha", {
+      mahaLord: m.planet,
+    });
     const list2 =
-      res2.dasha_list ||
-      (res2.data && (res2.data.dasha_list || res2.data.antardashas)) ||
-      [];
+      res2.dasha_list || (res2.data && (res2.data.dasha_list || res2.data.antardashas)) || [];
 
     console.log(`Level 2 items: ${list2.length}`);
     list2.forEach((a) => {

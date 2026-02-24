@@ -13,11 +13,7 @@ console.log(
   `Parent: ${parent.planet}, Start: ${parent.start_date}, Duration: ${parent.duration_years}`,
 );
 
-const subs = calculateSubPeriods(
-  parent.planet,
-  parent.start_date,
-  parent.duration_years,
-);
+const subs = calculateSubPeriods(parent.planet, parent.start_date, parent.duration_years);
 
 console.log(`Calculated ${subs.length} sub-periods:`);
 subs.forEach((s) => {

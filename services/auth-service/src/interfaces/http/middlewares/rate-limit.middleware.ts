@@ -65,10 +65,7 @@ export function createRateLimiter(type: keyof typeof RATE_LIMITS) {
       // Set rate limit headers
       res.set({
         "X-RateLimit-Limit": config.maxRequests.toString(),
-        "X-RateLimit-Remaining": Math.max(
-          0,
-          config.maxRequests - count,
-        ).toString(),
+        "X-RateLimit-Remaining": Math.max(0, config.maxRequests - count).toString(),
         "X-RateLimit-Reset": Math.ceil((Date.now() + ttl) / 1000).toString(),
       });
 

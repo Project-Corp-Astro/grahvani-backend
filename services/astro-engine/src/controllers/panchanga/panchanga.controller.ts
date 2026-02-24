@@ -1,11 +1,5 @@
 import { Request, Response } from "express";
-import {
-  lahiriClient,
-  ramanClient,
-  yukteswarClient,
-  BirthData,
-  AyanamsaType,
-} from "../../clients";
+import { lahiriClient, ramanClient, yukteswarClient, BirthData, AyanamsaType } from "../../clients";
 import { cacheService } from "../../services/cache.service";
 import { logger } from "../../config/logger";
 
@@ -22,8 +16,7 @@ export class PanchangaController {
 
       const cacheKey = { ...birthData, type: "panchanga" };
       const cached = await cacheService.get("panchanga", cacheKey);
-      if (cached)
-        return res.json({ success: true, data: cached, cached: true }) as any;
+      if (cached) return res.json({ success: true, data: cached, cached: true }) as any;
 
       const data = await lahiriClient.getPanchanga(birthData);
       await cacheService.set("panchanga", cacheKey, data);
@@ -40,8 +33,7 @@ export class PanchangaController {
 
       const cacheKey = { ...birthData, type: "choghadiya" };
       const cached = await cacheService.get("choghadiya", cacheKey);
-      if (cached)
-        return res.json({ success: true, data: cached, cached: true }) as any;
+      if (cached) return res.json({ success: true, data: cached, cached: true }) as any;
 
       const data = await lahiriClient.getChoghadiya(birthData);
       await cacheService.set("choghadiya", cacheKey, data);
@@ -58,8 +50,7 @@ export class PanchangaController {
 
       const cacheKey = { ...birthData, type: "hora-times" };
       const cached = await cacheService.get("hora-times", cacheKey);
-      if (cached)
-        return res.json({ success: true, data: cached, cached: true }) as any;
+      if (cached) return res.json({ success: true, data: cached, cached: true }) as any;
 
       const data = await lahiriClient.getHoraTimes(birthData);
       await cacheService.set("hora-times", cacheKey, data);
@@ -76,8 +67,7 @@ export class PanchangaController {
 
       const cacheKey = { ...birthData, type: "lagna-times" };
       const cached = await cacheService.get("lagna-times", cacheKey);
-      if (cached)
-        return res.json({ success: true, data: cached, cached: true }) as any;
+      if (cached) return res.json({ success: true, data: cached, cached: true }) as any;
 
       const data = await lahiriClient.getLagnaTimes(birthData);
       await cacheService.set("lagna-times", cacheKey, data);
@@ -94,8 +84,7 @@ export class PanchangaController {
 
       const cacheKey = { ...birthData, type: "muhurat" };
       const cached = await cacheService.get("muhurat", cacheKey);
-      if (cached)
-        return res.json({ success: true, data: cached, cached: true }) as any;
+      if (cached) return res.json({ success: true, data: cached, cached: true }) as any;
 
       const data = await lahiriClient.getMuhurat(birthData);
       await cacheService.set("muhurat", cacheKey, data);
@@ -112,8 +101,7 @@ export class PanchangaController {
 
       const cacheKey = { ...birthData, type: "avakhada_chakra" };
       const cached = await cacheService.get("avakhada_chakra", cacheKey);
-      if (cached)
-        return res.json({ success: true, data: cached, cached: true }) as any;
+      if (cached) return res.json({ success: true, data: cached, cached: true }) as any;
 
       const data = await lahiriClient.getAvakhadaChakra(birthData);
       await cacheService.set("avakhada_chakra", cacheKey, data);
@@ -130,8 +118,7 @@ export class PanchangaController {
 
       const cacheKey = { ...birthData, type: "tatkalik_maitri_chakra" };
       const cached = await cacheService.get("tatkalik_maitri_chakra", cacheKey);
-      if (cached)
-        return res.json({ success: true, data: cached, cached: true }) as any;
+      if (cached) return res.json({ success: true, data: cached, cached: true }) as any;
 
       const data = await lahiriClient.getTatkalikMaitriChakra(birthData);
       await cacheService.set("tatkalik_maitri_chakra", cacheKey, data);
@@ -149,8 +136,7 @@ export class PanchangaController {
 
       const cacheKey = { ...birthData, type: "gl_chart", ayanamsa };
       const cached = await cacheService.get("gl_chart", cacheKey);
-      if (cached)
-        return res.json({ success: true, data: cached, cached: true }) as any;
+      if (cached) return res.json({ success: true, data: cached, cached: true }) as any;
 
       const client = this.getClient(ayanamsa);
       // GL Chart might not be available for all systems, handle potential error
@@ -178,8 +164,7 @@ export class PanchangaController {
 
       const cacheKey = { ...birthData, type: "karaka_strength", ayanamsa };
       const cached = await cacheService.get("karaka_strength", cacheKey);
-      if (cached)
-        return res.json({ success: true, data: cached, cached: true }) as any;
+      if (cached) return res.json({ success: true, data: cached, cached: true }) as any;
 
       const client = this.getClient(ayanamsa);
       // Karaka Strength might not be available for all systems, handle potential error
@@ -206,8 +191,7 @@ export class PanchangaController {
 
       const cacheKey = { ...birthData, type: "pushkara-navamsha" };
       const cached = await cacheService.get("pushkara-navamsha", cacheKey);
-      if (cached)
-        return res.json({ success: true, data: cached, cached: true }) as any;
+      if (cached) return res.json({ success: true, data: cached, cached: true }) as any;
 
       const data = await lahiriClient.getPushkaraNavamsha(birthData);
       await cacheService.set("pushkara-navamsha", cacheKey, data);
@@ -230,9 +214,7 @@ export class PanchangaController {
 
   private validateBirthData(data: BirthData, res: Response): boolean {
     if (!data.birthDate || !data.latitude || !data.longitude) {
-      res
-        .status(400)
-        .json({ success: false, error: "Missing required fields" });
+      res.status(400).json({ success: false, error: "Missing required fields" });
       return false;
     }
     return true;

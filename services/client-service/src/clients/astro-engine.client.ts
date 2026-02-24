@@ -1,9 +1,4 @@
-import axios, {
-  AxiosInstance,
-  AxiosError,
-  InternalAxiosRequestConfig,
-  AxiosResponse,
-} from "axios";
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from "axios";
 import { logger } from "../config";
 import { BaseError } from "../errors/client.errors";
 import { decompressChartData } from "../utils/compression";
@@ -12,13 +7,7 @@ import { decompressChartData } from "../utils/compression";
 // Types & Interfaces
 // =============================================================================
 
-export type Ayanamsa =
-  | "lahiri"
-  | "raman"
-  | "kp"
-  | "yukteswar"
-  | "western"
-  | "universal";
+export type Ayanamsa = "lahiri" | "raman" | "kp" | "yukteswar" | "western" | "universal";
 
 export interface BirthData {
   birthDate: string; // YYYY-MM-DD
@@ -43,22 +32,14 @@ export interface AstroResponse<T = any> {
 // =============================================================================
 
 export class AstroEngineError extends BaseError {
-  constructor(
-    message: string,
-    statusCode: number = 500,
-    code: string = "ASTRO_ENGINE_ERROR",
-  ) {
+  constructor(message: string, statusCode: number = 500, code: string = "ASTRO_ENGINE_ERROR") {
     super(message, statusCode, code);
   }
 }
 
 export class AstroEngineUnavailableError extends AstroEngineError {
   constructor() {
-    super(
-      "Astro Engine service is unavailable",
-      503,
-      "ASTRO_ENGINE_UNAVAILABLE",
-    );
+    super("Astro Engine service is unavailable", 503, "ASTRO_ENGINE_UNAVAILABLE");
   }
 }
 
@@ -122,10 +103,7 @@ class AstroEngineClient {
   private setupInterceptors(client: AxiosInstance): void {
     client.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        logger.info(
-          { url: config.url, method: config.method },
-          "Astro Engine request",
-        );
+        logger.info({ url: config.url, method: config.method }, "Astro Engine request");
         return config;
       },
       (error: AxiosError) => Promise.reject(error),
@@ -133,10 +111,7 @@ class AstroEngineClient {
 
     client.interceptors.response.use(
       (response: AxiosResponse) => {
-        logger.info(
-          { url: response.config.url, status: response.status },
-          "Astro Engine response",
-        );
+        logger.info({ url: response.config.url, status: response.status }, "Astro Engine response");
 
         // Defensive decompression: If the engine sends data that matches our compression marker
         // (e.g. if we are proxying another instance or engine is GZIP aware), decompress it.
@@ -155,9 +130,7 @@ class AstroEngineClient {
         const shouldRetry =
           (config && !config._retryCount) ||
           ((config._retryCount || 0) < 3 &&
-            ((error.response &&
-              (error.response.status === 503 ||
-                error.response.status === 504)) ||
+            ((error.response && (error.response.status === 503 || error.response.status === 504)) ||
               error.code === "ECONNREFUSED" ||
               error.code === "ETIMEDOUT"));
 
@@ -200,10 +173,7 @@ class AstroEngineClient {
   /**
    * Get Natal Chart (D1) for any Ayanamsa system
    */
-  async getNatalChart(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
+  async getNatalChart(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
     logger.info({ ayanamsa }, "Generating natal chart via proxy");
     // The proxy now handles system routing internally for the /natal endpoint
     const payload = { ...birthData, ayanamsa: ayanamsa };
@@ -247,22 +217,15 @@ class AstroEngineClient {
     chartType: string,
     ayanamsa: Ayanamsa = "lahiri",
   ): Promise<AstroResponse> {
-    logger.info(
-      { ayanamsa, chartType },
-      "Generating divisional chart via proxy",
-    );
+    logger.info({ ayanamsa, chartType }, "Generating divisional chart via proxy");
     const payload = { ...birthData, ayanamsa: ayanamsa };
-    return (await this.internalClient.post(`/divisional/${chartType}`, payload))
-      .data;
+    return (await this.internalClient.post(`/divisional/${chartType}`, payload)).data;
   }
 
   /**
    * Get Moon Chart for any Ayanamsa system
    */
-  async getMoonChart(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
+  async getMoonChart(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
     const payload = { ...birthData, ayanamsa: ayanamsa };
     return (await this.internalClient.post("/moon-chart", payload)).data;
   }
@@ -270,10 +233,7 @@ class AstroEngineClient {
   /**
    * Get Sun Chart for any Ayanamsa system
    */
-  async getSunChart(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
+  async getSunChart(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
     const payload = { ...birthData, ayanamsa: ayanamsa };
     return (await this.internalClient.post("/sun-chart", payload)).data;
   }
@@ -306,10 +266,7 @@ class AstroEngineClient {
       sookshmaLord?: string;
     } = {},
   ): Promise<AstroResponse> {
-    logger.info(
-      { ayanamsa: birthData.ayanamsa, level },
-      "Generating Vimshottari Dasha",
-    );
+    logger.info({ ayanamsa: birthData.ayanamsa, level }, "Generating Vimshottari Dasha");
     const payload = { ...birthData };
 
     // Use URLSearchParams for clean query string construction
@@ -317,17 +274,11 @@ class AstroEngineClient {
     params.append("level", level);
     if (context.mahaLord) params.append("mahaLord", context.mahaLord);
     if (context.antarLord) params.append("antarLord", context.antarLord);
-    if (context.pratyantarLord)
-      params.append("pratyantarLord", context.pratyantarLord);
-    if (context.sookshmaLord)
-      params.append("sookshmaLord", context.sookshmaLord);
+    if (context.pratyantarLord) params.append("pratyantarLord", context.pratyantarLord);
+    if (context.sookshmaLord) params.append("sookshmaLord", context.sookshmaLord);
 
-    return (
-      await this.internalClient.post(
-        `/dasha/vimshottari?${params.toString()}`,
-        payload,
-      )
-    ).data;
+    return (await this.internalClient.post(`/dasha/vimshottari?${params.toString()}`, payload))
+      .data;
   }
 
   private getRamanDashaEndpoint(level: string): string {
@@ -341,14 +292,10 @@ class AstroEngineClient {
     return mapping[level.toLowerCase()] || "maha-antar";
   }
 
-  async getPranaDasha(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
+  async getPranaDasha(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
     switch (ayanamsa) {
       case "raman":
-        return (await this.apiClient.post("/raman/dasha/prana", birthData))
-          .data;
+        return (await this.apiClient.post("/raman/dasha/prana", birthData)).data;
       case "kp":
         // KP has its own dasha endpoints, but if calling raw prana:
         return (
@@ -378,14 +325,8 @@ class AstroEngineClient {
    * @param dashaType Type of dasha system (tribhagi, tribhagi-40, shodashottari, dwadashottari, etc.)
    * @returns Dasha calculation result
    */
-  async getAlternativeDasha(
-    birthData: BirthData,
-    dashaType: string,
-  ): Promise<AstroResponse> {
-    logger.info(
-      { ayanamsa: birthData.ayanamsa, dashaType },
-      "Generating Alternative Dasha",
-    );
+  async getAlternativeDasha(birthData: BirthData, dashaType: string): Promise<AstroResponse> {
+    logger.info({ ayanamsa: birthData.ayanamsa, dashaType }, "Generating Alternative Dasha");
     const payload = { ...birthData };
 
     // Normalize dasha type name (remove -dasha suffix if present)
@@ -396,12 +337,7 @@ class AstroEngineClient {
     params.append("type", normalizedType);
 
     try {
-      return (
-        await this.internalClient.post(
-          `/dasha/other?${params.toString()}`,
-          payload,
-        )
-      ).data;
+      return (await this.internalClient.post(`/dasha/other?${params.toString()}`, payload)).data;
     } catch (error) {
       logger.error({ dashaType, error }, "Alternative dasha generation failed");
       throw new AstroEngineError(`Failed to generate ${dashaType}`, 500);
@@ -434,26 +370,17 @@ class AstroEngineClient {
     // Add context lords if present
     if (options.mahaLord) params.append("mahaLord", options.mahaLord);
     if (options.antarLord) params.append("antarLord", options.antarLord);
-    if (options.pratyantarLord)
-      params.append("pratyantarLord", options.pratyantarLord);
+    if (options.pratyantarLord) params.append("pratyantarLord", options.pratyantarLord);
 
     const payload = { ...birthData, ayanamsa: ayanamsa, ...options };
-    return (
-      await this.internalClient.post(
-        `/dasha/other?${params.toString()}`,
-        payload,
-      )
-    ).data;
+    return (await this.internalClient.post(`/dasha/other?${params.toString()}`, payload)).data;
   }
 
   /**
    * Normalize dasha type names for Yukteswar engine endpoints
    * Maps frontend/DB names to exact Astro Engine endpoint names
    */
-  private getNormalizedDashaType(
-    dashaType: string,
-    ayanamsa: Ayanamsa,
-  ): string {
+  private getNormalizedDashaType(dashaType: string, ayanamsa: Ayanamsa): string {
     const type = dashaType
       .toLowerCase()
       .replace(/-dasha$/, "")
@@ -517,8 +444,7 @@ class AstroEngineClient {
     }
 
     const payload = { ...birthData, ayanamsa: ayanamsa };
-    return (await this.internalClient.post("/sarva-ashtakavarga", payload))
-      .data;
+    return (await this.internalClient.post("/sarva-ashtakavarga", payload)).data;
   }
 
   async getShodashaVarga(
@@ -547,20 +473,14 @@ class AstroEngineClient {
     return (await this.apiClient.post("/charts/arudha-lagna", birthData)).data;
   }
 
-  async getBhavaLagna(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
+  async getBhavaLagna(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
     if (ayanamsa === "raman") {
       return (await this.apiClient.post("/raman/bhava-lagna", birthData)).data;
     }
     return (await this.apiClient.post("/charts/bhava-lagna", birthData)).data;
   }
 
-  async getHoraLagna(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
+  async getHoraLagna(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
     if (ayanamsa === "raman") {
       return (await this.apiClient.post("/raman/hora-lagna", birthData)).data;
     }
@@ -573,9 +493,7 @@ class AstroEngineClient {
     ayanamsa: Ayanamsa = "lahiri",
   ): Promise<AstroResponse> {
     const payload = { ...birthData, ayanamsa: ayanamsa };
-    const response = (
-      await this.internalClient.post(`/yoga/${yogaType}`, payload)
-    ).data;
+    const response = (await this.internalClient.post(`/yoga/${yogaType}`, payload)).data;
     return this.normalizeAnalysisResponse(response, yogaType);
   }
 
@@ -585,16 +503,11 @@ class AstroEngineClient {
     ayanamsa: Ayanamsa = "lahiri",
   ): Promise<AstroResponse> {
     const payload = { ...birthData, ayanamsa: ayanamsa };
-    const response = (
-      await this.internalClient.post(`/dosha/${doshaType}`, payload)
-    ).data;
+    const response = (await this.internalClient.post(`/dosha/${doshaType}`, payload)).data;
     return this.normalizeAnalysisResponse(response, doshaType);
   }
 
-  private normalizeAnalysisResponse(
-    response: any,
-    _type: string,
-  ): AstroResponse {
+  private normalizeAnalysisResponse(response: any, _type: string): AstroResponse {
     return response;
   }
 
@@ -604,8 +517,7 @@ class AstroEngineClient {
     ayanamsa: Ayanamsa = "lahiri",
   ): Promise<AstroResponse> {
     const payload = { ...birthData, ayanamsa: ayanamsa };
-    return (await this.internalClient.post(`/remedy/${remedyType}`, payload))
-      .data;
+    return (await this.internalClient.post(`/remedy/${remedyType}`, payload)).data;
   }
 
   async getPanchanga(
@@ -617,18 +529,12 @@ class AstroEngineClient {
     return (await this.internalClient.post(`/panchanga/${type}`, payload)).data;
   }
 
-  async getAvakhada(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
+  async getAvakhada(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
     const payload = { ...birthData, ayanamsa: ayanamsa };
     return (await this.apiClient.post("/avakhada_chakra", payload)).data;
   }
 
-  async getShadbala(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
+  async getShadbala(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
     const payload = { ...birthData, ayanamsa: ayanamsa };
     return (await this.internalClient.post("/shadbala", payload)).data;
   }
@@ -638,37 +544,26 @@ class AstroEngineClient {
     ayanamsa: Ayanamsa = "lahiri",
   ): Promise<AstroResponse> {
     if (ayanamsa === "raman") {
-      return (await this.apiClient.post("/raman/sripathi-bhava", birthData))
-        .data;
+      return (await this.apiClient.post("/raman/sripathi-bhava", birthData)).data;
     }
-    return (await this.apiClient.post("/charts/sripathi-bhava", birthData))
-      .data;
+    return (await this.apiClient.post("/charts/sripathi-bhava", birthData)).data;
   }
 
-  async getKpBhava(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
+  async getKpBhava(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
     if (ayanamsa === "raman") {
       return (await this.apiClient.post("/raman/kp-bhava", birthData)).data;
     }
     return (await this.apiClient.post("/charts/kp-bhava", birthData)).data;
   }
 
-  async getEqualBhava(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
+  async getEqualBhava(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
     if (ayanamsa === "raman") {
       return (await this.apiClient.post("/raman/equal-bhava", birthData)).data;
     }
     return (await this.apiClient.post("/charts/equal-bhava", birthData)).data;
   }
 
-  async getEqualChart(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
+  async getEqualChart(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
     return (
       await this.internalClient.post(`/special/equal_chart`, {
         ...birthData,
@@ -697,41 +592,26 @@ class AstroEngineClient {
     return (await this.apiClient.post("/charts/karkamsha-d9", birthData)).data;
   }
 
-  async getMandi(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
+  async getMandi(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
     // Enforce Lahiri only for now as per engine
-    if (ayanamsa !== "lahiri")
-      throw new Error("Mandi is currently only supported for Lahiri");
+    if (ayanamsa !== "lahiri") throw new Error("Mandi is currently only supported for Lahiri");
     const payload = { ...birthData, ayanamsa: ayanamsa };
     return (await this.apiClient.post("/charts/mandi", payload)).data;
   }
 
-  async getGulika(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
-    if (ayanamsa !== "lahiri")
-      throw new Error("Gulika is currently only supported for Lahiri");
+  async getGulika(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
+    if (ayanamsa !== "lahiri") throw new Error("Gulika is currently only supported for Lahiri");
     const payload = { ...birthData, ayanamsa: ayanamsa };
     return (await this.apiClient.post("/charts/gulika", payload)).data;
   }
 
-  async getD40(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
+  async getD40(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
     const payload = { ...birthData, ayanamsa: ayanamsa };
     return (await this.apiClient.post("/charts/divisional/d40", payload)).data;
   }
 
-  async getD150(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
-    if (ayanamsa !== "lahiri")
-      throw new Error("D150 is currently only supported for Lahiri");
+  async getD150(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
+    if (ayanamsa !== "lahiri") throw new Error("D150 is currently only supported for Lahiri");
     const payload = { ...birthData, ayanamsa: ayanamsa };
     return (await this.apiClient.post("/charts/divisional/d150", payload)).data;
   }
@@ -757,13 +637,11 @@ class AstroEngineClient {
   }
 
   async getKpHouseSignifications(birthData: BirthData): Promise<AstroResponse> {
-    return (await this.apiClient.post("/kp/house-significations", birthData))
-      .data;
+    return (await this.apiClient.post("/kp/house-significations", birthData)).data;
   }
 
   async getKpPlanetSignificators(birthData: BirthData): Promise<AstroResponse> {
-    return (await this.apiClient.post("/kp/planet-significators", birthData))
-      .data;
+    return (await this.apiClient.post("/kp/planet-significators", birthData)).data;
   }
 
   async getKpInterlinks(birthData: BirthData): Promise<AstroResponse> {
@@ -771,8 +649,7 @@ class AstroEngineClient {
   }
 
   async getKpAdvancedInterlinks(birthData: BirthData): Promise<AstroResponse> {
-    return (await this.apiClient.post("/kp/interlinks-advanced", birthData))
-      .data;
+    return (await this.apiClient.post("/kp/interlinks-advanced", birthData)).data;
   }
 
   async getKpInterlinksSL(birthData: BirthData): Promise<AstroResponse> {
@@ -797,19 +674,11 @@ class AstroEngineClient {
   // COMPATIBILITY ENDPOINTS
   // =========================================================================
 
-  async getSynastry(
-    person1: BirthData,
-    person2: BirthData,
-  ): Promise<AstroResponse> {
-    return (
-      await this.apiClient.post("/compatibility/synastry", { person1, person2 })
-    ).data;
+  async getSynastry(person1: BirthData, person2: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/compatibility/synastry", { person1, person2 })).data;
   }
 
-  async getComposite(
-    person1: BirthData,
-    person2: BirthData,
-  ): Promise<AstroResponse> {
+  async getComposite(person1: BirthData, person2: BirthData): Promise<AstroResponse> {
     return (
       await this.apiClient.post("/compatibility/composite", {
         person1,
@@ -818,11 +687,8 @@ class AstroEngineClient {
     ).data;
   }
 
-  async getProgressed(
-    birthData: BirthData & { progressedDate: string },
-  ): Promise<AstroResponse> {
-    return (await this.apiClient.post("/compatibility/progressed", birthData))
-      .data;
+  async getProgressed(birthData: BirthData & { progressedDate: string }): Promise<AstroResponse> {
+    return (await this.apiClient.post("/compatibility/progressed", birthData)).data;
   }
 
   async getChaldeanNumerology(data: any): Promise<AstroResponse> {
@@ -855,11 +721,7 @@ class AstroEngineClient {
         if (chartType === "D1" || chartType.toLowerCase() === "natal") {
           results[chartType] = await this.getNatalChart(birthData, ayanamsa);
         } else {
-          results[chartType] = await this.getDivisionalChart(
-            birthData,
-            chartType,
-            ayanamsa,
-          );
+          results[chartType] = await this.getDivisionalChart(birthData, chartType, ayanamsa);
         }
       } catch (error) {
         logger.error({ chartType, error }, "Failed to generate chart");
@@ -885,8 +747,7 @@ class AstroEngineClient {
     ayanamsa: Ayanamsa = "lahiri",
   ): Promise<AstroResponse> {
     const payload = { ...birthData, ayanamsa };
-    return (await this.internalClient.post("/shodasha-varga-summary", payload))
-      .data;
+    return (await this.internalClient.post("/shodasha-varga-summary", payload)).data;
   }
 
   async isHealthy(): Promise<boolean> {
@@ -895,9 +756,7 @@ class AstroEngineClient {
         baseURL: this.baseURL,
         timeout: 5000,
       });
-      return (
-        response.data?.status === "ok" || response.data?.status === "healthy"
-      );
+      return response.data?.status === "ok" || response.data?.status === "healthy";
     } catch {
       return false;
     }
@@ -924,25 +783,17 @@ class AstroEngineClient {
     ayanamsa: Ayanamsa = "lahiri",
   ): Promise<AstroResponse> {
     if (ayanamsa !== "lahiri") {
-      throw new Error(
-        "Tatkalik Maitri Chakra is currently only available for Lahiri system",
-      );
+      throw new Error("Tatkalik Maitri Chakra is currently only available for Lahiri system");
     }
-    return (await this.apiClient.post("/tatkalik_maitri_chakra", birthData))
-      .data;
+    return (await this.apiClient.post("/tatkalik_maitri_chakra", birthData)).data;
   }
 
   /**
    * Gati Kalagna Chart (GL Chart) - Specialist chart for Lahiri and Yukteswar systems
    */
-  async getGlChart(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
+  async getGlChart(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
     if (ayanamsa !== "lahiri" && ayanamsa !== "yukteswar") {
-      throw new Error(
-        "GL Chart is currently only available for Lahiri and Yukteswar systems",
-      );
+      throw new Error("GL Chart is currently only available for Lahiri and Yukteswar systems");
     }
     const payload = { ...birthData, ayanamsa: ayanamsa };
     return (await this.apiClient.post("/gl_chart", payload)).data;
@@ -956,9 +807,7 @@ class AstroEngineClient {
     ayanamsa: Ayanamsa = "lahiri",
   ): Promise<AstroResponse> {
     if (ayanamsa !== "lahiri") {
-      throw new Error(
-        "Karaka Strength is currently only available for Lahiri system",
-      );
+      throw new Error("Karaka Strength is currently only available for Lahiri system");
     }
     return (await this.apiClient.post("/karaka_strength", birthData)).data;
   }
@@ -968,9 +817,7 @@ class AstroEngineClient {
    */
   async getYukteswarTransitChart(birthData: BirthData): Promise<AstroResponse> {
     logger.info({}, "Generating Yukteswar transit chart");
-    return (
-      await this.apiClient.post("/yukteswar/calculate_transit_chart", birthData)
-    ).data;
+    return (await this.apiClient.post("/yukteswar/calculate_transit_chart", birthData)).data;
   }
 
   /**

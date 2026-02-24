@@ -132,9 +132,7 @@ describe("Circuit Breaker", () => {
     it("creates breaker with event handlers", async () => {
       // Reset modules to get fresh opossum mock
       jest.resetModules();
-      const { createCircuitBreaker } = await import(
-        "../middleware/circuit-breaker"
-      );
+      const { createCircuitBreaker } = await import("../middleware/circuit-breaker");
 
       const action = (jest.fn() as any).mockResolvedValue("result");
       const breaker = createCircuitBreaker("test-circuit", action);
@@ -146,10 +144,7 @@ describe("Circuit Breaker", () => {
       expect(breaker.on).toHaveBeenCalledWith("open", expect.any(Function));
       expect(breaker.on).toHaveBeenCalledWith("halfOpen", expect.any(Function));
       expect(breaker.on).toHaveBeenCalledWith("close", expect.any(Function));
-      expect(breaker.on).toHaveBeenCalledWith(
-        "fallback",
-        expect.any(Function),
-      );
+      expect(breaker.on).toHaveBeenCalledWith("fallback", expect.any(Function));
     });
   });
 });

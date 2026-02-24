@@ -23,16 +23,12 @@ async function debugPranaEndpoint() {
   console.log("Testing /dasha/prana endpoint...");
   try {
     // We bypass the wrapper method to control payload exactly
-    const res = await (astroEngineClient as any).internalClient.post(
-      "/dasha/prana",
-      birthData,
-    );
+    const res = await (astroEngineClient as any).internalClient.post("/dasha/prana", birthData);
     const data = res.data;
 
     console.log("Keys:", Object.keys(data));
 
-    const list =
-      data.dasha_list || data.prana_dasha || data.data?.dasha_list || [];
+    const list = data.dasha_list || data.prana_dasha || data.data?.dasha_list || [];
     console.log("List Length:", list.length);
 
     if (list.length > 0) {

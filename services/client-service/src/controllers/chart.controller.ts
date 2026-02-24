@@ -16,12 +16,7 @@ export class ChartController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const chart = await chartService.saveChart(
-        tenantId,
-        id,
-        req.body,
-        metadata,
-      );
+      const chart = await chartService.saveChart(tenantId, id, req.body, metadata);
       res.status(201).json(chart);
     } catch (error) {
       next(error);
@@ -78,8 +73,7 @@ export class ChartController {
     try {
       const { id } = req.params;
       const tenantId = req.user!.tenantId;
-      const { chartType, system, ayanamsa, transitStartDate, transitEndDate } =
-        req.body;
+      const { chartType, system, ayanamsa, transitStartDate, transitEndDate } = req.body;
       const metadata = {
         userId: req.user!.id,
         ipAddress: req.ip,
@@ -122,15 +116,7 @@ export class ChartController {
     try {
       const { id } = req.params;
       const tenantId = req.user!.tenantId;
-      const {
-        level,
-        ayanamsa,
-        save,
-        mahaLord,
-        antarLord,
-        pratyantarLord,
-        sookshmaLord,
-      } = req.body;
+      const { level, ayanamsa, save, mahaLord, antarLord, pratyantarLord, sookshmaLord } = req.body;
       const metadata = {
         userId: req.user!.id,
         ipAddress: req.ip,
@@ -141,12 +127,7 @@ export class ChartController {
 
       let dasha;
       if (level === "deep") {
-        dasha = await chartService.generateDeepDasha(
-          tenantId,
-          id,
-          ayanamsa || "lahiri",
-          metadata,
-        );
+        dasha = await chartService.generateDeepDasha(tenantId, id, ayanamsa || "lahiri", metadata);
       } else if (save) {
         dasha = await chartService.generateAndSaveDasha(
           tenantId,
@@ -177,16 +158,11 @@ export class ChartController {
    * Generate alternative Dasha systems (tribhagi, shodashottari, dwadashottari, etc)
    * System param: tribhagi, shodashottari, dwadashottari, panchottari, shattrimshatsama, chaturshitisama, shastihayani, satabdika, dwisaptati
    */
-  async generateAlternativeDasha(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async generateAlternativeDasha(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id, system } = req.params;
       const tenantId = req.user!.tenantId;
-      const { ayanamsa, save, level, mahaLord, antarLord, pratyantarLord } =
-        req.body;
+      const { ayanamsa, save, level, mahaLord, antarLord, pratyantarLord } = req.body;
       const metadata = {
         userId: req.user!.id,
         ipAddress: req.ip,
@@ -211,8 +187,7 @@ export class ChartController {
         other: "tribhagi", // Default for 'other'
       };
 
-      let dashaType =
-        dashaSystemMap[system.toLowerCase()] || dashaSystemMap["tribhagi"];
+      let dashaType = dashaSystemMap[system.toLowerCase()] || dashaSystemMap["tribhagi"];
 
       // Logic to handle Ashtottari 3rd level which has a distinct endpoint
       if (
@@ -245,11 +220,7 @@ export class ChartController {
    * POST /clients/:id/charts/generate-core
    * Bulk generate core charts (D1, D9) for all systems
    */
-  async generateCoreCharts(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async generateCoreCharts(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const tenantId = req.user!.tenantId;
@@ -259,11 +230,7 @@ export class ChartController {
         userAgent: req.get("user-agent"),
       };
 
-      const charts = await chartService.generateCoreCharts(
-        tenantId,
-        id,
-        metadata,
-      );
+      const charts = await chartService.generateCoreCharts(tenantId, id, metadata);
       res.status(201).json({ success: true, count: charts.length });
     } catch (error) {
       next(error);
@@ -274,11 +241,7 @@ export class ChartController {
    * POST /clients/:id/charts/generate-full
    * Exhaustive generation of all possible diagrams and tables
    */
-  async generateFullVedicProfile(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async generateFullVedicProfile(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const tenantId = req.user!.tenantId;
@@ -288,11 +251,7 @@ export class ChartController {
         userAgent: req.get("user-agent"),
       };
 
-      const result = await chartService.generateFullVedicProfile(
-        tenantId,
-        id,
-        metadata,
-      );
+      const result = await chartService.generateFullVedicProfile(tenantId, id, metadata);
       res.status(201).json(result);
     } catch (error) {
       next(error);
@@ -303,11 +262,7 @@ export class ChartController {
    * POST /charts/generate-all
    * Generate core charts for all clients in the tenant
    */
-  async generateAllClientsCharts(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async generateAllClientsCharts(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const tenantId = req.user!.tenantId;
       const metadata = {
@@ -317,9 +272,7 @@ export class ChartController {
       };
 
       await chartService.generateBulkCharts(tenantId, metadata);
-      res
-        .status(200)
-        .json({ success: true, message: "Bulk generation started" });
+      res.status(200).json({ success: true, message: "Bulk generation started" });
     } catch (error) {
       next(error);
     }
@@ -329,11 +282,7 @@ export class ChartController {
    * POST /clients/:id/ashtakavarga
    * Generate Ashtakavarga (Lahiri/Raman only)
    */
-  async generateAshtakavarga(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async generateAshtakavarga(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const tenantId = req.user!.tenantId;
@@ -372,11 +321,7 @@ export class ChartController {
   /**
    * POST /clients/:id/sudarshan-chakra
    */
-  async generateSudarshanChakra(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async generateSudarshanChakra(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const tenantId = req.user!.tenantId;
@@ -397,11 +342,7 @@ export class ChartController {
           metadata,
         );
       } else {
-        chakra = await chartService.generateSudarshanChakra(
-          tenantId,
-          id,
-          ayanamsa || "lahiri",
-        );
+        chakra = await chartService.generateSudarshanChakra(tenantId, id, ayanamsa || "lahiri");
       }
 
       res.json(chakra);
@@ -417,11 +358,7 @@ export class ChartController {
   /**
    * POST /clients/:id/raman/natal
    */
-  async generateRamanNatal(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async generateRamanNatal(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const tenantId = req.user!.tenantId;
@@ -430,13 +367,7 @@ export class ChartController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const chart = await chartService.generateAndSaveChart(
-        tenantId,
-        id,
-        "D1",
-        "raman",
-        metadata,
-      );
+      const chart = await chartService.generateAndSaveChart(tenantId, id, "D1", "raman", metadata);
 
       // Wrap in standard RamanApiResponse structure expected by frontend
       res.status(201).json({
@@ -454,11 +385,7 @@ export class ChartController {
   /**
    * POST /clients/:id/raman/transit
    */
-  async generateRamanTransit(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async generateRamanTransit(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const tenantId = req.user!.tenantId;
@@ -490,11 +417,7 @@ export class ChartController {
   /**
    * POST /clients/:id/raman/divisional/:type
    */
-  async generateRamanDivisional(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async generateRamanDivisional(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id, type } = req.params;
       const tenantId = req.user!.tenantId;
@@ -503,13 +426,7 @@ export class ChartController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const chart = await chartService.generateAndSaveChart(
-        tenantId,
-        id,
-        type,
-        "raman",
-        metadata,
-      );
+      const chart = await chartService.generateAndSaveChart(tenantId, id, type, "raman", metadata);
 
       res.status(201).json({
         success: true,
@@ -526,11 +443,7 @@ export class ChartController {
   /**
    * POST /clients/:id/raman/dasha/:level
    */
-  async generateRamanDasha(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async generateRamanDasha(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id, level } = req.params;
       const tenantId = req.user!.tenantId;
@@ -564,11 +477,7 @@ export class ChartController {
    * POST /clients/:id/raman/:type
    * Generic handler for special Raman charts (arudha-lagna, etc)
    */
-  async generateRamanChart(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async generateRamanChart(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id, type } = req.params;
       const tenantId = req.user!.tenantId;
@@ -577,13 +486,7 @@ export class ChartController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const chart = await chartService.generateAndSaveChart(
-        tenantId,
-        id,
-        type,
-        "raman",
-        metadata,
-      );
+      const chart = await chartService.generateAndSaveChart(tenantId, id, type, "raman", metadata);
 
       res.status(201).json({
         success: true,
@@ -615,11 +518,7 @@ export class ChartController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const result = await chartService.getKpPlanetsCusps(
-        tenantId,
-        id,
-        metadata,
-      );
+      const result = await chartService.getKpPlanetsCusps(tenantId, id, metadata);
       res.json({
         success: true,
         data: result.chartData,
@@ -635,11 +534,7 @@ export class ChartController {
    * POST /clients/:id/kp/ruling-planets
    * Get current ruling planets for timing analysis
    */
-  async getKpRulingPlanets(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async getKpRulingPlanets(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const tenantId = req.user!.tenantId;
@@ -648,11 +543,7 @@ export class ChartController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const result = await chartService.getKpRulingPlanets(
-        tenantId,
-        id,
-        metadata,
-      );
+      const result = await chartService.getKpRulingPlanets(tenantId, id, metadata);
       res.json({
         success: true,
         data: result.chartData,
@@ -677,11 +568,7 @@ export class ChartController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const result = await chartService.getKpBhavaDetails(
-        tenantId,
-        id,
-        metadata,
-      );
+      const result = await chartService.getKpBhavaDetails(tenantId, id, metadata);
       res.json({
         success: true,
         data: result.chartData,
@@ -697,11 +584,7 @@ export class ChartController {
    * POST /clients/:id/kp/significations
    * Get KP significations
    */
-  async getKpSignifications(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async getKpSignifications(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const tenantId = req.user!.tenantId;
@@ -710,11 +593,7 @@ export class ChartController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const result = await chartService.getKpSignifications(
-        tenantId,
-        id,
-        metadata,
-      );
+      const result = await chartService.getKpSignifications(tenantId, id, metadata);
       res.json({
         success: true,
         data: result.chartData,
@@ -730,11 +609,7 @@ export class ChartController {
    * POST /clients/:id/kp/house-significations
    * Get KP House Significations (Table 1)
    */
-  async getKpHouseSignifications(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async getKpHouseSignifications(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const tenantId = req.user!.tenantId;
@@ -743,11 +618,7 @@ export class ChartController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const result = await chartService.getKpHouseSignifications(
-        tenantId,
-        id,
-        metadata,
-      );
+      const result = await chartService.getKpHouseSignifications(tenantId, id, metadata);
       res.json({
         success: true,
         data: result.chartData,
@@ -763,11 +634,7 @@ export class ChartController {
    * POST /clients/:id/kp/planets-significators
    * Get KP Planet Significators (Table 2 - Matrix)
    */
-  async getKpPlanetSignificators(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async getKpPlanetSignificators(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const tenantId = req.user!.tenantId;
@@ -776,11 +643,7 @@ export class ChartController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const result = await chartService.getKpPlanetSignificators(
-        tenantId,
-        id,
-        metadata,
-      );
+      const result = await chartService.getKpPlanetSignificators(tenantId, id, metadata);
       res.json({
         success: true,
         data: result.chartData,
@@ -821,11 +684,7 @@ export class ChartController {
    * POST /clients/:id/kp/interlinks-advanced
    * Get KP Advanced Interlinks (SSL)
    */
-  async getKpAdvancedInterlinks(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async getKpAdvancedInterlinks(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const tenantId = req.user!.tenantId;
@@ -834,11 +693,7 @@ export class ChartController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const result = await chartService.getKpAdvancedInterlinks(
-        tenantId,
-        id,
-        metadata,
-      );
+      const result = await chartService.getKpAdvancedInterlinks(tenantId, id, metadata);
       res.json({
         success: true,
         data: result.chartData,
@@ -854,11 +709,7 @@ export class ChartController {
    * POST /clients/:id/kp/nakshatra-nadi
    * Get KP Nakshatra Nadi
    */
-  async getKpNakshatraNadi(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async getKpNakshatraNadi(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const tenantId = req.user!.tenantId;
@@ -867,11 +718,7 @@ export class ChartController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const result = await chartService.getKpNakshatraNadi(
-        tenantId,
-        id,
-        metadata,
-      );
+      const result = await chartService.getKpNakshatraNadi(tenantId, id, metadata);
       res.json({
         success: true,
         data: result.chartData,
@@ -927,13 +774,7 @@ export class ChartController {
       // Checking chart.service.ts getKpHorary:
       // returns { success: true, data: result, calculatedAt: ..., system: 'kp' }
       // So this one is actually already formatted correctly!
-      const result = await chartService.getKpHorary(
-        tenantId,
-        id,
-        horaryNumber,
-        question,
-        metadata,
-      );
+      const result = await chartService.getKpHorary(tenantId, id, horaryNumber, question, metadata);
       res.json(result);
     } catch (error) {
       next(error);
@@ -1037,11 +878,7 @@ export class ChartController {
       const system = req.query.system as string | undefined;
       const tenantId = req.user!.tenantId;
 
-      const doshas = await yogaDoshaService.getStoredDoshas(
-        tenantId,
-        id,
-        system,
-      );
+      const doshas = await yogaDoshaService.getStoredDoshas(tenantId, id, system);
       res.json({ success: true, data: doshas, total: doshas.length });
     } catch (error) {
       next(error);
@@ -1052,21 +889,13 @@ export class ChartController {
    * GET /clients/:id/yoga-dosha-summary
    * Full dashboard of all yogas/doshas with presence status
    */
-  async getYogaDoshaSummary(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async getYogaDoshaSummary(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const system = req.query.system as string | undefined;
       const tenantId = req.user!.tenantId;
 
-      const dashboard = await yogaDoshaService.getDashboard(
-        tenantId,
-        id,
-        system,
-      );
+      const dashboard = await yogaDoshaService.getDashboard(tenantId, id, system);
       res.json({ success: true, data: dashboard });
     } catch (error) {
       next(error);

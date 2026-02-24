@@ -50,9 +50,7 @@ async function verifyProxy() {
         });
         results[system].stored.push(ep.name);
       } catch (error: any) {
-        const errorMsg = error.response?.status
-          ? `Status ${error.response.status}`
-          : error.message;
+        const errorMsg = error.response?.status ? `Status ${error.response.status}` : error.message;
         results[system].missed.push({
           name: ep.name,
           error: errorMsg,
@@ -72,9 +70,7 @@ async function verifyProxy() {
 
     if (data.missed.length > 0) {
       console.log("  Missed:");
-      data.missed.forEach((item) =>
-        console.log(`   - ${item.name} [${item.error}]`),
-      );
+      data.missed.forEach((item) => console.log(`   - ${item.name} [${item.error}]`));
     }
   }
 }

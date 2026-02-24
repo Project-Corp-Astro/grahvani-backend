@@ -9,22 +9,13 @@ const router = Router();
 // =============================================================================
 
 // Synastry (chart comparison)
-router.post(
-  "/synastry",
-  compatibilityController.getSynastry.bind(compatibilityController),
-);
+router.post("/synastry", compatibilityController.getSynastry.bind(compatibilityController));
 
 // Composite (midpoint chart)
-router.post(
-  "/composite",
-  compatibilityController.getComposite.bind(compatibilityController),
-);
+router.post("/composite", compatibilityController.getComposite.bind(compatibilityController));
 
 // Progressed (secondary progressions)
-router.post(
-  "/progressed",
-  compatibilityController.getProgressed.bind(compatibilityController),
-);
+router.post("/progressed", compatibilityController.getProgressed.bind(compatibilityController));
 
 // Western-specific endpoints
 router.post(

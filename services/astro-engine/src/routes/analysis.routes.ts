@@ -7,15 +7,9 @@ const router = Router();
 router.post("/yoga/:type", analysisController.getYoga.bind(analysisController));
 
 // Doshas
-router.post(
-  "/dosha/:type",
-  analysisController.getDosha.bind(analysisController),
-);
+router.post("/dosha/:type", analysisController.getDosha.bind(analysisController));
 
 // Remedies
-router.post(
-  "/remedies/:type",
-  analysisController.getRemedies.bind(analysisController),
-);
+router.post("/remedies/:type", analysisController.getRemedies.bind(analysisController));
 
 export default router;

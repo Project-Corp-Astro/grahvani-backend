@@ -46,11 +46,7 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === "production"
-        ? [
-            "https://grahvani.in",
-            "https://www.grahvani.in",
-            "https://admin.grahvani.in",
-          ]
+        ? ["https://grahvani.in", "https://www.grahvani.in", "https://admin.grahvani.in"]
         : "*",
     credentials: true,
   }),

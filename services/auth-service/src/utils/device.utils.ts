@@ -7,8 +7,7 @@ export class DeviceUtils {
     if (/tablet/i.test(userAgent)) return "tablet";
     if (/iPad/i.test(userAgent)) return "tablet";
     if (/iPhone/i.test(userAgent)) return "mobile";
-    if (/Android/i.test(userAgent) && !/mobile/i.test(userAgent))
-      return "tablet";
+    if (/Android/i.test(userAgent) && !/mobile/i.test(userAgent)) return "tablet";
     return "desktop";
   }
 

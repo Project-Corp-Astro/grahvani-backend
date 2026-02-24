@@ -61,10 +61,7 @@ export class EventPublisher {
 
     try {
       await this.redis.publish(this.channel, JSON.stringify(event));
-      logger.debug(
-        { type, eventId: event.metadata.eventId },
-        "Event published",
-      );
+      logger.debug({ type, eventId: event.metadata.eventId }, "Event published");
     } catch (error) {
       // Don't fail the main operation if event publishing fails
       logger.error({ error, type }, "Failed to publish event");

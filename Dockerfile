@@ -19,6 +19,7 @@ COPY services/auth-service/package.json ./services/auth-service/
 COPY services/user-service/package.json ./services/user-service/
 COPY services/client-service/package.json ./services/client-service/
 COPY services/astro-engine/package.json ./services/astro-engine/
+COPY services/media-service/package.json ./services/media-service/
 
 # Install all workspace dependencies (including dev for build step)
 RUN npm ci --ignore-scripts
@@ -70,6 +71,7 @@ COPY services/auth-service/package.json ./services/auth-service/
 COPY services/user-service/package.json ./services/user-service/
 COPY services/client-service/package.json ./services/client-service/
 COPY services/astro-engine/package.json ./services/astro-engine/
+COPY services/media-service/package.json ./services/media-service/
 
 RUN npm ci --omit=dev --ignore-scripts
 

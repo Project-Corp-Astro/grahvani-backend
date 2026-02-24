@@ -28,10 +28,7 @@ export class AshtakavargaController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type: "bhinna", ayanamsa };
-      const cached = await cacheService.get<any>(
-        `ashtakavarga:bhinna:${ayanamsa}`,
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>(`ashtakavarga:bhinna:${ayanamsa}`, cacheKey);
 
       if (cached) {
         res.json({
@@ -71,10 +68,7 @@ export class AshtakavargaController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type: "sarva", ayanamsa };
-      const cached = await cacheService.get<any>(
-        `ashtakavarga:sarva:${ayanamsa}`,
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>(`ashtakavarga:sarva:${ayanamsa}`, cacheKey);
 
       if (cached) {
         res.json({
@@ -157,15 +151,8 @@ export class AshtakavargaController {
   }
 
   private validateBirthData(data: BirthData, res: Response): boolean {
-    if (
-      !data.birthDate ||
-      !data.birthTime ||
-      !data.latitude ||
-      !data.longitude
-    ) {
-      res
-        .status(400)
-        .json({ success: false, error: "Missing required fields" });
+    if (!data.birthDate || !data.birthTime || !data.latitude || !data.longitude) {
+      res.status(400).json({ success: false, error: "Missing required fields" });
       return false;
     }
     return true;

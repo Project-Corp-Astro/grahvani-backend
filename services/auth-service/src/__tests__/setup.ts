@@ -91,14 +91,12 @@ beforeEach(() => {
   (RealTokenService.prototype as any).invalidateAllUserTokens = jest
     .fn()
     .mockResolvedValue(undefined) as any;
-  (RealTokenService.prototype as any).generateTokenPair = jest
-    .fn()
-    .mockResolvedValue({
-      accessToken: "access-123",
-      refreshToken: "refresh-123",
-      accessTokenExp: new Date(),
-      refreshTokenExp: new Date(),
-    }) as any;
+  (RealTokenService.prototype as any).generateTokenPair = jest.fn().mockResolvedValue({
+    accessToken: "access-123",
+    refreshToken: "refresh-123",
+    accessTokenExp: new Date(),
+    refreshTokenExp: new Date(),
+  }) as any;
   (RealTokenService.prototype as any).blacklistToken = jest
     .fn()
     .mockResolvedValue(undefined) as any;

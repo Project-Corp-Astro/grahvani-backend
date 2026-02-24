@@ -62,11 +62,7 @@ export class GeocodeService {
         longitude: result.geometry.lng,
         timezone: annotations.timezone?.name || "Asia/Kolkata",
         placeName: result.formatted,
-        city:
-          components.city ||
-          components.town ||
-          components.village ||
-          components.county,
+        city: components.city || components.town || components.village || components.county,
         state: components.state,
         country: components.country,
         countryCode: components.country_code?.toUpperCase(),
@@ -81,10 +77,7 @@ export class GeocodeService {
    * Get location suggestions for autocomplete
    * Helps astrologers quickly find accurate birth places
    */
-  async getLocationSuggestions(
-    query: string,
-    limit: number = 5,
-  ): Promise<LocationSuggestion[]> {
+  async getLocationSuggestions(query: string, limit: number = 5): Promise<LocationSuggestion[]> {
     logger.info({ query }, "Getting location suggestions");
 
     if (!GEOCODING_API_KEY || query.length < 2) {

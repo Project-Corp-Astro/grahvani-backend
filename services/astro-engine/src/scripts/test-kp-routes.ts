@@ -31,15 +31,10 @@ async function testKP() {
       console.log(`\nTesting ${ep}...`);
       const res = await axios.post(`${ASTRO_URL}${ep}`, BIRTH_DATA);
       console.log(`✅ Success (200) for ${ep}`);
-      console.log(
-        `   Data Sample: ${JSON.stringify(res.data).substring(0, 100)}...`,
-      );
+      console.log(`   Data Sample: ${JSON.stringify(res.data).substring(0, 100)}...`);
     } catch (error: any) {
-      console.error(
-        `❌ Failed for ${ep}: ${error.response?.status || error.message}`,
-      );
-      if (error.response?.data)
-        console.log("   Error Data:", error.response.data);
+      console.error(`❌ Failed for ${ep}: ${error.response?.status || error.message}`);
+      if (error.response?.data) console.log("   Error Data:", error.response.data);
     }
   }
 }

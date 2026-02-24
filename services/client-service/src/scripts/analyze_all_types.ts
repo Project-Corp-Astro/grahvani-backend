@@ -21,18 +21,13 @@ const SAMPLE_BIRTH_DATA = {
 };
 
 async function analyze() {
-  console.log(
-    "| Category | Type | Presence Key | Sample Value | Top Level Keys |",
-  );
+  console.log("| Category | Type | Presence Key | Sample Value | Top Level Keys |");
   console.log("|---|---|---|---|---|");
 
   // Analyze Yogas
   for (const type of YOGAS) {
     try {
-      const response = await astroEngineClient.getYogaAnalysis(
-        SAMPLE_BIRTH_DATA,
-        type,
-      );
+      const response = await astroEngineClient.getYogaAnalysis(SAMPLE_BIRTH_DATA, type);
       const data = response.data;
       const analysis = analyzeJson(data);
       console.log(
@@ -46,10 +41,7 @@ async function analyze() {
   // Analyze Doshas
   for (const type of DOSHAS) {
     try {
-      const response = await astroEngineClient.getDoshaAnalysis(
-        SAMPLE_BIRTH_DATA,
-        type,
-      );
+      const response = await astroEngineClient.getDoshaAnalysis(SAMPLE_BIRTH_DATA, type);
       const data = response.data;
       const analysis = analyzeJson(data);
       console.log(
@@ -95,10 +87,7 @@ function analyzeJson(data: any): {
     }
     // Also check dynamic keys like "{type}_present"
     const dynamicKey = Object.keys(data).find(
-      (dk) =>
-        dk.endsWith("_present") ||
-        dk.startsWith("has_") ||
-        dk.endsWith("_active"),
+      (dk) => dk.endsWith("_present") || dk.startsWith("has_") || dk.endsWith("_active"),
     );
     if (dynamicKey) {
       return { presenceKey: dynamicKey, value: data[dynamicKey], keys };

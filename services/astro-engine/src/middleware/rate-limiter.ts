@@ -39,9 +39,7 @@ export const apiRateLimiter = rateLimit({
   },
   skip: (req: Request) => {
     // Skip rate limiting for health checks
-    return (
-      req.path === "/health" || req.path === "/ready" || req.path === "/live"
-    );
+    return req.path === "/health" || req.path === "/ready" || req.path === "/live";
   },
 });
 
@@ -84,8 +82,7 @@ export const strictRateLimiter = rateLimit({
   max: 30, // 30 requests per minute
   message: {
     success: false,
-    error:
-      "Complex calculation rate limit exceeded. Please wait before requesting more charts.",
+    error: "Complex calculation rate limit exceeded. Please wait before requesting more charts.",
   },
   standardHeaders: true,
   legacyHeaders: false,

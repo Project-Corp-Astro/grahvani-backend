@@ -26,10 +26,7 @@ declare module "opossum" {
   }
 
   class CircuitBreaker<T = any> {
-    constructor(
-      action: (...args: any[]) => Promise<T>,
-      options?: CircuitBreakerOptions,
-    );
+    constructor(action: (...args: any[]) => Promise<T>, options?: CircuitBreakerOptions);
 
     fire(...args: any[]): Promise<T>;
 

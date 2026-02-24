@@ -1,10 +1,5 @@
 import { BaseAstroClient } from "./base.client";
-import {
-  BirthData,
-  DailyTransitData,
-  NumerologyData,
-  SynastryData,
-} from "../types";
+import { BirthData, DailyTransitData, NumerologyData, SynastryData } from "../types";
 import { LAHIRI_ENDPOINTS, DIVISIONAL_CHART_MAP } from "../constants";
 
 // =============================================================================
@@ -195,8 +190,7 @@ export class LahiriClient extends BaseAstroClient {
       sookshma: LAHIRI_ENDPOINTS.SOOKSHMA_DASHA,
       prana: LAHIRI_ENDPOINTS.PRANA_DASHA,
     };
-    const endpoint =
-      lahiriLevelMap[level.toLowerCase()] || lahiriLevelMap["mahadasha"];
+    const endpoint = lahiriLevelMap[level.toLowerCase()] || lahiriLevelMap["mahadasha"];
     return this.post(endpoint, data, context);
   }
 
@@ -218,10 +212,7 @@ export class LahiriClient extends BaseAstroClient {
       person1: this.buildPayload(data.person1),
       person2: this.buildPayload(data.person2),
     };
-    const response = await this.client.post(
-      LAHIRI_ENDPOINTS.COMPOSITE,
-      payload,
-    );
+    const response = await this.client.post(LAHIRI_ENDPOINTS.COMPOSITE, payload);
     return response.data;
   }
 
@@ -244,9 +235,7 @@ export class LahiriClient extends BaseAstroClient {
       person1: this.buildPayload(data.person1),
       person2: this.buildPayload(data.person2),
     };
-    return this.client
-      .post(LAHIRI_ENDPOINTS.GUNA_MILAN, payload)
-      .then((res) => res.data);
+    return this.client.post(LAHIRI_ENDPOINTS.GUNA_MILAN, payload).then((res) => res.data);
   }
 
   // =========================================================================

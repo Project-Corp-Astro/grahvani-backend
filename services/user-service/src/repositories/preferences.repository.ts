@@ -9,10 +9,7 @@ export class PreferencesRepository {
   /**
    * Get all preferences for a user
    */
-  async findByUserId(
-    userId: string,
-    category?: string,
-  ): Promise<UserPreference[]> {
+  async findByUserId(userId: string, category?: string): Promise<UserPreference[]> {
     return getPrismaClient().userPreference.findMany({
       where: {
         userId,
@@ -25,11 +22,7 @@ export class PreferencesRepository {
   /**
    * Get a specific preference
    */
-  async findOne(
-    userId: string,
-    category: string,
-    key: string,
-  ): Promise<UserPreference | null> {
+  async findOne(userId: string, category: string, key: string): Promise<UserPreference | null> {
     return getPrismaClient().userPreference.findFirst({
       where: { userId, category, key },
     });

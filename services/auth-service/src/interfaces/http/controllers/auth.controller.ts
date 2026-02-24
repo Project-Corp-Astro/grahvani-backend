@@ -23,11 +23,9 @@ const passwordService = new PasswordService();
 function getRequestMetadata(req: Request) {
   const userAgent = req.headers["user-agent"] || "unknown";
   const deviceType =
-    (req.headers["x-device-type"] as string) ||
-    DeviceUtils.detectDeviceType(userAgent);
+    (req.headers["x-device-type"] as string) || DeviceUtils.detectDeviceType(userAgent);
   const deviceName =
-    (req.headers["x-device-name"] as string) ||
-    DeviceUtils.generateDeviceName(userAgent);
+    (req.headers["x-device-name"] as string) || DeviceUtils.generateDeviceName(userAgent);
 
   return {
     ipAddress: req.ip || req.socket.remoteAddress || "unknown",
@@ -112,28 +110,18 @@ export class AuthController {
       const allDevices = req.body.allDevices === true;
 
       if (!user?.sub || !user?.sessionId) {
-        return res
-          .status(401)
-          .json(formatError("UNAUTHORIZED", "Not authenticated"));
+        return res.status(401).json(formatError("UNAUTHORIZED", "Not authenticated"));
       }
 
       const metadata = getRequestMetadata(req);
       const authHeader = req.headers.authorization;
       const token = authHeader?.substring(7);
 
-      await authService.logout(
-        user.sub,
-        user.sessionId,
-        metadata,
-        token,
-        allDevices,
-      );
+      await authService.logout(user.sub, user.sessionId, metadata, token, allDevices);
 
       res.status(200).json({
         success: true,
-        message: allDevices
-          ? "Logged out from all devices"
-          : "Logged out successfully",
+        message: allDevices ? "Logged out from all devices" : "Logged out successfully",
       });
     } catch (error) {
       next(error);
@@ -150,9 +138,7 @@ export class AuthController {
         return res.status(400).json(formatValidationError(parseResult.error));
       }
 
-      const result = await authService.refreshToken(
-        parseResult.data.refreshToken,
-      );
+      const result = await authService.refreshToken(parseResult.data.refreshToken);
 
       res.status(200).json(result);
     } catch (error) {
@@ -168,9 +154,7 @@ export class AuthController {
       const user = (req as any).user;
 
       if (!user?.sub) {
-        return res
-          .status(401)
-          .json(formatError("UNAUTHORIZED", "Not authenticated"));
+        return res.status(401).json(formatError("UNAUTHORIZED", "Not authenticated"));
       }
 
       const userData = await authService.getCurrentUser(user.sub);
@@ -189,15 +173,10 @@ export class AuthController {
       const user = (req as any).user;
 
       if (!user?.sub) {
-        return res
-          .status(401)
-          .json(formatError("UNAUTHORIZED", "Not authenticated"));
+        return res.status(401).json(formatError("UNAUTHORIZED", "Not authenticated"));
       }
 
-      const result = await authService.getUserSessions(
-        user.sub,
-        user.sessionId,
-      );
+      const result = await authService.getUserSessions(user.sub, user.sessionId);
 
       res.status(200).json(result);
     } catch (error) {
@@ -214,9 +193,7 @@ export class AuthController {
       const { id: sessionId } = req.params;
 
       if (!user?.sub) {
-        return res
-          .status(401)
-          .json(formatError("UNAUTHORIZED", "Not authenticated"));
+        return res.status(401).json(formatError("UNAUTHORIZED", "Not authenticated"));
       }
 
       const metadata = getRequestMetadata(req);
@@ -242,16 +219,14 @@ export class AuthController {
 
       res.status(200).json({
         success: true,
-        message:
-          "If an account exists with this email, a password reset link has been sent",
+        message: "If an account exists with this email, a password reset link has been sent",
       });
     } catch (error) {
       logger.error({ error }, "Forgot password error");
       // Always return success to prevent email enumeration
       res.status(200).json({
         success: true,
-        message:
-          "If an account exists with this email, a password reset link has been sent",
+        message: "If an account exists with this email, a password reset link has been sent",
       });
     }
   }
@@ -271,8 +246,7 @@ export class AuthController {
 
       res.status(200).json({
         success: true,
-        message:
-          "Password reset successfully. Please login with your new password.",
+        message: "Password reset successfully. Please login with your new password.",
       });
     } catch (error: any) {
       res.status(400).json(formatError("PASSWORD_RESET_FAILED", error.message));
@@ -287,9 +261,7 @@ export class AuthController {
       const user = (req as any).user;
 
       if (!user?.sub || !user?.sessionId) {
-        return res
-          .status(401)
-          .json(formatError("UNAUTHORIZED", "Not authenticated"));
+        return res.status(401).json(formatError("UNAUTHORIZED", "Not authenticated"));
       }
 
       const parseResult = ChangePasswordSchema.safeParse(req.body);
@@ -298,22 +270,14 @@ export class AuthController {
       }
 
       const metadata = getRequestMetadata(req);
-      await passwordService.changePassword(
-        user.sub,
-        parseResult.data,
-        user.sessionId,
-        metadata,
-      );
+      await passwordService.changePassword(user.sub, parseResult.data, user.sessionId, metadata);
 
       res.status(200).json({
         success: true,
-        message:
-          "Password changed successfully. Other sessions have been logged out.",
+        message: "Password changed successfully. Other sessions have been logged out.",
       });
     } catch (error: any) {
-      res
-        .status(400)
-        .json(formatError("PASSWORD_CHANGE_FAILED", error.message));
+      res.status(400).json(formatError("PASSWORD_CHANGE_FAILED", error.message));
     }
   }
 
@@ -327,12 +291,7 @@ export class AuthController {
       if (!accessToken) {
         return res
           .status(400)
-          .json(
-            formatError(
-              "VALIDATION_ERROR",
-              "Supabase access token is required",
-            ),
-          );
+          .json(formatError("VALIDATION_ERROR", "Supabase access token is required"));
       }
 
       const metadata = getRequestMetadata(req);
@@ -353,17 +312,13 @@ export class AuthController {
       const { accessToken } = req.body;
 
       if (!user?.sub) {
-        return res
-          .status(401)
-          .json(formatError("UNAUTHORIZED", "Not authenticated"));
+        return res.status(401).json(formatError("UNAUTHORIZED", "Not authenticated"));
       }
 
       if (!accessToken) {
         return res
           .status(400)
-          .json(
-            formatError("VALIDATION_ERROR", "OAuth access token is required"),
-          );
+          .json(formatError("VALIDATION_ERROR", "OAuth access token is required"));
       }
 
       await authService.linkOAuth(user.sub, accessToken);
@@ -386,9 +341,7 @@ export class AuthController {
       const { provider } = req.params;
 
       if (!user?.sub) {
-        return res
-          .status(401)
-          .json(formatError("UNAUTHORIZED", "Not authenticated"));
+        return res.status(401).json(formatError("UNAUTHORIZED", "Not authenticated"));
       }
 
       await authService.unlinkOAuth(user.sub, provider);
@@ -410,9 +363,7 @@ export class AuthController {
       const { token } = req.body;
 
       if (!token) {
-        return res
-          .status(400)
-          .json(formatError("VALIDATION_ERROR", "Token is required"));
+        return res.status(400).json(formatError("VALIDATION_ERROR", "Token is required"));
       }
 
       await authService.verifyEmail(token);
@@ -434,17 +385,14 @@ export class AuthController {
       const { email } = req.body;
 
       if (!email) {
-        return res
-          .status(400)
-          .json(formatError("VALIDATION_ERROR", "Email is required"));
+        return res.status(400).json(formatError("VALIDATION_ERROR", "Email is required"));
       }
 
       await authService.resendVerification(email);
 
       res.status(200).json({
         success: true,
-        message:
-          "If an account exists with this email, a verification link has been sent",
+        message: "If an account exists with this email, a verification link has been sent",
       });
     } catch (error) {
       next(error);
@@ -461,24 +409,16 @@ export class AuthController {
       if (!token) {
         return res
           .status(400)
-          .json(
-            formatError("VALIDATION_ERROR", "Activation token is required"),
-          );
+          .json(formatError("VALIDATION_ERROR", "Activation token is required"));
       }
 
       if (!password || password.length < 8) {
         return res
           .status(400)
-          .json(
-            formatError(
-              "VALIDATION_ERROR",
-              "Password must be at least 8 characters",
-            ),
-          );
+          .json(formatError("VALIDATION_ERROR", "Password must be at least 8 characters"));
       }
 
-      const { ProvisioningService } =
-        await import("../../../services/provision.service");
+      const { ProvisioningService } = await import("../../../services/provision.service");
       const provisioningService = new ProvisioningService();
 
       const result = await provisioningService.activate({ token, password });

@@ -2,23 +2,14 @@
 import { preferencesRepository } from "../repositories/preferences.repository";
 import { eventPublisher } from "../events";
 import { logger } from "../config/logger";
-import {
-  PreferencesResponse,
-  PreferenceUpdateResponse,
-} from "../dtos/preferences.dto";
+import { PreferencesResponse, PreferenceUpdateResponse } from "../dtos/preferences.dto";
 
 export class PreferencesService {
   /**
    * Get all preferences for a user, optionally filtered by category
    */
-  async getPreferences(
-    userId: string,
-    category?: string,
-  ): Promise<PreferencesResponse> {
-    const preferences = await preferencesRepository.findByUserId(
-      userId,
-      category,
-    );
+  async getPreferences(userId: string, category?: string): Promise<PreferencesResponse> {
+    const preferences = await preferencesRepository.findByUserId(userId, category);
 
     // Transform flat list to nested object
     const result: PreferencesResponse = {};
@@ -67,9 +58,7 @@ export class PreferencesService {
     await preferencesRepository.bulkUpsert(userId, preferences);
 
     // Publish event
-    const changedFields = preferences.map(
-      (p) => `preferences.${p.category}.${p.key}`,
-    );
+    const changedFields = preferences.map((p) => `preferences.${p.category}.${p.key}`);
     await eventPublisher.publish("user.updated", {
       userId,
       changedFields,
@@ -85,11 +74,7 @@ export class PreferencesService {
   /**
    * Delete a preference
    */
-  async deletePreference(
-    userId: string,
-    category: string,
-    key: string,
-  ): Promise<void> {
+  async deletePreference(userId: string, category: string, key: string): Promise<void> {
     await preferencesRepository.delete(userId, category, key);
     logger.info({ userId, category, key }, "Preference deleted");
   }

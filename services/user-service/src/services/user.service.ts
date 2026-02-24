@@ -22,10 +22,7 @@ export class UserService {
   /**
    * Get paginated list of users (admin only)
    */
-  async getUsers(
-    tenantId: string,
-    query: GetUsersQuery,
-  ): Promise<UserListResponse> {
+  async getUsers(tenantId: string, query: GetUsersQuery): Promise<UserListResponse> {
     const { page, limit, search, status, role, sortBy, sortOrder } = query;
     const skip = (page - 1) * limit;
 
@@ -93,10 +90,7 @@ export class UserService {
   /**
    * Get current authenticated user (for /me endpoint)
    */
-  async getCurrentUser(
-    tenantId: string,
-    userId: string,
-  ): Promise<UserProfileResponse> {
+  async getCurrentUser(tenantId: string, userId: string): Promise<UserProfileResponse> {
     const user = await userRepository.findById(tenantId, userId);
     if (!user) {
       throw new UserNotFoundError();
@@ -134,10 +128,7 @@ export class UserService {
       updateData.name = data.name;
       changedFields.push("name");
     }
-    if (
-      data.displayName !== undefined &&
-      data.displayName !== user.displayName
-    ) {
+    if (data.displayName !== undefined && data.displayName !== user.displayName) {
       updateData.displayName = data.displayName;
       changedFields.push("displayName");
     }
@@ -182,11 +173,7 @@ export class UserService {
     }
 
     // Update user
-    const updatedUser = await userRepository.update(
-      tenantId,
-      userId,
-      updateData,
-    );
+    const updatedUser = await userRepository.update(tenantId, userId, updateData);
 
     // Log activity
     await userRepository.createActivityLog({
@@ -212,11 +199,7 @@ export class UserService {
   /**
    * Soft delete user account
    */
-  async deleteAccount(
-    tenantId: string,
-    userId: string,
-    metadata: RequestMetadata,
-  ): Promise<void> {
+  async deleteAccount(tenantId: string, userId: string, metadata: RequestMetadata): Promise<void> {
     const user = await userRepository.findById(tenantId, userId);
     if (!user) {
       throw new UserNotFoundError();

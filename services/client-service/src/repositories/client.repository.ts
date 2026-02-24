@@ -81,9 +81,7 @@ export class ClientRepository {
         createdBy: options?.createdBy || undefined,
         gender: (options?.gender as any) || undefined,
         maritalStatus: (options?.maritalStatus as any) || undefined,
-        city: options?.city
-          ? { contains: options.city, mode: "insensitive" }
-          : undefined,
+        city: options?.city ? { contains: options.city, mode: "insensitive" } : undefined,
         tags: options?.tags ? { array_contains: options.tags } : undefined,
         OR: options?.searchTerm
           ? [
@@ -146,10 +144,7 @@ export class ClientRepository {
   /**
    * Check if client exists
    */
-  async findUnique(
-    tenantId: string,
-    criteria: { email?: string; phonePrimary?: string },
-  ) {
+  async findUnique(tenantId: string, criteria: { email?: string; phonePrimary?: string }) {
     if (!criteria.email && !criteria.phonePrimary) return null;
 
     return this.prisma.client.findFirst({
@@ -212,11 +207,7 @@ export class ClientRepository {
   /**
    * Soft delete client
    */
-  async softDelete(
-    tenantId: string,
-    id: string,
-    extraData: any = {},
-  ): Promise<Client> {
+  async softDelete(tenantId: string, id: string, extraData: any = {}): Promise<Client> {
     return this.prisma.client.update({
       where: { id, tenantId },
       data: {

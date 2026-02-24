@@ -18,9 +18,7 @@ export class YogaDoshaService {
   ) {
     // Unwrap engine response wrapper {data: actualData, cached: bool}
     const storedData =
-      analysisData?.data &&
-      typeof analysisData.data === "object" &&
-      "cached" in analysisData
+      analysisData?.data && typeof analysisData.data === "object" && "cached" in analysisData
         ? analysisData.data
         : analysisData;
 

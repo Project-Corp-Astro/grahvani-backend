@@ -7,11 +7,7 @@ export class GeocodeController {
    * GET /geocode/suggest?q=...
    * Location autocomplete for birth place entry
    */
-  async getLocationSuggestions(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async getLocationSuggestions(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const query = req.query.q as string;
       const limit = parseInt(req.query.limit as string) || 5;
@@ -20,10 +16,7 @@ export class GeocodeController {
         return res.json({ suggestions: [] });
       }
 
-      const suggestions = await geocodeService.getLocationSuggestions(
-        query,
-        limit,
-      );
+      const suggestions = await geocodeService.getLocationSuggestions(query, limit);
       res.json({ suggestions });
     } catch (error) {
       next(error);

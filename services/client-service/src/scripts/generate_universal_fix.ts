@@ -23,17 +23,11 @@ async function fixUniversalCharts() {
   };
 
   for (const client of clients) {
-    console.log(
-      `🔍 Auditing universal charts for: ${client.fullName} (${client.id})`,
-    );
+    console.log(`🔍 Auditing universal charts for: ${client.fullName} (${client.id})`);
 
     try {
       // ensureFullVedicProfile now explicitly audits 'universal' pseudo-system
-      await chartService.ensureFullVedicProfile(
-        client.tenantId,
-        client.id,
-        metadata,
-      );
+      await chartService.ensureFullVedicProfile(client.tenantId, client.id, metadata);
       console.log(`✅ Audit/Generation complete for ${client.fullName}`);
     } catch (err: any) {
       console.error(`❌ Failed for ${client.fullName}:`, err.message);

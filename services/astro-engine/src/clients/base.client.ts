@@ -1,9 +1,4 @@
-import axios, {
-  AxiosInstance,
-  AxiosError,
-  InternalAxiosRequestConfig,
-  AxiosResponse,
-} from "axios";
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from "axios";
 import { config } from "../config";
 import { logger } from "../config/logger";
 import { BirthData } from "../types";
@@ -94,10 +89,7 @@ export class BaseAstroClient {
    * Build standard payload for external API
    * Converts camelCase to snake_case for Python API
    */
-  protected buildPayload(
-    data: BirthData,
-    extras: Record<string, any> = {},
-  ): Record<string, any> {
+  protected buildPayload(data: BirthData, extras: Record<string, any> = {}): Record<string, any> {
     return {
       user_name: data.userName || "grahvani_client",
       birth_date: data.birthDate,
@@ -114,9 +106,7 @@ export class BaseAstroClient {
    * Build payload specifically for Universal Panchanga routes (using Python's new field names)
    * Python engine expects: date, time, latitude, longitude, timezone
    */
-  protected buildUniversalPanchangaPayload(
-    data: BirthData,
-  ): Record<string, any> {
+  protected buildUniversalPanchangaPayload(data: BirthData): Record<string, any> {
     return {
       date: data.birthDate,
       time: data.birthTime,
@@ -142,10 +132,7 @@ export class BaseAstroClient {
   /**
    * Execute POST request using Universal Panchanga payload format
    */
-  protected async postUniversal<T = any>(
-    endpoint: string,
-    data: BirthData,
-  ): Promise<T> {
+  protected async postUniversal<T = any>(endpoint: string, data: BirthData): Promise<T> {
     const payload = this.buildUniversalPanchangaPayload(data);
     const response = await this.client.post<T>(endpoint, payload);
     return response.data;

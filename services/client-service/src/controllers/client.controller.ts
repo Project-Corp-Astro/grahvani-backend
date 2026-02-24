@@ -16,23 +16,11 @@ function transformClient(client: any): any {
 
   // Fix birthTime - extract HH:mm:ss from Date object using UTC to preserve face value
   if (transformed.birthTime instanceof Date) {
-    const hours = transformed.birthTime
-      .getUTCHours()
-      .toString()
-      .padStart(2, "0");
-    const minutes = transformed.birthTime
-      .getUTCMinutes()
-      .toString()
-      .padStart(2, "0");
-    const seconds = transformed.birthTime
-      .getUTCSeconds()
-      .toString()
-      .padStart(2, "0");
+    const hours = transformed.birthTime.getUTCHours().toString().padStart(2, "0");
+    const minutes = transformed.birthTime.getUTCMinutes().toString().padStart(2, "0");
+    const seconds = transformed.birthTime.getUTCSeconds().toString().padStart(2, "0");
     transformed.birthTime = `${hours}:${minutes}:${seconds}`;
-  } else if (
-    typeof transformed.birthTime === "string" &&
-    transformed.birthTime.includes("T")
-  ) {
+  } else if (typeof transformed.birthTime === "string" && transformed.birthTime.includes("T")) {
     // If it's already an ISO string, extract just the time part from UTC
     const dt = new Date(transformed.birthTime);
     const hours = dt.getUTCHours().toString().padStart(2, "0");
@@ -87,12 +75,10 @@ export class ClientController {
       };
       // Auto-heal missing charts in background (Fire-and-Forget)
       // This ensures all Ayanamsas are available without user waiting
-      chartService
-        .ensureFullVedicProfile(tenantId, id, metadata)
-        .catch((err) => {
-          // Log but don't crash request
-          logger.error({ err, clientId: id }, "AutoHeal failed");
-        });
+      chartService.ensureFullVedicProfile(tenantId, id, metadata).catch((err) => {
+        // Log but don't crash request
+        logger.error({ err, clientId: id }, "AutoHeal failed");
+      });
 
       const client = await clientService.getClient(tenantId, id, metadata);
       res.json(transformClient(client));
@@ -112,11 +98,7 @@ export class ClientController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const client = await clientService.createClient(
-        tenantId,
-        req.body,
-        metadata,
-      );
+      const client = await clientService.createClient(tenantId, req.body, metadata);
       res.status(201).json(transformClient(client));
     } catch (error) {
       next(error);
@@ -135,12 +117,7 @@ export class ClientController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const client = await clientService.updateClient(
-        tenantId,
-        id,
-        req.body,
-        metadata,
-      );
+      const client = await clientService.updateClient(tenantId, id, req.body, metadata);
       res.json(transformClient(client));
     } catch (error) {
       next(error);

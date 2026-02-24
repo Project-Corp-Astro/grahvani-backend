@@ -1,11 +1,5 @@
 import { Request, Response } from "express";
-import {
-  lahiriClient,
-  ramanClient,
-  yukteswarClient,
-  BirthData,
-  AyanamsaType,
-} from "../../clients";
+import { lahiriClient, ramanClient, yukteswarClient, BirthData, AyanamsaType } from "../../clients";
 import { cacheService } from "../../services/cache.service";
 import { logger } from "../../config/logger";
 
@@ -74,16 +68,10 @@ export class NatalController {
   }
 
   private validateBirthData(data: BirthData, res: Response): boolean {
-    if (
-      !data.birthDate ||
-      !data.birthTime ||
-      !data.latitude ||
-      !data.longitude
-    ) {
+    if (!data.birthDate || !data.birthTime || !data.latitude || !data.longitude) {
       res.status(400).json({
         success: false,
-        error:
-          "Missing required fields: birthDate, birthTime, latitude, longitude",
+        error: "Missing required fields: birthDate, birthTime, latitude, longitude",
       });
       return false;
     }

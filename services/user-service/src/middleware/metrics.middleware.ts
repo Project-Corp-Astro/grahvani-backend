@@ -31,11 +31,7 @@ export const dbQueryDuration = new client.Histogram({
   registers: [register],
 });
 
-export function metricsMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): void {
+export function metricsMiddleware(req: Request, res: Response, next: NextFunction): void {
   const start = Date.now();
 
   res.on("finish", () => {
@@ -54,10 +50,7 @@ export function metricsMiddleware(
   next();
 }
 
-export async function metricsHandler(
-  _req: Request,
-  res: Response,
-): Promise<void> {
+export async function metricsHandler(_req: Request, res: Response): Promise<void> {
   try {
     res.set("Content-Type", register.contentType);
     res.end(await register.metrics());

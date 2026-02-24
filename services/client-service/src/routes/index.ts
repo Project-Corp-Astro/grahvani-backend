@@ -14,10 +14,6 @@ router.get(
   authMiddleware,
   geocodeController.getLocationSuggestions.bind(geocodeController),
 );
-router.post(
-  "/geocode",
-  authMiddleware,
-  geocodeController.geocodePlace.bind(geocodeController),
-);
+router.post("/geocode", authMiddleware, geocodeController.geocodePlace.bind(geocodeController));
 
 export default router;

@@ -20,10 +20,7 @@ async function debugSkipLevel() {
   // We mock the service logic here.
 
   console.log("Fetching Root...");
-  const res = await astroEngineClient.getVimshottariDasha(
-    birthData,
-    "mahadasha",
-  );
+  const res = await astroEngineClient.getVimshottariDasha(birthData, "mahadasha");
   const rootList = res.data.dasha_list || res.data.mahadashas || [];
 
   const contextLords = ["Saturn", "Saturn", "Mercury"]; // Maha, Antar, Prat. Target children of Mercury.
@@ -43,8 +40,7 @@ async function debugSkipLevel() {
       processedIndex = i + 1;
       console.log(`Found ${lord}.`);
 
-      const nextLevel =
-        node.sublevels || node.antardashas || node.pratyantardashas;
+      const nextLevel = node.sublevels || node.antardashas || node.pratyantardashas;
       if (nextLevel && nextLevel.length > 0) {
         currentNodes = nextLevel;
         console.log(`  Has children. Descending.`);
@@ -58,18 +54,14 @@ async function debugSkipLevel() {
     }
   }
 
-  console.log(
-    `Processed Depth: ${processedIndex}. Context Length: ${contextLords.length}`,
-  );
+  console.log(`Processed Depth: ${processedIndex}. Context Length: ${contextLords.length}`);
 
   // 2. Recursive Calculation
   console.log("--- Recursive Calculation ---");
   if (lastParent && processedIndex < contextLords.length) {
     for (let i = processedIndex; i < contextLords.length; i++) {
       const targetLord = contextLords[i];
-      console.log(
-        `Calculating children of ${lastParent.planet} to find ${targetLord}...`,
-      );
+      console.log(`Calculating children of ${lastParent.planet} to find ${targetLord}...`);
 
       const children = calculateSubPeriods(
         lastParent.planet,
@@ -81,9 +73,7 @@ async function debugSkipLevel() {
       const nextNode = children.find((c) => c.planet === targetLord);
       if (nextNode) {
         console.log(`  Found ${targetLord} in calculated list.`);
-        console.log(
-          `  Start: ${nextNode.start_date}, End: ${nextNode.end_date}`,
-        );
+        console.log(`  Start: ${nextNode.start_date}, End: ${nextNode.end_date}`);
         lastParent = nextNode;
       } else {
         console.log(`  Target lord not found!`);

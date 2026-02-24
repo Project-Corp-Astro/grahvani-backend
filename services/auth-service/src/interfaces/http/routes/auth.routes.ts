@@ -27,18 +27,9 @@ router.post(
   validateBody(RegisterSchema),
   authController.register,
 );
-router.post(
-  "/login",
-  loginRateLimiter,
-  validateBody(LoginSchema),
-  authController.login,
-);
+router.post("/login", loginRateLimiter, validateBody(LoginSchema), authController.login);
 router.post("/social-login", authController.socialLogin);
-router.post(
-  "/refresh",
-  validateBody(RefreshTokenSchema),
-  authController.refreshToken,
-);
+router.post("/refresh", validateBody(RefreshTokenSchema), authController.refreshToken);
 router.post(
   "/forgot-password",
   passwordResetRateLimiter,
@@ -63,10 +54,6 @@ router.get("/sessions", authController.getSessions);
 router.post("/sessions/:id/revoke", authController.revokeSession);
 router.post("/oauth/link", authController.linkOAuth);
 router.delete("/oauth/:provider", authController.unlinkOAuth);
-router.post(
-  "/change-password",
-  validateBody(ChangePasswordSchema),
-  authController.changePassword,
-);
+router.post("/change-password", validateBody(ChangePasswordSchema), authController.changePassword);
 
 export { router as authRoutes };

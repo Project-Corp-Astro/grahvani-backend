@@ -19,23 +19,16 @@ jest.mock("../clients", () => ({
 }));
 
 jest.mock("../middleware", () => ({
-  apiRateLimiter: (
-    _req: express.Request,
-    _res: express.Response,
-    next: express.NextFunction,
-  ) => next(),
+  apiRateLimiter: (_req: express.Request, _res: express.Response, next: express.NextFunction) =>
+    next(),
   internalRateLimiter: (
     _req: express.Request,
     _res: express.Response,
     next: express.NextFunction,
   ) => next(),
-  metricsMiddleware: (
-    _req: express.Request,
-    _res: express.Response,
-    next: express.NextFunction,
-  ) => next(),
-  metricsHandler: (_req: express.Request, res: express.Response) =>
-    res.send(""),
+  metricsMiddleware: (_req: express.Request, _res: express.Response, next: express.NextFunction) =>
+    next(),
+  metricsHandler: (_req: express.Request, res: express.Response) => res.send(""),
 }));
 
 jest.mock("../routes", () => {

@@ -7,7 +7,10 @@ import { config } from "./config";
 import { authRoutes } from "./interfaces/http/routes/auth.routes";
 import { internalRoutes } from "./interfaces/http/routes/internal.routes";
 import { errorMiddleware } from "./interfaces/http/middlewares/error.middleware";
-import { metricsMiddleware, metricsHandler } from "./interfaces/http/middlewares/metrics.middleware";
+import {
+  metricsMiddleware,
+  metricsHandler,
+} from "./interfaces/http/middlewares/metrics.middleware";
 import { requestIdMiddleware } from "@grahvani/contracts";
 import { logger } from "./config/logger";
 import { getDatabaseManager } from "./config/db-pro";
@@ -32,11 +35,7 @@ app.use(
   cors({
     origin:
       config.env === "production"
-        ? [
-            "https://grahvani.in",
-            "https://www.grahvani.in",
-            "https://admin.grahvani.in",
-          ]
+        ? ["https://grahvani.in", "https://www.grahvani.in", "https://admin.grahvani.in"]
         : "*",
     credentials: true,
   }),

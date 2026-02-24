@@ -16,30 +16,24 @@ async function inspectPrana() {
   try {
     console.log("\n--- Fetching Sookshma (via getVimshottariDasha) ---");
     // Need context: Maha=Venus, Antar=Moon, Pratyantar=Mars
-    const sookshma = await astroEngineClient.getVimshottariDasha(
-      birthData,
-      "sookshma",
-      { mahaLord: "Venus", antarLord: "Moon", pratyantarLord: "Mars" },
-    );
+    const sookshma = await astroEngineClient.getVimshottariDasha(birthData, "sookshma", {
+      mahaLord: "Venus",
+      antarLord: "Moon",
+      pratyantarLord: "Mars",
+    });
     console.log("Sookshma Sample:", JSON.stringify(sookshma, null, 2));
   } catch (e) {
     console.log("getVimshottariDasha(sookshma) failed:", e.message);
   }
 
   try {
-    console.log(
-      "\n--- Fetching Prana (via getVimshottariDasha with sookshmaLord) ---",
-    );
-    const prana = await astroEngineClient.getVimshottariDasha(
-      birthData,
-      "prana",
-      {
-        mahaLord: "Venus",
-        antarLord: "Moon",
-        pratyantarLord: "Mars",
-        sookshmaLord: "Rahu",
-      },
-    );
+    console.log("\n--- Fetching Prana (via getVimshottariDasha with sookshmaLord) ---");
+    const prana = await astroEngineClient.getVimshottariDasha(birthData, "prana", {
+      mahaLord: "Venus",
+      antarLord: "Moon",
+      pratyantarLord: "Mars",
+      sookshmaLord: "Rahu",
+    });
     console.log("Prana Sample:", JSON.stringify(prana, null, 2));
   } catch (e) {
     console.log("getVimshottariDasha(prana) failed:", e.message);

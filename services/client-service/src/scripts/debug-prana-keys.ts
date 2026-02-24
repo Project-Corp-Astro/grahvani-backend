@@ -21,11 +21,7 @@ async function debugPrana() {
 
   console.log("Fetching Prana (Level 5)...");
   try {
-    const res = await astroEngineClient.getVimshottariDasha(
-      birthData,
-      "prana",
-      context,
-    );
+    const res = await astroEngineClient.getVimshottariDasha(birthData, "prana", context);
     const data = res.data || res;
 
     console.log("Keys:", Object.keys(data));
@@ -41,10 +37,7 @@ async function debugPrana() {
       console.log("Item 0 End:", list[0].end_date);
 
       // Check if matches Venus Maha dates (1990-2010 approx)
-      if (
-        list[0].start_date?.startsWith("2067") ||
-        list[0].start_date?.includes("1990")
-      ) {
+      if (list[0].start_date?.startsWith("2067") || list[0].start_date?.includes("1990")) {
         // If standard Venus cycle is 20y, starting 1990?
         // Wait, random user.
         console.log("Duration:", list[0].duration_years);

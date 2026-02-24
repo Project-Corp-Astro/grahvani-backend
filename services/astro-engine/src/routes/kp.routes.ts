@@ -26,25 +26,16 @@ router.post(
 );
 router.post(
   "/house-significations",
-  kpPlanetsCuspsController.getKpHouseSignifications.bind(
-    kpPlanetsCuspsController,
-  ),
+  kpPlanetsCuspsController.getKpHouseSignifications.bind(kpPlanetsCuspsController),
 );
 router.post(
   "/planet-significators",
-  kpPlanetsCuspsController.getKpPlanetSignificators.bind(
-    kpPlanetsCuspsController,
-  ),
+  kpPlanetsCuspsController.getKpPlanetSignificators.bind(kpPlanetsCuspsController),
 );
-router.post(
-  "/interlinks",
-  kpPlanetsCuspsController.getKpInterlinks.bind(kpPlanetsCuspsController),
-);
+router.post("/interlinks", kpPlanetsCuspsController.getKpInterlinks.bind(kpPlanetsCuspsController));
 router.post(
   "/interlinks-advanced",
-  kpPlanetsCuspsController.getKpAdvancedInterlinks.bind(
-    kpPlanetsCuspsController,
-  ),
+  kpPlanetsCuspsController.getKpAdvancedInterlinks.bind(kpPlanetsCuspsController),
 );
 router.post(
   "/interlinks-sl",
@@ -54,15 +45,10 @@ router.post(
   "/nakshatra-nadi",
   kpPlanetsCuspsController.getKpNakshatraNadi.bind(kpPlanetsCuspsController),
 );
-router.post(
-  "/fortuna",
-  kpPlanetsCuspsController.getKpFortuna.bind(kpPlanetsCuspsController),
-);
+router.post("/fortuna", kpPlanetsCuspsController.getKpFortuna.bind(kpPlanetsCuspsController));
 router.post(
   "/shodasha_varga_signs",
-  kpPlanetsCuspsController.getShodashaVargaSummary.bind(
-    kpPlanetsCuspsController,
-  ),
+  kpPlanetsCuspsController.getShodashaVargaSummary.bind(kpPlanetsCuspsController),
 );
 
 // Horary

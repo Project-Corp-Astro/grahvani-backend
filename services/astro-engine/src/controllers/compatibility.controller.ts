@@ -96,9 +96,7 @@ export class CompatibilityController {
 
       if (!this.validateBirthData(birthData, res)) return;
       if (!progressedDate) {
-        res
-          .status(400)
-          .json({ success: false, error: "Missing progressedDate field" });
+        res.status(400).json({ success: false, error: "Missing progressedDate field" });
         return;
       }
 
@@ -210,9 +208,7 @@ export class CompatibilityController {
 
       if (!this.validateBirthData(birthData, res)) return;
       if (!progressedDate) {
-        res
-          .status(400)
-          .json({ success: false, error: "Missing progressedDate field" });
+        res.status(400).json({ success: false, error: "Missing progressedDate field" });
         return;
       }
 
@@ -221,10 +217,7 @@ export class CompatibilityController {
         progressedDate,
         type: "western-progressed",
       };
-      const cached = await cacheService.get<any>(
-        "western-progressed",
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>("western-progressed", cacheKey);
       if (cached) {
         res.json({
           success: true,
@@ -236,10 +229,7 @@ export class CompatibilityController {
         return;
       }
 
-      const data = await westernClient.getProgressedChart(
-        birthData,
-        progressedDate,
-      );
+      const data = await westernClient.getProgressedChart(birthData, progressedDate);
       await cacheService.set("western-progressed", cacheKey, data);
       res.json({
         success: true,
@@ -259,32 +249,16 @@ export class CompatibilityController {
   // =========================================================================
 
   private validateBirthData(data: BirthData, res: Response): boolean {
-    if (
-      !data?.birthDate ||
-      !data?.birthTime ||
-      !data?.latitude ||
-      !data?.longitude
-    ) {
-      res
-        .status(400)
-        .json({ success: false, error: "Missing required birth data fields" });
+    if (!data?.birthDate || !data?.birthTime || !data?.latitude || !data?.longitude) {
+      res.status(400).json({ success: false, error: "Missing required birth data fields" });
       return false;
     }
     return true;
   }
 
-  private validateSynastryData(
-    person1: BirthData,
-    person2: BirthData,
-    res: Response,
-  ): boolean {
+  private validateSynastryData(person1: BirthData, person2: BirthData, res: Response): boolean {
     if (!this.validateBirthData(person1, res)) return false;
-    if (
-      !person2?.birthDate ||
-      !person2?.birthTime ||
-      !person2?.latitude ||
-      !person2?.longitude
-    ) {
+    if (!person2?.birthDate || !person2?.birthTime || !person2?.latitude || !person2?.longitude) {
       res.status(400).json({
         success: false,
         error: "Missing required birth data for person2",

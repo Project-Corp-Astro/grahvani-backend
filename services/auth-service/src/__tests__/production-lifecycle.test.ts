@@ -116,9 +116,7 @@ describe("Auth Service Production Lifecycle", () => {
     );
 
     const lastPublish = JSON.parse(
-      (redisMock.publish as any).mock.calls.find((call: any) =>
-        call[1].includes("user.login"),
-      )[1],
+      (redisMock.publish as any).mock.calls.find((call: any) => call[1].includes("user.login"))[1],
     );
     expect(lastPublish.data.metadata).toMatchObject({
       ipAddress: metadata.ipAddress,

@@ -20,10 +20,7 @@ async function debugPranaContext() {
 
   console.log("Testing /dasha/prana with nested context...");
   try {
-    const res = await (astroEngineClient as any).internalClient.post(
-      "/dasha/prana",
-      birthData,
-    );
+    const res = await (astroEngineClient as any).internalClient.post("/dasha/prana", birthData);
     const list = res.data.dasha_list || res.data.prana_dasha || res.data || [];
 
     if (Array.isArray(list) && list.length > 0) {

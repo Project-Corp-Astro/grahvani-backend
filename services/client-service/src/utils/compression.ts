@@ -109,9 +109,7 @@ export function decompressChartData(data: any): any {
  * Check if data is compressed
  */
 export function isCompressed(data: any): boolean {
-  return (
-    data && typeof data === "object" && data.__compressed === COMPRESSED_MARKER
-  );
+  return data && typeof data === "object" && data.__compressed === COMPRESSED_MARKER;
 }
 
 /**

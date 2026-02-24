@@ -31,9 +31,7 @@ export class DisplayNameTakenError extends BaseError {
 }
 
 export class ForbiddenError extends BaseError {
-  constructor(
-    message: string = "You do not have permission to perform this action",
-  ) {
+  constructor(message: string = "You do not have permission to perform this action") {
     super(message, 403, "FORBIDDEN");
   }
 }

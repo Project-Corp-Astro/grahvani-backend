@@ -2,8 +2,7 @@ import axios from "axios";
 
 // Using the default URL from config if env var is missing, but hardcoding for the script to be sure.
 // astro-client.ts uses 'https://astroengine.astrocorp.in' as fallback.
-const ASTRO_URL =
-  process.env.ASTRO_ENGINE_EXTERNAL_URL || "https://astroengine.astrocorp.in";
+const ASTRO_URL = process.env.ASTRO_ENGINE_EXTERNAL_URL || "https://astroengine.astrocorp.in";
 
 const payload = {
   user_name: "Verification Script",
@@ -20,26 +19,17 @@ async function verify() {
 
   try {
     console.log("---- Fetching TRIBHAGI (80y) ----");
-    const t1 = await axios.post(
-      `${ASTRO_URL}/lahiri/calculate_tribhagi_dasha`,
-      payload,
-    );
+    const t1 = await axios.post(`${ASTRO_URL}/lahiri/calculate_tribhagi_dasha`, payload);
     console.log("Status:", t1.status);
     const keys1 = Object.keys(t1.data);
     console.log("Keys:", keys1);
     const periods1 = t1.data.tribhagi_dashas_janma || t1.data.mahadashas || [];
     if (periods1.length > 0) {
-      console.log(
-        "First 3 Periods (80y):",
-        JSON.stringify(periods1.slice(0, 3), null, 2),
-      );
+      console.log("First 3 Periods (80y):", JSON.stringify(periods1.slice(0, 3), null, 2));
     }
 
     console.log("\n---- Fetching TRIBHAGI-40 (40y) ----");
-    const t2 = await axios.post(
-      `${ASTRO_URL}/lahiri/tribhagi-dasha-40`,
-      payload,
-    );
+    const t2 = await axios.post(`${ASTRO_URL}/lahiri/tribhagi-dasha-40`, payload);
     console.log("Status:", t2.status);
     const keys2 = Object.keys(t2.data);
     console.log("Keys:", keys2);

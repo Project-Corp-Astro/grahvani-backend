@@ -1,18 +1,8 @@
 import { z } from "zod";
 
 export const GenderSchema = z.enum(["male", "female", "other"]);
-export const MaritalStatusSchema = z.enum([
-  "single",
-  "married",
-  "divorced",
-  "widowed",
-]);
-export const BirthTimeAccuracySchema = z.enum([
-  "exact",
-  "approximate",
-  "rectified",
-  "unknown",
-]);
+export const MaritalStatusSchema = z.enum(["single", "married", "divorced", "widowed"]);
+export const BirthTimeAccuracySchema = z.enum(["exact", "approximate", "rectified", "unknown"]);
 
 export const BirthDetailsSchema = z.object({
   // Accept either YYYY-MM-DD or full ISO-8601 DateTime (2026-01-27T10:33:39.000Z)
@@ -34,8 +24,7 @@ export const BirthDetailsSchema = z.object({
       (val) => {
         // Match HH:MM, HH:MM:SS, or ISO-8601 DateTime
         return (
-          /^\d{2}:\d{2}(:\d{2})?$/.test(val) ||
-          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val)
+          /^\d{2}:\d{2}(:\d{2})?$/.test(val) || /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val)
         );
       },
       { message: "Invalid time format (HH:MM, HH:MM:SS or ISO string)" },

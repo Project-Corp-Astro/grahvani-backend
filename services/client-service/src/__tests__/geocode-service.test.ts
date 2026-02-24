@@ -34,8 +34,7 @@ describe("GeocodeService", () => {
     });
 
     it("returns Varanasi as default fallback for unknown places", async () => {
-      const result =
-        await geocodeService.geocodeBirthPlace("Unknown Village XYZ");
+      const result = await geocodeService.geocodeBirthPlace("Unknown Village XYZ");
 
       expect(result.latitude).toBe(25.3176);
       expect(result.longitude).toBe(82.9739);

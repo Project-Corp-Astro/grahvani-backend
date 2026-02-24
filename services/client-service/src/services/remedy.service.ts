@@ -10,12 +10,7 @@ export class RemedyService {
   /**
    * Prescribe a remedy for a client
    */
-  async prescribeRemedy(
-    tenantId: string,
-    clientId: string,
-    data: any,
-    metadata: RequestMetadata,
-  ) {
+  async prescribeRemedy(tenantId: string, clientId: string, data: any, metadata: RequestMetadata) {
     const client = await clientRepository.findById(tenantId, clientId);
     if (!client) throw new ClientNotFoundError(clientId);
 
@@ -59,10 +54,7 @@ export class RemedyService {
       },
     });
 
-    logger.info(
-      { tenantId, clientId, remedyId: remedy.id },
-      "Remedy prescribed to client",
-    );
+    logger.info({ tenantId, clientId, remedyId: remedy.id }, "Remedy prescribed to client");
 
     return remedy;
   }
@@ -77,12 +69,7 @@ export class RemedyService {
   /**
    * Update remedy status
    */
-  async updateRemedyStatus(
-    tenantId: string,
-    id: string,
-    status: any,
-    metadata: RequestMetadata,
-  ) {
+  async updateRemedyStatus(tenantId: string, id: string, status: any, metadata: RequestMetadata) {
     const updated = await remedyRepository.update(tenantId, id, { status });
 
     // Record activity

@@ -7,16 +7,12 @@ let supabaseClient: SupabaseClient | null = null;
 
 export function getSupabaseClient(): SupabaseClient {
   if (!supabaseClient) {
-    supabaseClient = createClient(
-      config.supabase.url,
-      config.supabase.anonKey,
-      {
-        auth: {
-          autoRefreshToken: true,
-          persistSession: false,
-        },
+    supabaseClient = createClient(config.supabase.url, config.supabase.anonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: false,
       },
-    );
+    });
     logger.info("Supabase client initialized");
   }
   return supabaseClient;
@@ -28,20 +24,14 @@ let supabaseAdmin: SupabaseClient | null = null;
 export function getSupabaseAdmin(): SupabaseClient {
   if (!supabaseAdmin) {
     if (!config.supabase.serviceRoleKey) {
-      throw new Error(
-        "SUPABASE_SERVICE_ROLE_KEY is required for admin operations",
-      );
+      throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for admin operations");
     }
-    supabaseAdmin = createClient(
-      config.supabase.url,
-      config.supabase.serviceRoleKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
+    supabaseAdmin = createClient(config.supabase.url, config.supabase.serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
       },
-    );
+    });
     logger.info("Supabase admin client initialized");
   }
   return supabaseAdmin;

@@ -15,9 +15,7 @@ async function main() {
   });
 
   if (items.length === 0) {
-    console.log(
-      "No items found for default client. Searching for any client with data...",
-    );
+    console.log("No items found for default client. Searching for any client with data...");
     const anyItem = await prisma.clientYogaDosha.findFirst();
     if (anyItem) {
       targetClientId = anyItem.clientId;
@@ -50,9 +48,7 @@ async function main() {
     });
 
     uniqueTypes.forEach((item, type) => {
-      console.log(
-        `\nType: ${type} | Category: ${item.category} | isPresent: ${item.isPresent}`,
-      );
+      console.log(`\nType: ${type} | Category: ${item.category} | isPresent: ${item.isPresent}`);
       const data = item.analysisData;
       if (!data || typeof data !== "object") {
         console.log("Data is null or not object");
@@ -70,9 +66,7 @@ async function main() {
           const currentPath = path ? `${path}.${key}` : key;
           const lowerKey = key.toLowerCase();
           if (
-            (typeof val === "boolean" ||
-              typeof val === "string" ||
-              typeof val === "number") &&
+            (typeof val === "boolean" || typeof val === "string" || typeof val === "number") &&
             (lowerKey.includes("present") ||
               lowerKey.startsWith("has_") ||
               lowerKey.includes("active") ||

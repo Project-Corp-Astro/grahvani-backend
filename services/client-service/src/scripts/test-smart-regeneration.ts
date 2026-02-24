@@ -46,11 +46,7 @@ async function testSmartRegeneration() {
       birthPlace: "Bangalore, India",
     };
 
-    const client = await clientService.createClient(
-      TENANT_ID,
-      clientData,
-      metadata,
-    );
+    const client = await clientService.createClient(TENANT_ID, clientData, metadata);
     log(`✅ Client created: ${client.id}`);
 
     // 2. Create a dummy saved chart manually to simulate "old" data
@@ -76,10 +72,7 @@ async function testSmartRegeneration() {
     );
 
     // Verify chart still exists
-    const chartsAfterPhoneUpdate = await chartRepository.findByClientId(
-      TENANT_ID,
-      client.id,
-    );
+    const chartsAfterPhoneUpdate = await chartRepository.findByClientId(TENANT_ID, client.id);
     const oldChartStillExists = chartsAfterPhoneUpdate.some(
       (c) => c.chartName === "Old Numerology Chart",
     );
@@ -109,10 +102,7 @@ async function testSmartRegeneration() {
     // Verify chart is deleted
     // Wait a small moment to ensure DB transaction committed (even though await updateClient should handle the triggering)
     // But deletion is sync-awaited inside updateClient, so it should be gone.
-    const chartsAfterCriticalUpdate = await chartRepository.findByClientId(
-      TENANT_ID,
-      client.id,
-    );
+    const chartsAfterCriticalUpdate = await chartRepository.findByClientId(TENANT_ID, client.id);
 
     const oldChartSurvives = chartsAfterCriticalUpdate.some(
       (c) => c.chartName === "Old Numerology Chart",

@@ -16,12 +16,10 @@ const app = express();
 const PORT = process.env.GATEWAY_PORT || 8080;
 
 // Service URLs (Internal Docker Network)
-const AUTH_SERVICE_URL =
-  process.env.AUTH_SERVICE_URL || "http://localhost:3001";
-const USER_SERVICE_URL =
-  process.env.USER_SERVICE_URL || "http://localhost:3002";
-const CLIENT_SERVICE_URL =
-  process.env.CLIENT_SERVICE_URL || "http://localhost:3008";
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || "http://localhost:3001";
+const USER_SERVICE_URL = process.env.USER_SERVICE_URL || "http://localhost:3002";
+const CLIENT_SERVICE_URL = process.env.CLIENT_SERVICE_URL || "http://localhost:3008";
+const MEDIA_SERVICE_URL = process.env.MEDIA_SERVICE_URL || "http://localhost:3007";
 
 // Security & Optimization Middleware
 app.use(helmet());
@@ -29,17 +27,12 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === "production"
-        ? [
-            "https://grahvani.in",
-            "https://www.grahvani.in",
-            "https://admin.grahvani.in",
-          ]
+        ? ["https://grahvani.in", "https://www.grahvani.in", "https://admin.grahvani.in"]
         : "*",
     credentials: true,
   }),
 );
 app.use(compression());
-app.use(express.json({ limit: "10kb" }));
 app.use(metricsMiddleware);
 
 // Request ID — generate or forward
@@ -120,11 +113,31 @@ app.use(
   }),
 );
 
+// 5. Media Service Routes
+app.use(
+  createProxyMiddleware({
+    ...proxyOptions,
+    pathFilter: "/api/v1/media",
+    target: MEDIA_SERVICE_URL,
+  }),
+);
+
 // 404 Handler
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found via Gateway" });
 });
 
 app.listen(PORT, () => {
-  logger.info({ port: PORT, routes: { auth: AUTH_SERVICE_URL, user: USER_SERVICE_URL, client: CLIENT_SERVICE_URL } }, "API Gateway started");
+  logger.info(
+    {
+      port: PORT,
+      routes: {
+        auth: AUTH_SERVICE_URL,
+        user: USER_SERVICE_URL,
+        client: CLIENT_SERVICE_URL,
+        media: MEDIA_SERVICE_URL,
+      },
+    },
+    "API Gateway started",
+  );
 });

@@ -19,24 +19,17 @@ async function inspectData() {
     const sudarshan = await astroEngineClient.getSudarshanChakra(birthData);
     // console.log('Sudarshan Data:', JSON.stringify(sudarshan, null, 2));
 
-    console.log(
-      "\n--- Fetching Ashtakavarga (Bhinna - via getAshtakavarga) ---",
-    );
+    console.log("\n--- Fetching Ashtakavarga (Bhinna - via getAshtakavarga) ---");
     try {
       const bhinna = await astroEngineClient.getAshtakavarga(birthData);
       console.log("Bhinna Keys:", Object.keys(bhinna));
-      console.log(
-        "Bhinna Sample (Sun):",
-        JSON.stringify(bhinna.sun || bhinna.Sun || {}, null, 2),
-      );
+      console.log("Bhinna Sample (Sun):", JSON.stringify(bhinna.sun || bhinna.Sun || {}, null, 2));
       console.log("Bhinna Full Dump:", JSON.stringify(bhinna, null, 2));
     } catch (e) {
       console.log("getAshtakavarga failed:", e.message);
     }
 
-    console.log(
-      "\n--- Fetching Ashtakavarga (Sarva - via getSarvaAshtakavarga) ---",
-    );
+    console.log("\n--- Fetching Ashtakavarga (Sarva - via getSarvaAshtakavarga) ---");
     try {
       const sarva = await astroEngineClient.getSarvaAshtakavarga(birthData);
       console.log("Sarva Keys:", Object.keys(sarva));

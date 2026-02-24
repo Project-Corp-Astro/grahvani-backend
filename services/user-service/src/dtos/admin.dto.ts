@@ -6,9 +6,7 @@ export const UpdateUserStatusRequestSchema = z.object({
   reason: z.string().max(500).optional(),
 });
 
-export type UpdateUserStatusRequest = z.infer<
-  typeof UpdateUserStatusRequestSchema
->;
+export type UpdateUserStatusRequest = z.infer<typeof UpdateUserStatusRequestSchema>;
 
 // ============ Update User Role (Admin) ============
 export const UpdateUserRoleRequestSchema = z.object({

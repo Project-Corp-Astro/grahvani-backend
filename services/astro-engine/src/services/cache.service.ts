@@ -29,16 +29,10 @@ class CacheService {
       });
 
       this.redis.connect().catch((err) => {
-        logger.warn(
-          { err },
-          "Redis initial connection failed, continuing without cache",
-        );
+        logger.warn({ err }, "Redis initial connection failed, continuing without cache");
       });
     } catch (error) {
-      logger.warn(
-        { error },
-        "Failed to initialize Redis, continuing without cache",
-      );
+      logger.warn({ error }, "Failed to initialize Redis, continuing without cache");
     }
   }
 

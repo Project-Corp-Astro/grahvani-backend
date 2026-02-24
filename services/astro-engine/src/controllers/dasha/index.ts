@@ -1,4 +1,1 @@
-export {
-  vimshottariController,
-  VimshottariController,
-} from "./vimshottari.controller";
+export { vimshottariController, VimshottariController } from "./vimshottari.controller";

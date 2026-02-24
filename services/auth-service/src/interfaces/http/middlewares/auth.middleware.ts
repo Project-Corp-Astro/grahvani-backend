@@ -5,11 +5,7 @@ import { logger } from "../../../config/logger";
 
 const tokenService = new TokenService();
 
-export async function authMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
+export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
     const authHeader = req.headers.authorization;
 

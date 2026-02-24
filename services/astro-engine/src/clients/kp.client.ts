@@ -68,8 +68,7 @@ export class KpClient extends BaseAstroClient {
     level: string = "mahadasha",
     context: Record<string, string> = {},
   ) {
-    const endpoint =
-      DASHA_LEVEL_MAP[level.toLowerCase()] || DASHA_LEVEL_MAP["mahadasha"];
+    const endpoint = DASHA_LEVEL_MAP[level.toLowerCase()] || DASHA_LEVEL_MAP["mahadasha"];
     return this.post(endpoint, data, context);
   }
 

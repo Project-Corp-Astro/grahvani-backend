@@ -31,10 +31,7 @@ export class EventPublisher {
       await this.redis.publish(this.CHANNEL, JSON.stringify(event));
       logger.debug({ type, clientId: data.clientId }, "Client event published");
     } catch (error) {
-      logger.error(
-        { error, type, clientId: data.clientId },
-        "Failed to publish client event",
-      );
+      logger.error({ error, type, clientId: data.clientId }, "Failed to publish client event");
     }
   }
 }

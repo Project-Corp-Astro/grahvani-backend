@@ -10,12 +10,7 @@ export class HistoryService {
   /**
    * Log a new consultation
    */
-  async addConsultation(
-    tenantId: string,
-    clientId: string,
-    data: any,
-    metadata: RequestMetadata,
-  ) {
+  async addConsultation(tenantId: string, clientId: string, data: any, metadata: RequestMetadata) {
     // 1. Check client
     const client = await clientRepository.findById(tenantId, clientId);
     if (!client) throw new ClientNotFoundError(clientId);
@@ -24,9 +19,7 @@ export class HistoryService {
     const consultation = await historyRepository.create(tenantId, {
       ...data,
       clientId,
-      consultationDate: data.consultationDate
-        ? new Date(data.consultationDate)
-        : new Date(),
+      consultationDate: data.consultationDate ? new Date(data.consultationDate) : new Date(),
       followUpDate: data.followUpDate ? new Date(data.followUpDate) : undefined,
       createdBy: metadata.userId,
     });

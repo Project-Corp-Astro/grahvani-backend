@@ -15,12 +15,7 @@ export class HistoryController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const consultation = await historyService.addConsultation(
-        tenantId,
-        id,
-        req.body,
-        metadata,
-      );
+      const consultation = await historyService.addConsultation(tenantId, id, req.body, metadata);
       res.status(201).json(consultation);
     } catch (error) {
       next(error);

@@ -14,8 +14,7 @@ async function debugPranaQuery() {
   console.log("Testing /dasha/prana with QUERY PARAMS...");
   try {
     // Construct query string manually
-    const qs =
-      "mahaLord=Venus&antarLord=Venus&pratyantarLord=Venus&sookshmaLord=Venus";
+    const qs = "mahaLord=Venus&antarLord=Venus&pratyantarLord=Venus&sookshmaLord=Venus";
     const res = await (astroEngineClient as any).internalClient.post(
       `/dasha/prana?${qs}`,
       birthData,

@@ -61,10 +61,7 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions) {
       try {
         // Dynamic import to avoid hard dependency on crypto
         const crypto = await import("crypto");
-        const tokenHash = crypto
-          .createHash("sha256")
-          .update(token)
-          .digest("hex");
+        const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
         const isBlacklisted = await redis.get(`blacklist:${tokenHash}`);
 
         if (isBlacklisted === "1") {
@@ -83,9 +80,7 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions) {
     try {
       const secret = process.env.JWT_SECRET;
       if (!secret) {
-        throw new Error(
-          "JWT_SECRET environment variable is not set. Server cannot verify tokens.",
-        );
+        throw new Error("JWT_SECRET environment variable is not set. Server cannot verify tokens.");
       }
 
       // Dynamic import to avoid hard dependency on jsonwebtoken
@@ -97,9 +92,7 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions) {
       const tokenVersion = decoded.version || 0;
 
       const currentVersionStr = await redis.get(`token_version:${userId}`);
-      const currentVersion = currentVersionStr
-        ? parseInt(currentVersionStr, 10)
-        : 0;
+      const currentVersion = currentVersionStr ? parseInt(currentVersionStr, 10) : 0;
 
       if (tokenVersion < currentVersion) {
         return res.status(401).json({

@@ -190,10 +190,7 @@ export class RamanController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type: `raman-divisional:${type}` };
-      const cached = await cacheService.get<any>(
-        `raman-divisional:${type}`,
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>(`raman-divisional:${type}`, cacheKey);
       if (cached) {
         res.json({
           success: true,
@@ -236,15 +233,11 @@ export class RamanController {
   }
 
   async getBhavaLagna(req: Request, res: Response): Promise<void> {
-    await this.handleLagnaChart(req, res, "bhava-lagna", (data) =>
-      ramanClient.getBhavaLagna(data),
-    );
+    await this.handleLagnaChart(req, res, "bhava-lagna", (data) => ramanClient.getBhavaLagna(data));
   }
 
   async getHoraLagna(req: Request, res: Response): Promise<void> {
-    await this.handleLagnaChart(req, res, "hora-lagna", (data) =>
-      ramanClient.getHoraLagna(data),
-    );
+    await this.handleLagnaChart(req, res, "hora-lagna", (data) => ramanClient.getHoraLagna(data));
   }
 
   async getSripathiBhava(req: Request, res: Response): Promise<void> {
@@ -255,15 +248,11 @@ export class RamanController {
 
   async getKpBhava(req: Request, res: Response): Promise<void> {
     logger.info({ body: req.body }, "Raman KP Bhava requested");
-    await this.handleLagnaChart(req, res, "kp-bhava", (data) =>
-      ramanClient.getKpBhava(data),
-    );
+    await this.handleLagnaChart(req, res, "kp-bhava", (data) => ramanClient.getKpBhava(data));
   }
 
   async getEqualBhava(req: Request, res: Response): Promise<void> {
-    await this.handleLagnaChart(req, res, "equal-bhava", (data) =>
-      ramanClient.getEqualBhava(data),
-    );
+    await this.handleLagnaChart(req, res, "equal-bhava", (data) => ramanClient.getEqualBhava(data));
   }
 
   async getKarkamshaD1(req: Request, res: Response): Promise<void> {
@@ -289,10 +278,7 @@ export class RamanController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type: `raman-${chartName}` };
-      const cached = await cacheService.get<any>(
-        `raman-${chartName}`,
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>(`raman-${chartName}`, cacheKey);
       if (cached) {
         res.json({
           success: true,
@@ -337,10 +323,7 @@ export class RamanController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type: "raman-bhinna-ashtakavarga" };
-      const cached = await cacheService.get<any>(
-        "raman-bhinna-ashtakavarga",
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>("raman-bhinna-ashtakavarga", cacheKey);
       if (cached) {
         res.json({
           success: true,
@@ -362,10 +345,7 @@ export class RamanController {
         calculatedAt: new Date().toISOString(),
       });
     } catch (error: any) {
-      logger.error(
-        { error: error.message },
-        "Raman Bhinna Ashtakavarga failed",
-      );
+      logger.error({ error: error.message }, "Raman Bhinna Ashtakavarga failed");
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -376,10 +356,7 @@ export class RamanController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type: "raman-sarva-ashtakavarga" };
-      const cached = await cacheService.get<any>(
-        "raman-sarva-ashtakavarga",
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>("raman-sarva-ashtakavarga", cacheKey);
       if (cached) {
         res.json({
           success: true,
@@ -412,10 +389,7 @@ export class RamanController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type: "raman-shodasha-varga" };
-      const cached = await cacheService.get<any>(
-        "raman-shodasha-varga",
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>("raman-shodasha-varga", cacheKey);
       if (cached) {
         res.json({
           success: true,
@@ -447,27 +421,19 @@ export class RamanController {
   // =========================================================================
 
   async getMahaAntarDasha(req: Request, res: Response): Promise<void> {
-    await this.handleDasha(req, res, "maha-antar", (data) =>
-      ramanClient.getMahaAntarDasha(data),
-    );
+    await this.handleDasha(req, res, "maha-antar", (data) => ramanClient.getMahaAntarDasha(data));
   }
 
   async getPratyantarDasha(req: Request, res: Response): Promise<void> {
-    await this.handleDasha(req, res, "pratyantar", (data) =>
-      ramanClient.getPratyantarDasha(data),
-    );
+    await this.handleDasha(req, res, "pratyantar", (data) => ramanClient.getPratyantarDasha(data));
   }
 
   async getSookshmaDasha(req: Request, res: Response): Promise<void> {
-    await this.handleDasha(req, res, "sookshma", (data) =>
-      ramanClient.getSookshmaDasha(data),
-    );
+    await this.handleDasha(req, res, "sookshma", (data) => ramanClient.getSookshmaDasha(data));
   }
 
   async getPranaDasha(req: Request, res: Response): Promise<void> {
-    await this.handleDasha(req, res, "prana", (data) =>
-      ramanClient.getPranaDasha(data),
-    );
+    await this.handleDasha(req, res, "prana", (data) => ramanClient.getPranaDasha(data));
   }
 
   private async handleDasha(
@@ -481,10 +447,7 @@ export class RamanController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type: `raman-dasha:${level}` };
-      const cached = await cacheService.get<any>(
-        `raman-dasha:${level}`,
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>(`raman-dasha:${level}`, cacheKey);
       if (cached) {
         res.json({
           success: true,
@@ -518,16 +481,10 @@ export class RamanController {
   // =========================================================================
 
   private validateBirthData(data: BirthData, res: Response): boolean {
-    if (
-      !data.birthDate ||
-      !data.birthTime ||
-      !data.latitude ||
-      !data.longitude
-    ) {
+    if (!data.birthDate || !data.birthTime || !data.latitude || !data.longitude) {
       res.status(400).json({
         success: false,
-        error:
-          "Missing required fields: birthDate, birthTime, latitude, longitude",
+        error: "Missing required fields: birthDate, birthTime, latitude, longitude",
       });
       return false;
     }
