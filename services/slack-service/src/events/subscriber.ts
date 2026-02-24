@@ -70,9 +70,7 @@ export const eventSubscriber = {
     });
 
     // Send startup notification
-    await postAlert(
-      ":rocket: *Slack Service Started*\nListening to all Grahvani event channels.",
-    );
+    await postAlert(":rocket: *Slack Service Started*\nListening to all Grahvani event channels.");
   },
 
   async stop(): Promise<void> {

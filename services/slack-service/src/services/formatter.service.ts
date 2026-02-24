@@ -188,7 +188,10 @@ function formatBookingCreated(channel: string, event: EventPayload): SlackMessag
     fields: [
       { label: "Booking", value: bookingId },
       { label: "Service", value: serviceType },
-      { label: "Scheduled", value: new Date(scheduledAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) },
+      {
+        label: "Scheduled",
+        value: new Date(scheduledAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+      },
       { label: "Duration", value: `${duration} min` },
     ],
     metadata: event.metadata,
@@ -356,7 +359,8 @@ function formatMediaUploaded(channel: string, event: EventPayload): SlackMessage
     size: number;
   };
 
-  const sizeStr = size > 1048576 ? `${(size / 1048576).toFixed(1)} MB` : `${(size / 1024).toFixed(0)} KB`;
+  const sizeStr =
+    size > 1048576 ? `${(size / 1048576).toFixed(1)} MB` : `${(size / 1024).toFixed(0)} KB`;
 
   return buildMessage(channel, {
     emoji: ":file_folder:",
@@ -404,10 +408,7 @@ function formatGenericEvent(channel: string, event: EventPayload): SlackMessage 
 // EVENT → FORMATTER MAPPING
 // ─────────────────────────────────────────────────────────────────────
 
-const EVENT_FORMATTERS: Record<
-  string,
-  (channel: string, event: EventPayload) => SlackMessage
-> = {
+const EVENT_FORMATTERS: Record<string, (channel: string, event: EventPayload) => SlackMessage> = {
   // Auth
   "user.registered": formatUserRegistered,
   "user.login": formatUserLogin,
