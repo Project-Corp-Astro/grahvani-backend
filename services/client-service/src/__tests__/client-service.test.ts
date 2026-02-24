@@ -1,7 +1,10 @@
 import { jest } from "@jest/globals";
 import { prismaMock } from "./setup";
 import { ClientService, RequestMetadata } from "../services/client.service";
-import { ClientNotFoundError, DuplicateClientError } from "../errors/client.errors";
+import {
+  ClientNotFoundError,
+  DuplicateClientError,
+} from "../errors/client.errors";
 
 // Mock chart service to prevent side effects
 jest.mock("../services/chart.service", () => ({
@@ -57,7 +60,9 @@ const mockClient = {
 beforeEach(() => {
   const { chartService } = require("../services/chart.service");
   chartService.ensureFullVedicProfile = jest.fn();
-  chartService.generateFullVedicProfile = (jest.fn() as any).mockResolvedValue(undefined);
+  chartService.generateFullVedicProfile = (jest.fn() as any).mockResolvedValue(
+    undefined,
+  );
 });
 
 describe("ClientService", () => {
@@ -242,7 +247,11 @@ describe("ClientService", () => {
 
     it("rejects invalid data (missing fullName)", async () => {
       await expect(
-        clientService.createClient(tenantId, { email: "test@test.com" }, metadata),
+        clientService.createClient(
+          tenantId,
+          { email: "test@test.com" },
+          metadata,
+        ),
       ).rejects.toThrow();
     });
   });

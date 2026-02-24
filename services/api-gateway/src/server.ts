@@ -6,7 +6,10 @@ import compression from "compression";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
 import { randomUUID } from "crypto";
 import rateLimit from "express-rate-limit";
-import { metricsMiddleware, metricsHandler } from "./middleware/metrics.middleware";
+import {
+  metricsMiddleware,
+  metricsHandler,
+} from "./middleware/metrics.middleware";
 import { logger } from "./config/logger";
 import dotenv from "dotenv";
 
@@ -32,10 +35,10 @@ app.use(
     origin:
       process.env.NODE_ENV === "production"
         ? [
-          "https://grahvani.in",
-          "https://www.grahvani.in",
-          "https://admin.grahvani.in",
-        ]
+            "https://grahvani.in",
+            "https://www.grahvani.in",
+            "https://admin.grahvani.in",
+          ]
         : "*",
     credentials: true,
   }),
@@ -136,5 +139,16 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
-  logger.info({ port: PORT, routes: { auth: AUTH_SERVICE_URL, user: USER_SERVICE_URL, client: CLIENT_SERVICE_URL, media: MEDIA_SERVICE_URL } }, "API Gateway started");
+  logger.info(
+    {
+      port: PORT,
+      routes: {
+        auth: AUTH_SERVICE_URL,
+        user: USER_SERVICE_URL,
+        client: CLIENT_SERVICE_URL,
+        media: MEDIA_SERVICE_URL,
+      },
+    },
+    "API Gateway started",
+  );
 });

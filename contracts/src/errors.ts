@@ -25,7 +25,9 @@ export interface ErrorResponse {
     requestId: string;
     timestamp: string;
     path?: string;
-    details?: Array<{ field: string; message: string }> | Record<string, string>;
+    details?:
+      | Array<{ field: string; message: string }>
+      | Record<string, string>;
   };
 }
 

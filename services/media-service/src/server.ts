@@ -16,21 +16,21 @@ const PORT = process.env.PORT || 3007;
 
 // Start the HTTP server
 app.listen(PORT, async () => {
-    logger.info({ port: PORT }, "Media Service started");
+  logger.info({ port: PORT }, "Media Service started");
 
-    // Start event subscriber for cleanup events
-    try {
-        await eventSubscriber.start();
-        logger.info("Event subscriber started");
-    } catch (error) {
-        logger.error({ err: error }, "Failed to start event subscriber");
-        // Service continues without event sync (degraded mode)
-    }
+  // Start event subscriber for cleanup events
+  try {
+    await eventSubscriber.start();
+    logger.info("Event subscriber started");
+  } catch (error) {
+    logger.error({ err: error }, "Failed to start event subscriber");
+    // Service continues without event sync (degraded mode)
+  }
 });
 
 // Graceful shutdown
 process.on("SIGTERM", async () => {
-    logger.info("SIGTERM received, shutting down");
-    await eventSubscriber.stop();
-    process.exit(0);
+  logger.info("SIGTERM received, shutting down");
+  await eventSubscriber.stop();
+  process.exit(0);
 });

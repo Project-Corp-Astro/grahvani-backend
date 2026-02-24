@@ -1,9 +1,9 @@
 import { Router } from "express";
 import {
-    handleListFiles,
-    handleGetFile,
-    handleUpdateFile,
-    handleDeleteFile,
+  handleListFiles,
+  handleGetFile,
+  handleUpdateFile,
+  handleDeleteFile,
 } from "../controllers/file.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
 

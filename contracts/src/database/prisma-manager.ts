@@ -84,8 +84,7 @@ export class DatabaseManager<T extends PrismaClientLike = PrismaClientLike> {
   private initializeClient(): void {
     try {
       let url =
-        process.env[this.config.databaseUrlEnvKey] ||
-        process.env.DATABASE_URL;
+        process.env[this.config.databaseUrlEnvKey] || process.env.DATABASE_URL;
 
       if (!url) {
         throw new Error("DATABASE_URL not configured in environment");

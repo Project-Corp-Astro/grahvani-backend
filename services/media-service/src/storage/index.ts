@@ -15,20 +15,20 @@ let storageAdapter: StorageAdapter | null = null;
  * Switch by changing env vars only — zero code changes.
  */
 export function getStorageAdapter(): StorageAdapter {
-    if (!storageAdapter) {
-        const config = getStorageConfig();
+  if (!storageAdapter) {
+    const config = getStorageConfig();
 
-        if (config.adapter === "s3" && config.s3) {
-            storageAdapter = new S3StorageAdapter(config.s3);
-            logger.info("Using S3 storage adapter");
-        } else {
-            const baseUrl = process.env.MEDIA_PUBLIC_URL || "/api/v1/media/files";
-            storageAdapter = new LocalStorageAdapter(config.localPath, baseUrl);
-            logger.info({ path: config.localPath }, "Using local storage adapter");
-        }
+    if (config.adapter === "s3" && config.s3) {
+      storageAdapter = new S3StorageAdapter(config.s3);
+      logger.info("Using S3 storage adapter");
+    } else {
+      const baseUrl = process.env.MEDIA_PUBLIC_URL || "/api/v1/media/files";
+      storageAdapter = new LocalStorageAdapter(config.localPath, baseUrl);
+      logger.info({ path: config.localPath }, "Using local storage adapter");
     }
+  }
 
-    return storageAdapter;
+  return storageAdapter;
 }
 
 export { StorageAdapter } from "./adapter.interface";

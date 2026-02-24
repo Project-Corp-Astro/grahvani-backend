@@ -7,7 +7,10 @@ import rateLimit from "express-rate-limit"; // Security: Rate Limiting
 
 import routes from "./routes";
 import { errorMiddleware } from "./middleware/error.middleware";
-import { metricsMiddleware, metricsHandler } from "./middleware/metrics.middleware";
+import {
+  metricsMiddleware,
+  metricsHandler,
+} from "./middleware/metrics.middleware";
 import { requestIdMiddleware } from "@grahvani/contracts";
 import { getDatabaseManager } from "./config/db-pro";
 
