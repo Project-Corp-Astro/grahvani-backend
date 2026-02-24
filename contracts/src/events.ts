@@ -189,6 +189,37 @@ export type ReportGeneratedEvent = BaseEvent<
   }
 >;
 
+// ============ MEDIA EVENTS ============
+
+export type MediaUploadedEvent = BaseEvent<
+  "media.uploaded",
+  {
+    fileId: string;
+    tenantId: string;
+    userId: string;
+    bucket: string;
+    mimeType: string;
+    size: number;
+  }
+>;
+
+export type MediaProcessedEvent = BaseEvent<
+  "media.processed",
+  {
+    fileId: string;
+    variants: string[];
+  }
+>;
+
+export type MediaDeletedEvent = BaseEvent<
+  "media.deleted",
+  {
+    fileId: string;
+    tenantId: string;
+    storagePath: string;
+  }
+>;
+
 // ============ ALL EVENTS UNION ============
 
 export type GrahvaniEvent =
@@ -212,7 +243,11 @@ export type GrahvaniEvent =
   // Notification
   | NotificationRequestedEvent
   // Report
-  | ReportGeneratedEvent;
+  | ReportGeneratedEvent
+  // Media
+  | MediaUploadedEvent
+  | MediaProcessedEvent
+  | MediaDeletedEvent;
 
 // ============ EVENT CHANNELS ============
 
@@ -222,5 +257,6 @@ export const EVENT_CHANNELS = {
   PAYMENT: "grahvani:events:payment",
   NOTIFICATION: "grahvani:events:notification",
   REPORT: "grahvani:events:report",
+  MEDIA: "grahvani:events:media",
   ALL: "grahvani:events:*",
 } as const;

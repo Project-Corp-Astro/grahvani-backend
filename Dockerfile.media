@@ -1,6 +1,6 @@
 # ============================================================
-# Grahvani Backend - Multi-Service Dockerfile
-# Usage: docker build --build-arg SERVICE_NAME=auth-service --build-arg ENTRY_FILE=main.js .
+# Grahvani Media Service - Standalone Dockerfile
+# Usage: docker build -f Dockerfile.media .
 # ============================================================
 
 # ---- Stage 1: Install dependencies ----
@@ -8,59 +8,42 @@ FROM node:22-alpine AS deps
 
 WORKDIR /app
 
-# Copy root workspace files
 COPY package.json package-lock.json turbo.json ./
-
-# Copy contracts package (shared dependency)
 COPY contracts/package.json ./contracts/
-
-# Copy all service package.json files (needed for npm workspace resolution)
 COPY services/auth-service/package.json ./services/auth-service/
 COPY services/user-service/package.json ./services/user-service/
 COPY services/client-service/package.json ./services/client-service/
 COPY services/astro-engine/package.json ./services/astro-engine/
 COPY services/media-service/package.json ./services/media-service/
 
-# Install all workspace dependencies (including dev for build step)
 RUN npm ci --ignore-scripts
 
 # ---- Stage 2: Build ----
 FROM node:22-alpine AS builder
 
-ARG SERVICE_NAME
-ARG ENTRY_FILE=server.js
-
 WORKDIR /app
 
-# Copy installed node_modules from deps stage
 COPY --from=deps /app/node_modules ./node_modules
-
-# Copy root config
 COPY package.json turbo.json ./
 
-# Copy contracts source and build it
+# Build contracts
 COPY contracts/ ./contracts/
 RUN cd contracts && npx tsc
 
-# Copy target service source
-COPY services/${SERVICE_NAME}/ ./services/${SERVICE_NAME}/
+# Copy and build media service
+COPY services/media-service/ ./services/media-service/
 
-# Generate Prisma client if schema exists
-RUN if [ -f "services/${SERVICE_NAME}/prisma/schema.prisma" ]; then \
-      npx prisma generate --schema=services/${SERVICE_NAME}/prisma/schema.prisma; \
-    fi
+# Generate Prisma client
+RUN npx prisma generate --schema=services/media-service/prisma/schema.prisma
 
-# Build the target service
-RUN cd services/${SERVICE_NAME} && npx tsc
+# Build TypeScript
+RUN cd services/media-service && npx tsc
 
-# Persist entry file path for runtime
-RUN echo "dist/${ENTRY_FILE}" > /app/.entrypoint
+# Ensure generated dirs exist
+RUN mkdir -p services/media-service/src/generated/prisma \
+    && mkdir -p services/media-service/prisma
 
-# Ensure generated/prisma dirs exist so COPY won't fail
-RUN mkdir -p services/${SERVICE_NAME}/src/generated/prisma \
-    && mkdir -p services/${SERVICE_NAME}/prisma
-
-# ---- Stage 3: Prune to production deps ----
+# ---- Stage 3: Production dependencies ----
 FROM node:22-alpine AS pruner
 
 WORKDIR /app
@@ -78,8 +61,6 @@ RUN npm ci --omit=dev --ignore-scripts
 # ---- Stage 4: Production runner ----
 FROM node:22-alpine AS runner
 
-ARG SERVICE_NAME
-
 ENV NODE_ENV=production
 ENV TZ=Asia/Kolkata
 
@@ -89,33 +70,35 @@ WORKDIR /app
 RUN addgroup --system --gid 1001 grahvani && \
     adduser --system --uid 1001 grahvani
 
-# Copy production-only node_modules
+# Create uploads directory
+RUN mkdir -p /var/uploads && chown grahvani:grahvani /var/uploads
+
+# Copy production node_modules
 COPY --from=pruner /app/node_modules ./node_modules
 
-# Copy root package.json (workspace resolution)
+# Copy root package.json
 COPY --from=builder /app/package.json ./
-
-# Copy entrypoint marker
-COPY --from=builder /app/.entrypoint ./.entrypoint
 
 # Copy built contracts
 COPY --from=builder /app/contracts/dist ./contracts/dist
 COPY --from=builder /app/contracts/package.json ./contracts/
 
-# Copy built service
-COPY --from=builder /app/services/${SERVICE_NAME}/dist ./services/${SERVICE_NAME}/dist
-COPY --from=builder /app/services/${SERVICE_NAME}/package.json ./services/${SERVICE_NAME}/
+# Copy built media service
+COPY --from=builder /app/services/media-service/dist ./services/media-service/dist
+COPY --from=builder /app/services/media-service/package.json ./services/media-service/
 
-# Copy Prisma schema + generated client (dirs guaranteed to exist from builder)
-COPY --from=builder /app/services/${SERVICE_NAME}/prisma/ ./services/${SERVICE_NAME}/prisma/
-COPY --from=builder /app/services/${SERVICE_NAME}/src/generated/ ./services/${SERVICE_NAME}/src/generated/
+# Copy Prisma schema + generated client
+COPY --from=builder /app/services/media-service/prisma/ ./services/media-service/prisma/
+COPY --from=builder /app/services/media-service/src/generated/ ./services/media-service/src/generated/
 
 # Set ownership
 RUN chown -R grahvani:grahvani /app
 
 USER grahvani
 
-WORKDIR /app/services/${SERVICE_NAME}
+WORKDIR /app/services/media-service
 
-# Use shell form to read dynamic entrypoint
-CMD node $(cat /app/.entrypoint)
+# Expose port
+EXPOSE 3007
+
+CMD ["node", "dist/server.js"]

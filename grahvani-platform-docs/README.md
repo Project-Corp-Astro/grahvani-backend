@@ -26,6 +26,7 @@ All secrets, credentials, and connection strings are stored in the `.env` file (
 | 8 | [Monitoring & Health](./08-monitoring.md) | Health checks, monitoring, logging, alerting |
 | 9 | [Developer Guide](./09-developer-guide.md) | Local setup, running services, debugging, workflows |
 | 10 | [Troubleshooting](./10-troubleshooting.md) | Common issues, fixes, operational runbook |
+| 11 | [Media & Storage](./11-media-storage.md) | Media service, storage adapters, migration local→VPS→S3/R2 |
 | 12 | [Incident Response](./12-incident-response.md) | Severity levels, diagnosis, rollback, communication |
 | 13 | [On-Call Guide](./13-on-call-guide.md) | Quick reference for responding to alerts and outages |
 | 14 | [Sprint Changelog](./14-sprint-changelog.md) | Detailed record of all 4 production-readiness sprints |
@@ -39,6 +40,7 @@ All secrets, credentials, and connection strings are stored in the `.env` file (
 - API User: https://api-user.grahvani.in
 - API Client: https://api-client.grahvani.in
 - API Astro: https://api-astro.grahvani.in
+- API Media: https://api-media.grahvani.in
 - API Gateway: https://api-gateway.grahvani.in
 
 ## Team & Access

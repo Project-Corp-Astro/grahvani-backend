@@ -22,7 +22,8 @@ jobs:
       client: ${{ steps.filter.outputs.client }}
       astro-engine: ${{ steps.filter.outputs.astro-engine }}
       gateway: ${{ steps.filter.outputs.gateway }}
-      any-service: ${{ steps.filter.outputs.auth == 'true' || steps.filter.outputs.user == 'true' || steps.filter.outputs.client == 'true' || steps.filter.outputs.astro-engine == 'true' || steps.filter.outputs.contracts == 'true' || steps.filter.outputs.gateway == 'true' }}
+      media: ${{ steps.filter.outputs.media }}
+      any-service: ${{ steps.filter.outputs.auth == 'true' || steps.filter.outputs.user == 'true' || steps.filter.outputs.client == 'true' || steps.filter.outputs.astro-engine == 'true' || steps.filter.outputs.contracts == 'true' || steps.filter.outputs.gateway == 'true' || steps.filter.outputs.media == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -55,6 +56,10 @@ jobs:
             gateway:
               - 'services/api-gateway/**'
               - 'contracts/**'
+            media:
+              - 'services/media-service/**'
+              - 'contracts/**'
+              - 'Dockerfile.media'
 
   secrets-scan:
     runs-on: ubuntu-latest
@@ -90,6 +95,7 @@ jobs:
           npx prisma generate --schema=services/auth-service/prisma/schema.prisma
           npx prisma generate --schema=services/user-service/prisma/schema.prisma
           npx prisma generate --schema=services/client-service/prisma/schema.prisma
+          npx prisma generate --schema=services/media-service/prisma/schema.prisma
 
       - name: Build contracts
         run: npx turbo run build --filter=@grahvani/contracts
@@ -135,6 +141,9 @@ jobs:
           - service: gateway
             dockerfile: Dockerfile.gateway
             image: grahvani-api-gateway
+          - service: media
+            dockerfile: Dockerfile.media
+            image: grahvani-media-service
     steps:
       - name: Skip if no changes
         if: needs.detect-changes.outputs[matrix.service] != 'true'
@@ -191,6 +200,9 @@ jobs:
           - service: gateway
             uuid_secret: COOLIFY_GATEWAY_UUID
             health_url: https://api-gateway.grahvani.in/health
+          - service: media
+            uuid_secret: COOLIFY_MEDIA_UUID
+            health_url: https://api-media.grahvani.in/health
     steps:
       - name: Deploy ${{ matrix.service }}
         if: needs.detect-changes.outputs[matrix.service] == 'true'
