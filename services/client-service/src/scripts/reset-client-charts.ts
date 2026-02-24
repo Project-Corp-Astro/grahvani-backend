@@ -26,9 +26,7 @@ async function resetClientCharts() {
     }
 
     console.log(`Client: ${client.fullName}`);
-    console.log(
-      `Birth: ${client.birthDate?.toISOString().split("T")[0]} at ${client.birthTime}`,
-    );
+    console.log(`Birth: ${client.birthDate?.toISOString().split("T")[0]} at ${client.birthTime}`);
     console.log(
       `Location: ${client.birthPlace} (${client.birthLatitude}, ${client.birthLongitude})`,
     );
@@ -43,9 +41,7 @@ async function resetClientCharts() {
     // 3. Prepare birth data for chart generation
     const birthData = {
       birthDate: client.birthDate?.toISOString().split("T")[0] || "1980-05-01",
-      birthTime: client.birthTime
-        ? client.birthTime.toISOString().slice(11, 19)
-        : "12:00:00",
+      birthTime: client.birthTime ? client.birthTime.toISOString().slice(11, 19) : "12:00:00",
       latitude: client.birthLatitude ? client.birthLatitude.toNumber() : 0,
       longitude: client.birthLongitude ? client.birthLongitude.toNumber() : 0,
       timezoneOffset: 5.5, // India Standard Time
@@ -54,13 +50,8 @@ async function resetClientCharts() {
     console.log("\n[Step 2] Prepared Birth Data:", birthData);
 
     // 4. Generate D1 (Rashi) chart for Lahiri
-    console.log(
-      "\n[Step 3] Generating D1 (Natal/Rashi) chart via Astro Engine...",
-    );
-    const d1Response = await astroEngineClient.getNatalChart(
-      birthData,
-      "lahiri",
-    );
+    console.log("\n[Step 3] Generating D1 (Natal/Rashi) chart via Astro Engine...");
+    const d1Response = await astroEngineClient.getNatalChart(birthData, "lahiri");
     console.log(
       "  ✓ D1 Chart Generated (Asc Sign:",
       d1Response.data?.ascendant?.sign || "N/A",
@@ -83,11 +74,7 @@ async function resetClientCharts() {
 
     // 6. Generate D9 (Navamsha) chart for Lahiri
     console.log("\n[Step 4] Generating D9 (Navamsha) chart...");
-    const d9Response = await astroEngineClient.getDivisionalChart(
-      birthData,
-      "D9",
-      "lahiri",
-    );
+    const d9Response = await astroEngineClient.getDivisionalChart(birthData, "D9", "lahiri");
     console.log(
       "  ✓ D9 Chart Generated (Asc Sign:",
       d9Response.data?.ascendant?.sign || "N/A",

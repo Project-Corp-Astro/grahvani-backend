@@ -20,11 +20,7 @@ export class ClientNotFoundError extends BaseError {
 
 export class DuplicateClientError extends BaseError {
   constructor(field: string, value: string) {
-    super(
-      `Client with ${field} '${value}' already exists`,
-      409,
-      "DUPLICATE_CLIENT",
-    );
+    super(`Client with ${field} '${value}' already exists`, 409, "DUPLICATE_CLIENT");
   }
 }
 
@@ -36,11 +32,7 @@ export class InvalidBirthDetailsError extends BaseError {
 
 export class UnauthorizedAccessError extends BaseError {
   constructor() {
-    super(
-      "Unauthorized access to this client record",
-      403,
-      "UNAUTHORIZED_ACCESS",
-    );
+    super("Unauthorized access to this client record", 403, "UNAUTHORIZED_ACCESS");
   }
 }
 

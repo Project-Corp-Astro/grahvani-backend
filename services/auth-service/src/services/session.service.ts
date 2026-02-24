@@ -61,18 +61,13 @@ export class SessionService {
         ipAddress: data.ipAddress,
         userAgent: data.userAgent,
         deviceType: deviceType || data.deviceType,
-        deviceName:
-          data.deviceName ||
-          DeviceUtils.generateDeviceName(data.userAgent || ""),
+        deviceName: data.deviceName || DeviceUtils.generateDeviceName(data.userAgent || ""),
         expiresAt,
         lastActivityAt: new Date(),
       },
     });
 
-    logger.info(
-      { userId: data.userId, sessionId: session.id },
-      "Session created",
-    );
+    logger.info({ userId: data.userId, sessionId: session.id }, "Session created");
 
     return {
       session: {
@@ -184,10 +179,7 @@ export class SessionService {
   /**
    * Revoke all sessions except current
    */
-  async revokeOtherSessions(
-    userId: string,
-    currentSessionId: string,
-  ): Promise<number> {
+  async revokeOtherSessions(userId: string, currentSessionId: string): Promise<number> {
     const result = await this.prisma.session.updateMany({
       where: {
         userId,
@@ -207,10 +199,7 @@ export class SessionService {
       await this.redis.del(`token_family:${session.id}`);
     }
 
-    logger.info(
-      { userId, revokedCount: result.count },
-      "Other sessions revoked",
-    );
+    logger.info({ userId, revokedCount: result.count }, "Other sessions revoked");
 
     return result.count;
   }
@@ -277,8 +266,7 @@ export class SessionService {
     if (/tablet/i.test(userAgent)) return "tablet";
     if (/iPad/i.test(userAgent)) return "tablet";
     if (/iPhone/i.test(userAgent)) return "mobile";
-    if (/Android/i.test(userAgent) && !/mobile/i.test(userAgent))
-      return "tablet";
+    if (/Android/i.test(userAgent) && !/mobile/i.test(userAgent)) return "tablet";
     return "desktop";
   }
 

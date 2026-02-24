@@ -58,8 +58,7 @@ export class RamanClient extends BaseAstroClient {
       d45: "calculate_d45",
       d60: "calculate_d60",
     };
-    const endpoint =
-      chartEndpoints[chartType.toLowerCase()] || chartType.toLowerCase();
+    const endpoint = chartEndpoints[chartType.toLowerCase()] || chartType.toLowerCase();
     return this.post(`/raman/${endpoint}`, data);
   }
   async getD2Hora(data: BirthData) {
@@ -185,8 +184,7 @@ export class RamanClient extends BaseAstroClient {
       sookshma: RAMAN_ENDPOINTS.SOOKSHMA_DASHA,
       prana: RAMAN_ENDPOINTS.PRANA_DASHA,
     };
-    const endpoint =
-      ramanLevelMap[level.toLowerCase()] || ramanLevelMap["mahadasha"];
+    const endpoint = ramanLevelMap[level.toLowerCase()] || ramanLevelMap["mahadasha"];
     return this.post(endpoint, data, context);
   }
 }

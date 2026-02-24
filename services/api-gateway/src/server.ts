@@ -6,10 +6,7 @@ import compression from "compression";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
 import { randomUUID } from "crypto";
 import rateLimit from "express-rate-limit";
-import {
-  metricsMiddleware,
-  metricsHandler,
-} from "./middleware/metrics.middleware";
+import { metricsMiddleware, metricsHandler } from "./middleware/metrics.middleware";
 import { logger } from "./config/logger";
 import dotenv from "dotenv";
 
@@ -19,14 +16,10 @@ const app = express();
 const PORT = process.env.GATEWAY_PORT || 8080;
 
 // Service URLs (Internal Docker Network)
-const AUTH_SERVICE_URL =
-  process.env.AUTH_SERVICE_URL || "http://localhost:3001";
-const USER_SERVICE_URL =
-  process.env.USER_SERVICE_URL || "http://localhost:3002";
-const CLIENT_SERVICE_URL =
-  process.env.CLIENT_SERVICE_URL || "http://localhost:3008";
-const MEDIA_SERVICE_URL =
-  process.env.MEDIA_SERVICE_URL || "http://localhost:3007";
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || "http://localhost:3001";
+const USER_SERVICE_URL = process.env.USER_SERVICE_URL || "http://localhost:3002";
+const CLIENT_SERVICE_URL = process.env.CLIENT_SERVICE_URL || "http://localhost:3008";
+const MEDIA_SERVICE_URL = process.env.MEDIA_SERVICE_URL || "http://localhost:3007";
 
 // Security & Optimization Middleware
 app.use(helmet());
@@ -34,11 +27,7 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === "production"
-        ? [
-            "https://grahvani.in",
-            "https://www.grahvani.in",
-            "https://admin.grahvani.in",
-          ]
+        ? ["https://grahvani.in", "https://www.grahvani.in", "https://admin.grahvani.in"]
         : "*",
     credentials: true,
   }),

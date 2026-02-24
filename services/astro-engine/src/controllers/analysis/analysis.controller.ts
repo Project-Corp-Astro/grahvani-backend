@@ -62,19 +62,14 @@ export class AnalysisController {
           data = await lahiriClient.getSpecialYogas(birthData);
           break;
         default:
-          res
-            .status(400)
-            .json({ success: false, error: `Unknown yoga type: ${type}` });
+          res.status(400).json({ success: false, error: `Unknown yoga type: ${type}` });
           return;
       }
 
       await cacheService.set(`yoga:${type}`, cacheKey, data);
       res.json({ success: true, data, cached: false });
     } catch (error: any) {
-      logger.error(
-        { error: error.message, type: req.params.type },
-        "Yoga analysis failed",
-      );
+      logger.error({ error: error.message, type: req.params.type }, "Yoga analysis failed");
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -119,19 +114,14 @@ export class AnalysisController {
           data = await lahiriClient.getDhaiya(birthData);
           break;
         default:
-          res
-            .status(400)
-            .json({ success: false, error: `Unknown dosha type: ${type}` });
+          res.status(400).json({ success: false, error: `Unknown dosha type: ${type}` });
           return;
       }
 
       await cacheService.set(`dosha:${type}`, cacheKey, data);
       res.json({ success: true, data, cached: false });
     } catch (error: any) {
-      logger.error(
-        { error: error.message, type: req.params.type },
-        "Dosha analysis failed",
-      );
+      logger.error({ error: error.message, type: req.params.type }, "Dosha analysis failed");
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -187,33 +177,21 @@ export class AnalysisController {
           data = await lahiriClient.getLalKitabRemedies(birthData);
           break;
         default:
-          res
-            .status(400)
-            .json({ success: false, error: `Unknown remedy type: ${type}` });
+          res.status(400).json({ success: false, error: `Unknown remedy type: ${type}` });
           return;
       }
 
       await cacheService.set(`remedies:${type}`, cacheKey, data);
       res.json({ success: true, data, cached: false });
     } catch (error: any) {
-      logger.error(
-        { error: error.message, type: req.params.type },
-        "Remedies analysis failed",
-      );
+      logger.error({ error: error.message, type: req.params.type }, "Remedies analysis failed");
       res.status(500).json({ success: false, error: error.message });
     }
   }
 
   private validateBirthData(data: BirthData, res: Response): boolean {
-    if (
-      !data.birthDate ||
-      !data.birthTime ||
-      !data.latitude ||
-      !data.longitude
-    ) {
-      res
-        .status(400)
-        .json({ success: false, error: "Missing required fields" });
+    if (!data.birthDate || !data.birthTime || !data.latitude || !data.longitude) {
+      res.status(400).json({ success: false, error: "Missing required fields" });
       return false;
     }
     return true;

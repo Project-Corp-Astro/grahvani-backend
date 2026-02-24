@@ -2,14 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import { BaseError } from "@grahvani/contracts";
 import { logger } from "../config";
 
-export const errorMiddleware = (
-  err: any,
-  req: Request,
-  res: Response,
-  _next: NextFunction,
-) => {
-  const requestId =
-    (req as any).requestId || req.headers["x-request-id"] || "unknown";
+export const errorMiddleware = (err: any, req: Request, res: Response, _next: NextFunction) => {
+  const requestId = (req as any).requestId || req.headers["x-request-id"] || "unknown";
 
   // Custom base error
   if (err instanceof BaseError) {

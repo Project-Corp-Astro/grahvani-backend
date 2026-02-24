@@ -37,11 +37,7 @@ const fileUploadSize = new client.Histogram({
   registers: [register],
 });
 
-export function metricsMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
+export function metricsMiddleware(req: Request, res: Response, next: NextFunction) {
   const end = httpRequestDuration.startTimer();
 
   res.on("finish", () => {

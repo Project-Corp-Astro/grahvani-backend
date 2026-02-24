@@ -28,11 +28,7 @@ async function testPermanentDeletion() {
       birthTimezone: "Asia/Kolkata",
     };
 
-    const client = await clientService.createClient(
-      tenantId,
-      clientData,
-      metadata,
-    );
+    const client = await clientService.createClient(tenantId, clientData, metadata);
     const clientId = client.id;
     logger.info({ clientId }, "✅ Created Test Client");
 
@@ -59,10 +55,7 @@ async function testPermanentDeletion() {
     logger.info("✅ Created Client Note");
 
     // 3. Verify they exist
-    const chartsBefore = await chartRepository.findByClientId(
-      tenantId,
-      clientId,
-    );
+    const chartsBefore = await chartRepository.findByClientId(tenantId, clientId);
     const notesBefore = await prisma.clientNote.findMany({
       where: { clientId },
     });
@@ -92,23 +85,12 @@ async function testPermanentDeletion() {
     });
 
     logger.info("🏁 Final Verification:");
-    logger.info(
-      { exists: !!clientAfter },
-      `Client Still Exists? ${!!clientAfter}`,
-    );
-    logger.info(
-      { count: chartsAfter.length },
-      `Charts Remaining: ${chartsAfter.length}`,
-    );
-    logger.info(
-      { count: notesAfter.length },
-      `Notes Remaining: ${notesAfter.length}`,
-    );
+    logger.info({ exists: !!clientAfter }, `Client Still Exists? ${!!clientAfter}`);
+    logger.info({ count: chartsAfter.length }, `Charts Remaining: ${chartsAfter.length}`);
+    logger.info({ count: notesAfter.length }, `Notes Remaining: ${notesAfter.length}`);
 
     if (!clientAfter && chartsAfter.length === 0 && notesAfter.length === 0) {
-      logger.info(
-        "🏆 TEST PASSED: All records permanently deleted via cascade.",
-      );
+      logger.info("🏆 TEST PASSED: All records permanently deleted via cascade.");
     } else {
       logger.error("❌ TEST FAILED: Residual data found.");
       process.exit(1);

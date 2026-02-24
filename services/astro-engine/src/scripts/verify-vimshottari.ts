@@ -15,17 +15,12 @@ async function verifyVimshottari() {
   console.log(`Checking Vimshottari at: ${ENGINE_URL}`);
 
   try {
-    console.log(
-      "\n---- Fetching VIMSHOTTARI (Pratyantar) with Lords (Ven, Ven) ----",
-    );
-    const response = await axios.post(
-      `${ENGINE_URL}/lahiri/calculate_vimshottari_prathyantar`,
-      {
-        ...birthData,
-        maha_lord: "Venus",
-        antar_lord: "Venus",
-      },
-    );
+    console.log("\n---- Fetching VIMSHOTTARI (Pratyantar) with Lords (Ven, Ven) ----");
+    const response = await axios.post(`${ENGINE_URL}/lahiri/calculate_vimshottari_prathyantar`, {
+      ...birthData,
+      maha_lord: "Venus",
+      antar_lord: "Venus",
+    });
 
     console.log("Status:", response.status);
 
@@ -39,14 +34,8 @@ async function verifyVimshottari() {
         console.log("  First Antar:", a1.lord);
         console.log("  First Antar Keys:", Object.keys(a1));
         if (a1.pratyantardashas) {
-          console.log(
-            "    [SUCCESS] Found Pratyantardashas:",
-            a1.pratyantardashas.length,
-          );
-          console.log(
-            "    First Pratyantar:",
-            JSON.stringify(a1.pratyantardashas[0]),
-          );
+          console.log("    [SUCCESS] Found Pratyantardashas:", a1.pratyantardashas.length);
+          console.log("    First Pratyantar:", JSON.stringify(a1.pratyantardashas[0]));
         } else {
           console.log("    [FAIL] No pratyantardashas found.");
         }

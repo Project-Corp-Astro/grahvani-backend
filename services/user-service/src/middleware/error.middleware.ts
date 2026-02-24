@@ -3,14 +3,8 @@ import { Request, Response, NextFunction } from "express";
 import { BaseError } from "@grahvani/contracts";
 import { logger } from "../config/logger";
 
-export const errorMiddleware = (
-  error: any,
-  req: Request,
-  res: Response,
-  _next: NextFunction,
-) => {
-  const requestId =
-    (req as any).requestId || req.headers["x-request-id"] || "unknown";
+export const errorMiddleware = (error: any, req: Request, res: Response, _next: NextFunction) => {
+  const requestId = (req as any).requestId || req.headers["x-request-id"] || "unknown";
 
   logger.error({ err: error, requestId }, "Request error");
 

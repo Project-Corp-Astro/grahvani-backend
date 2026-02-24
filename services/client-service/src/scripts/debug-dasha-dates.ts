@@ -16,10 +16,7 @@ async function debugDates() {
   try {
     // 1. Fetch Mahadashas
     console.log("\n1. Fetching MAHADASHAS...");
-    const mahaRes = await astroEngineClient.getVimshottariDasha(
-      birthData,
-      "mahadasha",
-    );
+    const mahaRes = await astroEngineClient.getVimshottariDasha(birthData, "mahadasha");
     console.log(JSON.stringify(mahaRes, null, 2));
     process.exit(0);
 
@@ -35,13 +32,9 @@ async function debugDates() {
 
     // 2. Fetch Antardashas for this Maha
     console.log(`\n2. Fetching ANTARDASHAS for ${firstMaha.planet}...`);
-    const antarRes = await astroEngineClient.getVimshottariDasha(
-      birthData,
-      "antardasha",
-      {
-        mahaLord: firstMaha.planet,
-      },
-    );
+    const antarRes = await astroEngineClient.getVimshottariDasha(birthData, "antardasha", {
+      mahaLord: firstMaha.planet,
+    });
     const antardashas = antarRes.dasha_list || [];
 
     console.log(`Found ${antardashas.length} Antardashas.`);
@@ -68,9 +61,7 @@ async function debugDates() {
           "\n[CRITICAL ISSUE SOURCE] Antardasha has SAME end date as Mahadasha! It implies it spans the whole duration.",
         );
       } else {
-        console.log(
-          "\n[Good] Antardasha end date differs from Mahadasha end date.",
-        );
+        console.log("\n[Good] Antardasha end date differs from Mahadasha end date.");
       }
     }
   } catch (e) {

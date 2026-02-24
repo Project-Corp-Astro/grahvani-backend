@@ -3,11 +3,7 @@
 // Export all middleware for clean imports
 // =============================================================================
 
-export {
-  apiRateLimiter,
-  internalRateLimiter,
-  strictRateLimiter,
-} from "./rate-limiter";
+export { apiRateLimiter, internalRateLimiter, strictRateLimiter } from "./rate-limiter";
 export {
   createCircuitBreaker,
   circuitBreakerOptions,

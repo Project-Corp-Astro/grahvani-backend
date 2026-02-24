@@ -17,18 +17,12 @@ export class WesternClient extends BaseAstroClient {
    * @param data Birth data
    * @param progressedDate Date to progress chart to (YYYY-MM-DD)
    */
-  async getProgressedChart(
-    data: BirthData,
-    progressedDate: string,
-  ): Promise<any> {
+  async getProgressedChart(data: BirthData, progressedDate: string): Promise<any> {
     const payload = {
       ...this.buildPayload(data).valueOf(),
       progressed_date: progressedDate,
     };
-    const response = await this.client.post(
-      WESTERN_ENDPOINTS.PROGRESSED,
-      payload,
-    );
+    const response = await this.client.post(WESTERN_ENDPOINTS.PROGRESSED, payload);
     return response.data;
   }
 
@@ -40,10 +34,7 @@ export class WesternClient extends BaseAstroClient {
       person1: this.buildPayload(data.person1),
       person2: this.buildPayload(data.person2),
     };
-    const response = await this.client.post(
-      WESTERN_ENDPOINTS.SYNASTRY,
-      payload,
-    );
+    const response = await this.client.post(WESTERN_ENDPOINTS.SYNASTRY, payload);
     return response.data;
   }
 
@@ -55,10 +46,7 @@ export class WesternClient extends BaseAstroClient {
       person1: this.buildPayload(data.person1),
       person2: this.buildPayload(data.person2),
     };
-    const response = await this.client.post(
-      WESTERN_ENDPOINTS.COMPOSITE,
-      payload,
-    );
+    const response = await this.client.post(WESTERN_ENDPOINTS.COMPOSITE, payload);
     return response.data;
   }
 }

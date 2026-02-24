@@ -15,12 +15,7 @@ export class RemedyController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const remedy = await remedyService.prescribeRemedy(
-        tenantId,
-        id,
-        req.body,
-        metadata,
-      );
+      const remedy = await remedyService.prescribeRemedy(tenantId, id, req.body, metadata);
       res.status(201).json(remedy);
     } catch (error) {
       next(error);
@@ -54,12 +49,7 @@ export class RemedyController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const updated = await remedyService.updateRemedyStatus(
-        tenantId,
-        remedyId,
-        status,
-        metadata,
-      );
+      const updated = await remedyService.updateRemedyStatus(tenantId, remedyId, status, metadata);
       res.json(updated);
     } catch (error) {
       next(error);

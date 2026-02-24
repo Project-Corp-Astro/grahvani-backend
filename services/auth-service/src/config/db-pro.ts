@@ -65,10 +65,7 @@ export class DatabaseManager {
       if (isPoolerMode && !url.includes("pgbouncer=true")) {
         url += (url.includes("?") ? "&" : "?") + "pgbouncer=true";
       }
-      if (
-        process.env.NODE_ENV === "development" &&
-        !url.includes("connection_limit")
-      ) {
+      if (process.env.NODE_ENV === "development" && !url.includes("connection_limit")) {
         url += (url.includes("?") ? "&" : "?") + "connection_limit=5";
       }
 
@@ -185,12 +182,7 @@ export class DatabaseManager {
     fn: (
       tx: Omit<
         PrismaClient,
-        | "$connect"
-        | "$disconnect"
-        | "$on"
-        | "$transaction"
-        | "$use"
-        | "$extends"
+        "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
       >,
     ) => Promise<T>,
     options?: { maxWait?: number; timeout?: number },

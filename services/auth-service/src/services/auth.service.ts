@@ -82,10 +82,7 @@ export class AuthService {
   /**
    * Register a new user
    */
-  async register(
-    data: RegisterInput,
-    metadata: RequestMetadata,
-  ): Promise<AuthResult> {
+  async register(data: RegisterInput, metadata: RequestMetadata): Promise<AuthResult> {
     // Check if user already exists
     const existingUser = await this.prisma.user.findUnique({
       where: { email: data.email },
@@ -102,21 +99,17 @@ export class AuthService {
     let supabaseUserId: string | undefined;
     try {
       const supabaseAdmin = getSupabaseAdmin();
-      const { data: authData, error } =
-        await supabaseAdmin.auth.admin.createUser({
-          email: data.email,
-          password: data.password,
-          email_confirm: false,
-          user_metadata: { name: data.name },
-        });
+      const { data: authData, error } = await supabaseAdmin.auth.admin.createUser({
+        email: data.email,
+        password: data.password,
+        email_confirm: false,
+        user_metadata: { name: data.name },
+      });
       if (!error && authData.user) {
         supabaseUserId = authData.user.id;
       }
     } catch (error) {
-      logger.warn(
-        { error },
-        "Supabase user creation failed, using local auth only",
-      );
+      logger.warn({ error }, "Supabase user creation failed, using local auth only");
     }
 
     // Create user in local database
@@ -128,10 +121,7 @@ export class AuthService {
         passwordHash,
         name: data.name,
         role: "user",
-        status:
-          process.env.NODE_ENV === "development"
-            ? "active"
-            : "pending_verification",
+        status: process.env.NODE_ENV === "development" ? "active" : "pending_verification",
         emailVerified: process.env.NODE_ENV === "development",
       },
     });
@@ -158,16 +148,9 @@ export class AuthService {
     );
 
     // Send verification email via service
-    await this.verificationService.sendVerificationEmail(
-      user.id,
-      user.email,
-      user.name,
-    );
+    await this.verificationService.sendVerificationEmail(user.id, user.email, user.name);
 
-    logger.info(
-      { userId: user.id },
-      "User registered successfully and verification sent",
-    );
+    logger.info({ userId: user.id }, "User registered successfully and verification sent");
 
     return {
       user: {
@@ -197,10 +180,7 @@ export class AuthService {
   /**
    * Authenticate user with email and password
    */
-  async login(
-    data: LoginInput,
-    metadata: RequestMetadata,
-  ): Promise<AuthResult> {
+  async login(data: LoginInput, metadata: RequestMetadata): Promise<AuthResult> {
     // Rate limit check
     await this.checkRateLimit(data.email, metadata.ipAddress);
 
@@ -230,12 +210,7 @@ export class AuthService {
 
     if (!user) {
       // User not found - record attempt and throw (no need to query again, we just checked)
-      await this.recordLoginAttempt(
-        data.email,
-        metadata,
-        false,
-        "User not found",
-      );
+      await this.recordLoginAttempt(data.email, metadata, false, "User not found");
       throw new InvalidCredentialsError();
     }
 
@@ -245,38 +220,20 @@ export class AuthService {
     }
 
     // Verify password
-    const passwordValid = await bcrypt.compare(
-      data.password,
-      user.passwordHash,
-    );
+    const passwordValid = await bcrypt.compare(data.password, user.passwordHash);
     if (!passwordValid) {
-      await this.recordLoginAttempt(
-        data.email,
-        metadata,
-        false,
-        "Invalid password",
-        user.id,
-      );
+      await this.recordLoginAttempt(data.email, metadata, false, "Invalid password", user.id);
       throw new InvalidCredentialsError();
     }
 
     // Check account status
     if (user.status === "suspended") {
-      await this.recordLoginAttempt(
-        data.email,
-        metadata,
-        false,
-        "Account suspended",
-        user.id,
-      );
+      await this.recordLoginAttempt(data.email, metadata, false, "Account suspended", user.id);
       throw new AccountSuspendedError();
     }
 
     // Auto-activate pending users in development
-    if (
-      user.status === "pending_verification" &&
-      process.env.NODE_ENV === "development"
-    ) {
+    if (user.status === "pending_verification" && process.env.NODE_ENV === "development") {
       await this.prisma.user.update({
         where: { id: user.id },
         data: { status: "active", emailVerified: true },
@@ -284,19 +241,13 @@ export class AuthService {
       user.status = "active";
       // Invalidate cache since status changed
       await this.redis.del(cacheKey);
-      logger.info(
-        { userId: user.id },
-        "Dev Mode: Auto-activated user on first login",
-      );
+      logger.info({ userId: user.id }, "Dev Mode: Auto-activated user on first login");
     }
 
     // Enforce Strict Device Policy (Single Login)
     if (config.security.strictDevicePolicy) {
       await this.sessionService.revokeAllSessions(user.id);
-      logger.info(
-        { userId: user.id },
-        "Strict Device Policy: Revoked all existing sessions",
-      );
+      logger.info({ userId: user.id }, "Strict Device Policy: Revoked all existing sessions");
     }
 
     // Create session
@@ -332,13 +283,7 @@ export class AuthService {
     }
 
     // Record successful login
-    await this.recordLoginAttempt(
-      data.email,
-      metadata,
-      true,
-      undefined,
-      user.id,
-    );
+    await this.recordLoginAttempt(data.email, metadata, true, undefined, user.id);
 
     // Clear rate limit on successful login
     const rateKey = `login_attempts:${data.email}:${metadata.ipAddress}`;
@@ -368,9 +313,7 @@ export class AuthService {
         status: user.status,
         emailVerified: user.emailVerified,
         createdAt:
-          typeof user.createdAt === "string"
-            ? user.createdAt
-            : user.createdAt?.toISOString(),
+          typeof user.createdAt === "string" ? user.createdAt : user.createdAt?.toISOString(),
       },
       tokens: {
         accessToken: tokenPair.accessToken,
@@ -505,11 +448,7 @@ export class AuthService {
   /**
    * Revoke a session
    */
-  async revokeSession(
-    userId: string,
-    sessionId: string,
-    metadata: RequestMetadata,
-  ): Promise<void> {
+  async revokeSession(userId: string, sessionId: string, metadata: RequestMetadata): Promise<void> {
     await this.sessionService.revokeSession(sessionId, userId);
 
     await this.eventPublisher.publish("auth.session_revoked", {
@@ -543,20 +482,13 @@ export class AuthService {
 
     if (user.emailVerified) return;
 
-    await this.verificationService.sendVerificationEmail(
-      user.id,
-      user.email,
-      user.name,
-    );
+    await this.verificationService.sendVerificationEmail(user.id, user.email, user.name);
   }
 
   /**
    * Authenticate or register via Social Provider (Supabase OAuth Sync)
    */
-  async socialLogin(
-    supabaseAccessToken: string,
-    metadata: RequestMetadata,
-  ): Promise<AuthResult> {
+  async socialLogin(supabaseAccessToken: string, metadata: RequestMetadata): Promise<AuthResult> {
     // 1. Verify token with Supabase
     const {
       data: { user: sbUser },
@@ -578,10 +510,7 @@ export class AuthService {
         data: {
           id: sbUser.id, // Sync IDs for consistency
           email: sbUser.email,
-          name:
-            sbUser.user_metadata?.full_name ||
-            sbUser.user_metadata?.name ||
-            "Social User",
+          name: sbUser.user_metadata?.full_name || sbUser.user_metadata?.name || "Social User",
           avatarUrl: sbUser.user_metadata?.avatar_url || null,
           role: "user",
           status: "active",
@@ -614,10 +543,7 @@ export class AuthService {
         updateData.status = "active";
         updateData.emailVerified = true;
         updateData.emailVerifiedAt = new Date();
-        logger.info(
-          { userId: user.id },
-          "User activated automatically via social login",
-        );
+        logger.info({ userId: user.id }, "User activated automatically via social login");
       }
 
       user = await this.prisma.user.update({
@@ -755,9 +681,7 @@ export class AuthService {
     if (!user) throw new NotFoundError("User");
 
     if (!user.passwordHash && user.oauthAccounts.length <= 1) {
-      throw new Error(
-        "Cannot unlink the only authentication method. Please set a password first.",
-      );
+      throw new Error("Cannot unlink the only authentication method. Please set a password first.");
     }
 
     await this.prisma.oAuthAccount.deleteMany({
@@ -772,10 +696,7 @@ export class AuthService {
 
   // ============ PRIVATE METHODS ============
 
-  private async checkRateLimit(
-    email: string,
-    ipAddress: string,
-  ): Promise<void> {
+  private async checkRateLimit(email: string, ipAddress: string): Promise<void> {
     if (process.env.NODE_ENV !== "production") return;
     const key = `login_attempts:${email}:${ipAddress}`;
     const attempts = await this.redis.get(key);

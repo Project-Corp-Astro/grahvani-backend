@@ -1,7 +1,6 @@
 import axios from "axios";
 
-const ASTRO_URL =
-  process.env.ASTRO_ENGINE_EXTERNAL_URL || "https://astroengine.astrocorp.in";
+const ASTRO_URL = process.env.ASTRO_ENGINE_EXTERNAL_URL || "https://astroengine.astrocorp.in";
 
 const payload = {
   user_name: "Verification Script",
@@ -19,10 +18,7 @@ async function verify() {
   try {
     console.log("---- Fetching ASHTOTTARI (Antar) ----");
     // Check standard endpoint
-    const t1 = await axios.post(
-      `${ASTRO_URL}/lahiri/calculate_ashtottari_antar`,
-      payload,
-    );
+    const t1 = await axios.post(`${ASTRO_URL}/lahiri/calculate_ashtottari_antar`, payload);
     console.log("Status:", t1.status);
     const keys1 = Object.keys(t1.data);
     console.log("Keys:", keys1);
@@ -35,10 +31,7 @@ async function verify() {
       t1.data.ashtottari_antar ||
       [];
     if (periods1.length > 0) {
-      console.log(
-        "First Period (Ashtottari Antar):",
-        JSON.stringify(periods1[0], null, 2),
-      );
+      console.log("First Period (Ashtottari Antar):", JSON.stringify(periods1[0], null, 2));
       // Check depth
       if (periods1[0].antardashas || periods1[0].sublevels) {
         console.log("\n[INFO] Nested Antardashas FOUND.");
@@ -53,23 +46,18 @@ async function verify() {
     // Try to fetch Pratyantar - assuming it might need maha/antar context or returns full tree if no context?
     // Let's try sending generic payload first.
     try {
-      const t2 = await axios.post(
-        `${ASTRO_URL}/lahiri/calculate_ashtottari_prathyantar`,
-        {
-          ...payload,
-          maha_lord: "Venus", // Sample lords from previous output
-          antar_lord: "Venus",
-        },
-      );
+      const t2 = await axios.post(`${ASTRO_URL}/lahiri/calculate_ashtottari_prathyantar`, {
+        ...payload,
+        maha_lord: "Venus", // Sample lords from previous output
+        antar_lord: "Venus",
+      });
       console.log("Status (Pratyantar):", t2.status);
       console.log("TOP-LEVEL KEYS:", Object.keys(t2.data));
 
       // Check if there is any key that looks like a list
       for (const key of Object.keys(t2.data)) {
         if (Array.isArray(t2.data[key])) {
-          console.log(
-            `Key '${key}' is an array of length ${t2.data[key].length}`,
-          );
+          console.log(`Key '${key}' is an array of length ${t2.data[key].length}`);
         }
       }
 

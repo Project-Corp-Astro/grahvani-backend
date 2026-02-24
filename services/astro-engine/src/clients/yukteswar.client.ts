@@ -72,8 +72,7 @@ export class YukteswarClient extends BaseAstroClient {
       d60: YUKTESWAR_ENDPOINTS.D60_SHASHTIAMSA,
     };
     const endpoint = map[type];
-    if (!endpoint)
-      throw new Error(`Unknown divisional chart type for Yukteswar: ${type}`);
+    if (!endpoint) throw new Error(`Unknown divisional chart type for Yukteswar: ${type}`);
     return this.post(endpoint, data);
   }
 

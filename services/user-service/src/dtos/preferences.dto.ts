@@ -23,9 +23,7 @@ export const UpdatePreferenceRequestSchema = z.object({
   value: z.unknown(),
 });
 
-export type UpdatePreferenceRequest = z.infer<
-  typeof UpdatePreferenceRequestSchema
->;
+export type UpdatePreferenceRequest = z.infer<typeof UpdatePreferenceRequestSchema>;
 
 // ============ Bulk Update Preferences ============
 export const BulkUpdatePreferencesRequestSchema = z.object({
@@ -41,9 +39,7 @@ export const BulkUpdatePreferencesRequestSchema = z.object({
     .max(50),
 });
 
-export type BulkUpdatePreferencesRequest = z.infer<
-  typeof BulkUpdatePreferencesRequestSchema
->;
+export type BulkUpdatePreferencesRequest = z.infer<typeof BulkUpdatePreferencesRequestSchema>;
 
 // ============ Notification Preferences Schema ============
 export const NotificationPreferencesSchema = z.object({
@@ -65,15 +61,11 @@ export const NotificationPreferencesSchema = z.object({
   }),
 });
 
-export type NotificationPreferences = z.infer<
-  typeof NotificationPreferencesSchema
->;
+export type NotificationPreferences = z.infer<typeof NotificationPreferencesSchema>;
 
 // ============ Privacy Preferences Schema ============
 export const PrivacyPreferencesSchema = z.object({
-  profileVisibility: z
-    .enum(["public", "private", "followers_only"])
-    .default("public"),
+  profileVisibility: z.enum(["public", "private", "followers_only"]).default("public"),
   showEmail: z.boolean().default(false),
   showPhone: z.boolean().default(false),
   showLocation: z.boolean().default(true),

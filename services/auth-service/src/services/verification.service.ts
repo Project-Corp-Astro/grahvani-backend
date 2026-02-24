@@ -11,11 +11,7 @@ export class VerificationService {
   /**
    * Generate a new verification token and publish event
    */
-  async sendVerificationEmail(
-    userId: string,
-    email: string,
-    name: string,
-  ): Promise<void> {
+  async sendVerificationEmail(userId: string, email: string, name: string): Promise<void> {
     // 1. Generate token
     const token = crypto.randomBytes(32).toString("hex");
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
@@ -54,11 +50,10 @@ export class VerificationService {
   async verifyEmail(token: string): Promise<{ userId: string; email: string }> {
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
-    const verificationToken =
-      await this.prisma.emailVerificationToken.findUnique({
-        where: { tokenHash },
-        include: { user: true },
-      });
+    const verificationToken = await this.prisma.emailVerificationToken.findUnique({
+      where: { tokenHash },
+      include: { user: true },
+    });
 
     if (!verificationToken) {
       throw new Error("Invalid or expired verification token");
@@ -88,10 +83,7 @@ export class VerificationService {
       }),
     ]);
 
-    logger.info(
-      { userId: verificationToken.userId },
-      "Email verified successfully",
-    );
+    logger.info({ userId: verificationToken.userId }, "Email verified successfully");
 
     return {
       userId: verificationToken.userId,

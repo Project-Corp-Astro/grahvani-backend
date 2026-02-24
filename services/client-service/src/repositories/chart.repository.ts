@@ -71,10 +71,7 @@ export class ChartRepository {
    * Find saved charts for a client
    * Implements Cache-Aside pattern with hit/miss logging
    */
-  async findByClientId(
-    tenantId: string,
-    clientId: string,
-  ): Promise<ClientSavedChart[]> {
+  async findByClientId(tenantId: string, clientId: string): Promise<ClientSavedChart[]> {
     const cacheKey = this.getCacheKey(tenantId, clientId);
     const redis = getRedisClient();
 
@@ -97,20 +94,14 @@ export class ChartRepository {
         }
       }
     } catch (error) {
-      logger.warn(
-        { error, clientId },
-        "Redis cache read failed, falling back to DB",
-      );
+      logger.warn({ error, clientId }, "Redis cache read failed, falling back to DB");
     }
 
     // 2. Implement Singleflight (Request Coalescing) for DB fetches
     // If another request is already fetching this client's charts, wait for it
     const pendingFetch = this.fetchPromises.get(cacheKey);
     if (pendingFetch) {
-      logger.debug(
-        { clientId },
-        "[COALESCING] Waiting for in-flight DB fetch for same client",
-      );
+      logger.debug({ clientId }, "[COALESCING] Waiting for in-flight DB fetch for same client");
       return pendingFetch;
     }
 
@@ -130,10 +121,7 @@ export class ChartRepository {
             await redis.set(cacheKey, JSON.stringify(charts), {
               EX: CACHE_TTL,
             });
-            logger.debug(
-              { clientId, count: charts.length },
-              "Charts cached to Redis",
-            );
+            logger.debug({ clientId, count: charts.length }, "Charts cached to Redis");
           } catch (err) {
             logger.warn({ err, clientId }, "Redis cache write failed");
           }
@@ -163,10 +151,7 @@ export class ChartRepository {
   /**
    * Find specific chart by ID
    */
-  async findById(
-    tenantId: string,
-    id: string,
-  ): Promise<ClientSavedChart | null> {
+  async findById(tenantId: string, id: string): Promise<ClientSavedChart | null> {
     const chart = await this.prisma.clientSavedChart.findFirst({
       where: { id, tenantId },
     });
@@ -187,12 +172,7 @@ export class ChartRepository {
     type: ChartType,
     system: string,
   ): Promise<ClientSavedChart | null> {
-    const cacheKey = this.getSingleChartCacheKey(
-      tenantId,
-      clientId,
-      type.toString(),
-      system,
-    );
+    const cacheKey = this.getSingleChartCacheKey(tenantId, clientId, type.toString(), system);
     const redis = getRedisClient();
 
     // 1. Try Redis Cache first
@@ -265,12 +245,8 @@ export class ChartRepository {
 
     // Compress chart data for large payloads (reduces disk IO significantly)
     const chartTypeStr = chartType.toString().toLowerCase();
-    const shouldCompress = COMPRESSIBLE_CHARTS.some((t) =>
-      chartTypeStr.includes(t),
-    );
-    const processedChartData = shouldCompress
-      ? compressChartData(data.chartData)
-      : data.chartData;
+    const shouldCompress = COMPRESSIBLE_CHARTS.some((t) => chartTypeStr.includes(t));
+    const processedChartData = shouldCompress ? compressChartData(data.chartData) : data.chartData;
 
     const result = await this.prisma.clientSavedChart.upsert({
       where: {
@@ -311,9 +287,7 @@ export class ChartRepository {
     // If updating chartData, ensure it's compressed if needed
     if (data.chartData && data.chartType) {
       const chartTypeStr = data.chartType.toString().toLowerCase();
-      const shouldCompress = COMPRESSIBLE_CHARTS.some((t) =>
-        chartTypeStr.includes(t),
-      );
+      const shouldCompress = COMPRESSIBLE_CHARTS.some((t) => chartTypeStr.includes(t));
       if (shouldCompress) {
         processedData = {
           ...data,

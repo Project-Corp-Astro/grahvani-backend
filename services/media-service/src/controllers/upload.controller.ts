@@ -8,11 +8,7 @@ import { recordUpload } from "../middleware/metrics.middleware";
  * POST /api/v1/media/upload
  * Upload a file with optional bucket and visibility
  */
-export async function handleUpload(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
+export async function handleUpload(req: Request, res: Response, next: NextFunction) {
   try {
     const authReq = req as AuthRequest;
 
@@ -35,8 +31,7 @@ export async function handleUpload(
     }
 
     const { bucket, visibility, metadata } = parsed.data;
-    const tenantId =
-      (authReq as any).user?.tenantId || (authReq as any).tenantId;
+    const tenantId = (authReq as any).user?.tenantId || (authReq as any).tenantId;
     const userId = (authReq as any).user?.userId || (authReq as any).userId;
 
     if (!tenantId || !userId) {

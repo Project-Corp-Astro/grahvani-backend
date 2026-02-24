@@ -2,25 +2,15 @@
 import { Response, NextFunction } from "express";
 import { userService } from "../services/user.service";
 import { AuthRequest } from "../middleware/auth.middleware";
-import {
-  GetUsersQuerySchema,
-  UpdateProfileRequestSchema,
-  ErrorResponse,
-} from "../dtos";
+import { GetUsersQuerySchema, UpdateProfileRequestSchema, ErrorResponse } from "../dtos";
 import { BaseError, ValidationError } from "../errors";
 import { logger } from "../config/logger";
 import { v4 as uuidv4 } from "uuid";
 import { addressService } from "../services/address.service";
-import {
-  CreateAddressRequestSchema,
-  UpdateAddressRequestSchema,
-} from "../dtos/address.dto";
+import { CreateAddressRequestSchema, UpdateAddressRequestSchema } from "../dtos/address.dto";
 
 // Helper to create structured error response
-const createErrorResponse = (
-  error: BaseError,
-  requestId: string,
-): ErrorResponse => ({
+const createErrorResponse = (error: BaseError, requestId: string): ErrorResponse => ({
   error: {
     code: error.code,
     message: error.message,
@@ -46,9 +36,7 @@ export const UserController = {
           errors[path].push(e.message);
         });
         const validationError = new ValidationError(errors);
-        return res
-          .status(400)
-          .json(createErrorResponse(validationError, requestId));
+        return res.status(400).json(createErrorResponse(validationError, requestId));
       }
 
       const tenantId = req.user!.tenantId;
@@ -73,7 +61,9 @@ export const UserController = {
       const user = await userService.getCurrentUser(tenantId, userId);
 
       // Update last active (non-blocking)
-      userService.updateLastActive(tenantId, userId).catch((err) => logger.error({ err }, "Failed to update last active"));
+      userService
+        .updateLastActive(tenantId, userId)
+        .catch((err) => logger.error({ err }, "Failed to update last active"));
 
       logger.debug({ userId: user.id }, "getMe user found");
 
@@ -81,9 +71,7 @@ export const UserController = {
     } catch (error) {
       logger.error({ err: error }, "getMe error");
       if (error instanceof BaseError) {
-        return res
-          .status(error.statusCode)
-          .json(createErrorResponse(error, requestId));
+        return res.status(error.statusCode).json(createErrorResponse(error, requestId));
       }
       next(error);
     }
@@ -104,30 +92,21 @@ export const UserController = {
           errors[path].push(e.message);
         });
         const validationError = new ValidationError(errors);
-        return res
-          .status(400)
-          .json(createErrorResponse(validationError, requestId));
+        return res.status(400).json(createErrorResponse(validationError, requestId));
       }
 
       const tenantId = req.user!.tenantId;
       const userId = req.user!.id;
 
-      const updatedUser = await userService.updateProfile(
-        tenantId,
-        userId,
-        validation.data,
-        {
-          ipAddress: req.ip,
-          userAgent: req.get("User-Agent"),
-        },
-      );
+      const updatedUser = await userService.updateProfile(tenantId, userId, validation.data, {
+        ipAddress: req.ip,
+        userAgent: req.get("User-Agent"),
+      });
 
       res.json(updatedUser);
     } catch (error) {
       if (error instanceof BaseError) {
-        return res
-          .status(error.statusCode)
-          .json(createErrorResponse(error, requestId));
+        return res.status(error.statusCode).json(createErrorResponse(error, requestId));
       }
       next(error);
     }
@@ -150,9 +129,7 @@ export const UserController = {
       res.status(204).send();
     } catch (error) {
       if (error instanceof BaseError) {
-        return res
-          .status(error.statusCode)
-          .json(createErrorResponse(error, requestId));
+        return res.status(error.statusCode).json(createErrorResponse(error, requestId));
       }
       next(error);
     }
@@ -172,9 +149,7 @@ export const UserController = {
       res.json(user);
     } catch (error) {
       if (error instanceof BaseError) {
-        return res
-          .status(error.statusCode)
-          .json(createErrorResponse(error, requestId));
+        return res.status(error.statusCode).json(createErrorResponse(error, requestId));
       }
       next(error);
     }
@@ -251,9 +226,7 @@ export const UserController = {
       });
     } catch (error) {
       if (error instanceof BaseError) {
-        return res
-          .status(error.statusCode)
-          .json(createErrorResponse(error, requestId));
+        return res.status(error.statusCode).json(createErrorResponse(error, requestId));
       }
       next(error);
     }
@@ -331,9 +304,7 @@ export const UserController = {
       });
     } catch (error) {
       if (error instanceof BaseError) {
-        return res
-          .status(error.statusCode)
-          .json(createErrorResponse(error, requestId));
+        return res.status(error.statusCode).json(createErrorResponse(error, requestId));
       }
       next(error);
     }
@@ -368,9 +339,7 @@ export const UserController = {
           if (!errors[path]) errors[path] = [];
           errors[path].push(e.message);
         });
-        return res
-          .status(400)
-          .json(createErrorResponse(new ValidationError(errors), requestId));
+        return res.status(400).json(createErrorResponse(new ValidationError(errors), requestId));
       }
 
       const userId = req.user!.id;
@@ -382,9 +351,7 @@ export const UserController = {
       res.status(201).json(address);
     } catch (error) {
       if (error instanceof BaseError) {
-        return res
-          .status(error.statusCode)
-          .json(createErrorResponse(error, requestId));
+        return res.status(error.statusCode).json(createErrorResponse(error, requestId));
       }
       next(error);
     }
@@ -405,28 +372,19 @@ export const UserController = {
           if (!errors[path]) errors[path] = [];
           errors[path].push(e.message);
         });
-        return res
-          .status(400)
-          .json(createErrorResponse(new ValidationError(errors), requestId));
+        return res.status(400).json(createErrorResponse(new ValidationError(errors), requestId));
       }
 
       const userId = req.user!.id;
-      const address = await addressService.updateAddress(
-        userId,
-        id,
-        validation.data,
-        {
-          ipAddress: req.ip,
-          userAgent: req.get("User-Agent"),
-        },
-      );
+      const address = await addressService.updateAddress(userId, id, validation.data, {
+        ipAddress: req.ip,
+        userAgent: req.get("User-Agent"),
+      });
 
       res.json(address);
     } catch (error) {
       if (error instanceof BaseError) {
-        return res
-          .status(error.statusCode)
-          .json(createErrorResponse(error, requestId));
+        return res.status(error.statusCode).json(createErrorResponse(error, requestId));
       }
       next(error);
     }
@@ -449,9 +407,7 @@ export const UserController = {
       res.status(204).send();
     } catch (error) {
       if (error instanceof BaseError) {
-        return res
-          .status(error.statusCode)
-          .json(createErrorResponse(error, requestId));
+        return res.status(error.statusCode).json(createErrorResponse(error, requestId));
       }
       next(error);
     }

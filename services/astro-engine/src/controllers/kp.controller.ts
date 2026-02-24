@@ -151,10 +151,7 @@ export class KpController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type: "planet-significators" };
-      const cached = await cacheService.get<any>(
-        "planet-significators",
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>("planet-significators", cacheKey);
       if (cached) {
         res.json({
           success: true,
@@ -187,9 +184,7 @@ export class KpController {
       const { horaryNumber, question, ...birthData } = req.body;
 
       if (!horaryNumber || !question) {
-        res
-          .status(400)
-          .json({ success: false, error: "Missing horaryNumber or question" });
+        res.status(400).json({ success: false, error: "Missing horaryNumber or question" });
         return;
       }
       if (!this.validateBirthData(birthData as BirthData, res)) return;
@@ -214,15 +209,8 @@ export class KpController {
   }
 
   private validateBirthData(data: BirthData, res: Response): boolean {
-    if (
-      !data.birthDate ||
-      !data.birthTime ||
-      !data.latitude ||
-      !data.longitude
-    ) {
-      res
-        .status(400)
-        .json({ success: false, error: "Missing required fields" });
+    if (!data.birthDate || !data.birthTime || !data.latitude || !data.longitude) {
+      res.status(400).json({ success: false, error: "Missing required fields" });
       return false;
     }
     return true;

@@ -1,9 +1,4 @@
-import axios, {
-  AxiosInstance,
-  AxiosError,
-  InternalAxiosRequestConfig,
-  AxiosResponse,
-} from "axios";
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from "axios";
 import { config } from "../config";
 import { logger } from "../config/logger";
 import { cacheService } from "./cache.service";
@@ -66,10 +61,7 @@ export class AstroEngineClient {
   private setupInterceptors(): void {
     this.client.interceptors.request.use(
       (request: InternalAxiosRequestConfig) => {
-        logger.info(
-          { url: request.url, method: request.method },
-          "Astro Engine API request",
-        );
+        logger.info({ url: request.url, method: request.method }, "Astro Engine API request");
         return request;
       },
       (error: AxiosError) => {
@@ -103,16 +95,9 @@ export class AstroEngineClient {
   /**
    * Get the resolved ayanamsa system from birth data
    */
-  private getAyanamsa(
-    data: BirthData,
-  ): "lahiri" | "kp" | "raman" | "yukteswar" | "western" {
+  private getAyanamsa(data: BirthData): "lahiri" | "kp" | "raman" | "yukteswar" | "western" {
     const ayanamsa = data.ayanamsa || "lahiri";
-    return ayanamsa.toLowerCase() as
-      | "lahiri"
-      | "kp"
-      | "raman"
-      | "yukteswar"
-      | "western";
+    return ayanamsa.toLowerCase() as "lahiri" | "kp" | "raman" | "yukteswar" | "western";
   }
 
   /**
@@ -285,16 +270,10 @@ export class AstroEngineClient {
     };
     const endpoint = endpointMap[yogaType] || yogaType;
 
-    const cached = await cacheService.get<any>(
-      `yoga:${system}:${yogaType}`,
-      data,
-    );
+    const cached = await cacheService.get<any>(`yoga:${system}:${yogaType}`, data);
     if (cached) return { data: cached, cached: true };
 
-    const response = await this.client.post(
-      `/${system}/${endpoint}`,
-      this.buildPayload(data),
-    );
+    const response = await this.client.post(`/${system}/${endpoint}`, this.buildPayload(data));
     await cacheService.set(`yoga:${system}:${yogaType}`, data, response.data);
 
     return { data: response.data, cached: false };
@@ -322,16 +301,10 @@ export class AstroEngineClient {
     };
     const endpoint = endpointMap[doshaType] || doshaType;
 
-    const cached = await cacheService.get<any>(
-      `dosha:${system}:${doshaType}`,
-      data,
-    );
+    const cached = await cacheService.get<any>(`dosha:${system}:${doshaType}`, data);
     if (cached) return { data: cached, cached: true };
 
-    const response = await this.client.post(
-      `/${system}/${endpoint}`,
-      this.buildPayload(data),
-    );
+    const response = await this.client.post(`/${system}/${endpoint}`, this.buildPayload(data));
     await cacheService.set(`dosha:${system}:${doshaType}`, data, response.data);
 
     return { data: response.data, cached: false };
@@ -343,9 +316,7 @@ export class AstroEngineClient {
   async getRemedy(data: BirthData, type: string): Promise<any> {
     const system = this.getAyanamsa(data);
     if (system !== "lahiri") {
-      throw new Error(
-        `Remedies are only available for Lahiri system. Current system: ${system}`,
-      );
+      throw new Error(`Remedies are only available for Lahiri system. Current system: ${system}`);
     }
 
     const endpointMap: Record<string, string> = {
@@ -373,20 +344,14 @@ export class AstroEngineClient {
       if (!data.house) extras.house = 1;
     }
 
-    const response = await this.client.post(
-      endpoint,
-      this.buildPayload(data, extras, options),
-    );
+    const response = await this.client.post(endpoint, this.buildPayload(data, extras, options));
     return response.data;
   }
 
   /**
    * Get Panchanga & Muhurat Elements (Generic)
    */
-  async getPanchanga(
-    data: BirthData,
-    type: string = "panchanga",
-  ): Promise<any> {
+  async getPanchanga(data: BirthData, type: string = "panchanga"): Promise<any> {
     // Panchanga is an independent module in python, but usually proxied.
     // Based on ApiEndPoints.txt, it lives at root /panchanga or /choghadiya_times etc.
     // It does NOT seem to be prefixed by /{system}/ unless it's /lahiri/guna-milan
@@ -403,10 +368,7 @@ export class AstroEngineClient {
 
     const absoluteEndpoint = endpointMap[type];
     if (absoluteEndpoint) {
-      const response = await this.client.post(
-        absoluteEndpoint,
-        this.buildPayload(data),
-      );
+      const response = await this.client.post(absoluteEndpoint, this.buildPayload(data));
       return response.data;
     }
 
@@ -420,9 +382,7 @@ export class AstroEngineClient {
   async getShadbala(data: BirthData): Promise<any> {
     const system = this.getAyanamsa(data);
     if (system !== "lahiri")
-      throw new Error(
-        "Shadbala is currently only available for Lahiri system.",
-      );
+      throw new Error("Shadbala is currently only available for Lahiri system.");
 
     const cached = await cacheService.get<any>(`shadbala:${system}`, data);
     if (cached) return { data: cached, cached: true };
@@ -452,10 +412,7 @@ export class AstroEngineClient {
       shadbala: "calculate_shadbala",
     };
     const endpoint = endpointMap[type] || type;
-    const response = await this.client.post(
-      `/${system}/${endpoint}`,
-      this.buildPayload(data),
-    );
+    const response = await this.client.post(`/${system}/${endpoint}`, this.buildPayload(data));
     return response.data;
   }
 
@@ -477,10 +434,7 @@ export class AstroEngineClient {
       );
     }
 
-    const cached = await cacheService.get<any>(
-      `divisional:${system}:${type}`,
-      data,
-    );
+    const cached = await cacheService.get<any>(`divisional:${system}:${type}`, data);
     if (cached) return { data: cached, cached: true };
 
     // System-aware endpoint mappings
@@ -639,8 +593,7 @@ export class AstroEngineClient {
         sookshma: "/raman/calculate_sookshma_dasha_raman",
         prana: "/raman/calculate_raman_prana_dasha",
       };
-      endpoint =
-        ramanEndpoints[level.toLowerCase()] || ramanEndpoints["mahadasha"];
+      endpoint = ramanEndpoints[level.toLowerCase()] || ramanEndpoints["mahadasha"];
     } else if (system === "kp") {
       const kpEndpoints: Record<string, string> = {
         mahadasha: "/kp/calculate_maha_antar_dasha",
@@ -658,9 +611,7 @@ export class AstroEngineClient {
         sookshma: "/yukteswar/calculate_sookshma_dasha",
         prana: "/yukteswar/calculate_prana_dasha",
       };
-      endpoint =
-        yukteswarEndpoints[level.toLowerCase()] ||
-        yukteswarEndpoints["mahadasha"];
+      endpoint = yukteswarEndpoints[level.toLowerCase()] || yukteswarEndpoints["mahadasha"];
     } else {
       // Lahiri/Default
       const lahiriEndpoints: Record<string, string> = {
@@ -670,8 +621,7 @@ export class AstroEngineClient {
         sookshma: "/lahiri/calculate_antar_pratyantar_sookshma_dasha",
         prana: "/lahiri/calculate_sookshma_prana_dashas",
       };
-      endpoint =
-        lahiriEndpoints[level.toLowerCase()] || lahiriEndpoints["mahadasha"];
+      endpoint = lahiriEndpoints[level.toLowerCase()] || lahiriEndpoints["mahadasha"];
     }
 
     // Map frontend camelCase context to backend snake_case if they exist
@@ -680,10 +630,7 @@ export class AstroEngineClient {
     if (context.antarLord) extras.antar_lord = context.antarLord;
     if (context.pratyantarLord) extras.pratyantar_lord = context.pratyantarLord;
 
-    const response = await this.client.post(
-      endpoint,
-      this.buildPayload(data, extras),
-    );
+    const response = await this.client.post(endpoint, this.buildPayload(data, extras));
     return response.data;
   }
 
@@ -772,10 +719,7 @@ export class AstroEngineClient {
     );
     if (cached) return { data: cached, cached: true };
 
-    const response = await this.client.post(
-      endpoint,
-      this.buildPayload(data, extras),
-    );
+    const response = await this.client.post(endpoint, this.buildPayload(data, extras));
     await cacheService.set(
       `dasha_other:${system}:${dashaType}:${JSON.stringify(extras)}`,
       data,
@@ -792,10 +736,7 @@ export class AstroEngineClient {
     const system = this.getAyanamsa(data);
     if (system !== "lahiri")
       throw new Error("Mandi calculation is only available for Lahiri system.");
-    const response = await this.client.post(
-      LAHIRI_ENDPOINTS.MANDI,
-      this.buildPayload(data),
-    );
+    const response = await this.client.post(LAHIRI_ENDPOINTS.MANDI, this.buildPayload(data));
     return response.data;
   }
 
@@ -805,13 +746,8 @@ export class AstroEngineClient {
   async getGulika(data: BirthData): Promise<any> {
     const system = this.getAyanamsa(data);
     if (system !== "lahiri")
-      throw new Error(
-        "Gulika calculation is only available for Lahiri system.",
-      );
-    const response = await this.client.post(
-      LAHIRI_ENDPOINTS.GULIKA,
-      this.buildPayload(data),
-    );
+      throw new Error("Gulika calculation is only available for Lahiri system.");
+    const response = await this.client.post(LAHIRI_ENDPOINTS.GULIKA, this.buildPayload(data));
     return response.data;
   }
 
@@ -827,8 +763,7 @@ export class AstroEngineClient {
    */
   async getD150(data: BirthData): Promise<any> {
     const system = this.getAyanamsa(data);
-    if (system !== "lahiri")
-      throw new Error("D150 Nadiamsha is only available for Lahiri system.");
+    if (system !== "lahiri") throw new Error("D150 Nadiamsha is only available for Lahiri system.");
     const response = await this.client.post(
       LAHIRI_ENDPOINTS.D150_NADIAMSHA,
       this.buildPayload(data),
@@ -848,8 +783,7 @@ export class AstroEngineClient {
     let endpoint: string = LAHIRI_ENDPOINTS.BHINNA_ASHTAKAVARGA;
 
     if (system === "raman") endpoint = RAMAN_ENDPOINTS.BHINNA_ASHTAKAVARGA;
-    if (system === "yukteswar")
-      endpoint = YUKTESWAR_ENDPOINTS.BHINNA_ASHTAKAVARGA;
+    if (system === "yukteswar") endpoint = YUKTESWAR_ENDPOINTS.BHINNA_ASHTAKAVARGA;
     if (system === "kp") endpoint = "/lahiri/calculate_binnatakvarga"; // Fallback for KP
 
     const response = await this.client.post(endpoint, this.buildPayload(data));
@@ -864,8 +798,7 @@ export class AstroEngineClient {
     let endpoint: string = LAHIRI_ENDPOINTS.SARVA_ASHTAKAVARGA;
 
     if (system === "raman") endpoint = RAMAN_ENDPOINTS.SARVA_ASHTAKAVARGA;
-    if (system === "yukteswar")
-      endpoint = YUKTESWAR_ENDPOINTS.SARVA_ASHTAKAVARGA;
+    if (system === "yukteswar") endpoint = YUKTESWAR_ENDPOINTS.SARVA_ASHTAKAVARGA;
     if (system === "kp") endpoint = "/lahiri/calculate_sarvashtakavarga"; // Fallback for KP
 
     const response = await this.client.post(endpoint, this.buildPayload(data));
@@ -881,8 +814,7 @@ export class AstroEngineClient {
 
     if (system === "raman") endpoint = RAMAN_ENDPOINTS.SHODASHA_VARGA;
     if (system === "kp") endpoint = KP_ENDPOINTS.SHODASHA_VARGA;
-    if (system === "yukteswar")
-      endpoint = YUKTESWAR_ENDPOINTS.SHODASHA_VARGA_SUMMARY;
+    if (system === "yukteswar") endpoint = YUKTESWAR_ENDPOINTS.SHODASHA_VARGA_SUMMARY;
 
     const response = await this.client.post(endpoint, this.buildPayload(data));
     return response.data;
@@ -958,12 +890,9 @@ export class AstroEngineClient {
   /**
    * Get Chaldean Numerology
    */
-  async getChaldeanNumerology(
-    data: BirthData & { name: string },
-  ): Promise<any> {
+  async getChaldeanNumerology(data: BirthData & { name: string }): Promise<any> {
     const system = this.getAyanamsa(data);
-    if (system !== "lahiri")
-      throw new Error("Numerology is only available for Lahiri system.");
+    if (system !== "lahiri") throw new Error("Numerology is only available for Lahiri system.");
 
     const endpoint = "/lahiri/chaldean_numerology";
     const response = await this.client.post(endpoint, {
@@ -977,10 +906,7 @@ export class AstroEngineClient {
    * Get Progressed Chart
    * Secondary progressions for predictive analysis
    */
-  async getProgressedChart(
-    data: BirthData,
-    progressedDate: string,
-  ): Promise<any> {
+  async getProgressedChart(data: BirthData, progressedDate: string): Promise<any> {
     const system = this.getAyanamsa(data);
     const endpoint = `/${system}/progressed`;
     const response = await this.client.post(endpoint, {
@@ -993,10 +919,7 @@ export class AstroEngineClient {
   /**
    * Get Composite Chart (midpoint chart for two people)
    */
-  async getCompositeChart(
-    person1: BirthData,
-    person2: BirthData,
-  ): Promise<any> {
+  async getCompositeChart(person1: BirthData, person2: BirthData): Promise<any> {
     const endpoint = "/lahiri/composite";
     const payload = {
       person1: this.buildPayload(person1),
@@ -1011,8 +934,7 @@ export class AstroEngineClient {
    */
   async getLoShuGrid(data: BirthData): Promise<any> {
     const system = this.getAyanamsa(data);
-    if (system !== "lahiri")
-      throw new Error("Numerology is only available for Lahiri system.");
+    if (system !== "lahiri") throw new Error("Numerology is only available for Lahiri system.");
 
     const endpoint = "/lahiri/lo_shu_grid_numerology";
     const response = await this.client.post(endpoint, this.buildPayload(data));
@@ -1050,15 +972,12 @@ export class AstroEngineClient {
   }
 
   async getKpFortuna(data: BirthData): Promise<any> {
-    return this.client
-      .post(KP_ENDPOINTS.FORTUNA, this.buildPayload(data))
-      .then((r) => r.data);
+    return this.client.post(KP_ENDPOINTS.FORTUNA, this.buildPayload(data)).then((r) => r.data);
   }
 
   async getPersonNumerology(data: BirthData): Promise<any> {
     const system = this.getAyanamsa(data);
-    if (system !== "lahiri")
-      throw new Error("Numerology is only available for Lahiri system.");
+    if (system !== "lahiri") throw new Error("Numerology is only available for Lahiri system.");
 
     const endpoint = "/lahiri/person_numerology";
     const response = await this.client.post(endpoint, this.buildPayload(data));
@@ -1067,8 +986,7 @@ export class AstroEngineClient {
 
   async getGunaMilan(data: BirthData): Promise<any> {
     const system = this.getAyanamsa(data);
-    if (system !== "lahiri")
-      throw new Error("Guna Milan is only available for Lahiri system.");
+    if (system !== "lahiri") throw new Error("Guna Milan is only available for Lahiri system.");
 
     const endpoint = "/lahiri/guna-milan";
     const response = await this.client.post(endpoint, this.buildPayload(data));

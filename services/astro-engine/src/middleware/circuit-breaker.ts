@@ -42,31 +42,19 @@ export function createCircuitBreaker<T>(
   });
 
   breaker.on("reject", () => {
-    logger.warn(
-      { circuit: name },
-      "Circuit breaker rejected call (circuit open)",
-    );
+    logger.warn({ circuit: name }, "Circuit breaker rejected call (circuit open)");
   });
 
   breaker.on("open", () => {
-    logger.error(
-      { circuit: name },
-      "Circuit breaker OPENED - external service unhealthy",
-    );
+    logger.error({ circuit: name }, "Circuit breaker OPENED - external service unhealthy");
   });
 
   breaker.on("halfOpen", () => {
-    logger.info(
-      { circuit: name },
-      "Circuit breaker half-open - testing recovery",
-    );
+    logger.info({ circuit: name }, "Circuit breaker half-open - testing recovery");
   });
 
   breaker.on("close", () => {
-    logger.info(
-      { circuit: name },
-      "Circuit breaker CLOSED - service recovered",
-    );
+    logger.info({ circuit: name }, "Circuit breaker CLOSED - service recovered");
   });
 
   breaker.on("fallback", (_result: any) => {
@@ -81,8 +69,7 @@ export function createCircuitBreaker<T>(
  */
 export const circuitOpenFallback = {
   success: false,
-  error:
-    "External Astro Engine is temporarily unavailable. Please try again in a few moments.",
+  error: "External Astro Engine is temporarily unavailable. Please try again in a few moments.",
   retryAfter: 30,
   cached: false,
 };
@@ -90,18 +77,12 @@ export const circuitOpenFallback = {
 /**
  * Get circuit breaker status for all circuits
  */
-export function getCircuitStatus(
-  breakers: Map<string, CircuitBreaker>,
-): Record<string, any> {
+export function getCircuitStatus(breakers: Map<string, CircuitBreaker>): Record<string, any> {
   const status: Record<string, any> = {};
 
   breakers.forEach((breaker, name) => {
     status[name] = {
-      state: breaker.opened
-        ? "OPEN"
-        : breaker.halfOpen
-          ? "HALF_OPEN"
-          : "CLOSED",
+      state: breaker.opened ? "OPEN" : breaker.halfOpen ? "HALF_OPEN" : "CLOSED",
       stats: breaker.stats,
     };
   });

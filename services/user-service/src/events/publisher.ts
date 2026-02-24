@@ -29,10 +29,7 @@ export class EventPublisher {
     return this.redis;
   }
 
-  async publish(
-    eventType: UserEventType,
-    payload: UserEventPayload,
-  ): Promise<void> {
+  async publish(eventType: UserEventType, payload: UserEventPayload): Promise<void> {
     try {
       const client = await this.getClient();
       const channel = `user-service:${eventType}`;

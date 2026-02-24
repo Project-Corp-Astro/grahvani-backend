@@ -248,10 +248,7 @@ export class DatabaseMonitoring {
     const beforeCount = this.alerts.length;
     this.alerts = this.alerts.filter((a) => a.timestamp.getTime() > cutoffTime);
     const cleared = beforeCount - this.alerts.length;
-    logger.info(
-      { cleared, remaining: this.alerts.length },
-      "🧹 Cleared old alerts",
-    );
+    logger.info({ cleared, remaining: this.alerts.length }, "🧹 Cleared old alerts");
   }
 }
 

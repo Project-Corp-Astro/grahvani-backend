@@ -31,9 +31,7 @@ export class S3StorageAdapter implements StorageAdapter {
     this.publicUrl = config.publicUrl || `${config.endpoint}/${config.bucket}`;
 
     this.client = new S3Client({
-      endpoint: config.endpoint.includes("amazonaws.com")
-        ? undefined
-        : config.endpoint,
+      endpoint: config.endpoint.includes("amazonaws.com") ? undefined : config.endpoint,
       region: config.region,
       credentials: {
         accessKeyId: config.accessKeyId,
@@ -42,17 +40,10 @@ export class S3StorageAdapter implements StorageAdapter {
       forcePathStyle: !config.endpoint.includes("amazonaws.com"),
     });
 
-    logger.info(
-      { bucket: this.bucket, endpoint: config.endpoint },
-      "S3 adapter initialized",
-    );
+    logger.info({ bucket: this.bucket, endpoint: config.endpoint }, "S3 adapter initialized");
   }
 
-  async upload(
-    storagePath: string,
-    buffer: Buffer,
-    mimeType: string,
-  ): Promise<string> {
+  async upload(storagePath: string, buffer: Buffer, mimeType: string): Promise<string> {
     const command = new PutObjectCommand({
       Bucket: this.bucket,
       Key: storagePath,
@@ -62,10 +53,7 @@ export class S3StorageAdapter implements StorageAdapter {
     });
 
     await this.client.send(command);
-    logger.info(
-      { path: storagePath, size: buffer.length },
-      "File uploaded to S3",
-    );
+    logger.info({ path: storagePath, size: buffer.length }, "File uploaded to S3");
 
     return this.getPublicUrl(storagePath);
   }

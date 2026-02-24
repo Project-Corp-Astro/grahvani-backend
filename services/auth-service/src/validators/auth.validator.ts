@@ -16,11 +16,7 @@ export const RegisterSchema = z.object({
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
       "Password must contain uppercase, lowercase, number, and special character",
     ),
-  name: z
-    .string()
-    .min(2, "Name must be at least 2 characters")
-    .max(100, "Name too long")
-    .trim(),
+  name: z.string().min(2, "Name must be at least 2 characters").max(100, "Name too long").trim(),
   tenantId: z.string().uuid().optional(),
 });
 

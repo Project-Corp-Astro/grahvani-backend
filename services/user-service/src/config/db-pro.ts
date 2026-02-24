@@ -64,10 +64,7 @@ export class DatabaseManager {
       if (isPoolerMode && !url.includes("pgbouncer=true")) {
         url += (url.includes("?") ? "&" : "?") + "pgbouncer=true";
       }
-      if (
-        process.env.NODE_ENV === "development" &&
-        !url.includes("connection_limit")
-      ) {
+      if (process.env.NODE_ENV === "development" && !url.includes("connection_limit")) {
         url += (url.includes("?") ? "&" : "?") + "connection_limit=5";
       }
 
@@ -137,10 +134,7 @@ export class DatabaseManager {
           throw error;
         }
 
-        logger.warn(
-          { attempt, maxRetries, error: error.message },
-          "Query failed, retrying...",
-        );
+        logger.warn({ attempt, maxRetries, error: error.message }, "Query failed, retrying...");
         await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
       }
     }
@@ -152,12 +146,7 @@ export class DatabaseManager {
     fn: (
       tx: Omit<
         PrismaClient,
-        | "$connect"
-        | "$disconnect"
-        | "$on"
-        | "$transaction"
-        | "$use"
-        | "$extends"
+        "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
       >,
     ) => Promise<T>,
     options?: { maxWait?: number; timeout?: number },
@@ -171,10 +160,7 @@ export class DatabaseManager {
       });
     } catch (error: any) {
       this.metrics.failedQueries++;
-      logger.error(
-        { error: error.message, code: error.code },
-        "Transaction failed",
-      );
+      logger.error({ error: error.message, code: error.code }, "Transaction failed");
       throw error;
     }
   }

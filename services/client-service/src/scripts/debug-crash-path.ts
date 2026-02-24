@@ -26,11 +26,7 @@ async function debugCrashPath() {
 
   try {
     // 1. Fetch from Engine
-    const res = await astroEngineClient.getVimshottariDasha(
-      birthData,
-      level,
-      context,
-    );
+    const res = await astroEngineClient.getVimshottariDasha(birthData, level, context);
     const data = res.data || res;
     const rootList = data.dasha_list || data.mahadashas || [];
 
@@ -53,10 +49,7 @@ async function debugCrashPath() {
       const node = currentNodes.find((n: any) => n.planet === lord);
       if (node) {
         lastParent = node;
-        console.log(
-          `Found ${lord}. Children available?`,
-          !!node.sublevels || !!node.antardashas,
-        );
+        console.log(`Found ${lord}. Children available?`, !!node.sublevels || !!node.antardashas);
 
         const nextLevel =
           node.sublevels ||
@@ -87,8 +80,7 @@ async function debugCrashPath() {
       console.log(
         `Parent: ${lastParent.planet}, Start: ${lastParent.start_date}, Dur: ${lastParent.duration_years}`,
       );
-      if (!lastParent.start_date)
-        console.error("CRITICAL: Parent has no start_date!");
+      if (!lastParent.start_date) console.error("CRITICAL: Parent has no start_date!");
 
       finalList = calculateSubPeriods(
         lastParent.planet,

@@ -5,13 +5,9 @@ export const GetUsersQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   search: z.string().max(100).optional(),
-  status: z
-    .enum(["active", "suspended", "pending_verification", "all"])
-    .optional(),
+  status: z.enum(["active", "suspended", "pending_verification", "all"]).optional(),
   role: z.enum(["user", "admin", "moderator"]).optional(),
-  sortBy: z
-    .enum(["created_at", "name", "last_active_at"])
-    .default("created_at"),
+  sortBy: z.enum(["created_at", "name", "last_active_at"]).default("created_at"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
@@ -35,21 +31,10 @@ export const UpdateProfileRequestSchema = z.object({
     .string()
     .min(2, "Display name must be at least 2 characters")
     .max(50, "Display name must be less than 50 characters")
-    .regex(
-      /^[a-zA-Z0-9_]+$/,
-      "Display name can only contain letters, numbers, and underscores",
-    )
+    .regex(/^[a-zA-Z0-9_]+$/, "Display name can only contain letters, numbers, and underscores")
     .optional(),
-  bio: z
-    .string()
-    .max(500, "Bio must be less than 500 characters")
-    .optional()
-    .nullable(),
-  location: z
-    .string()
-    .max(100, "Location must be less than 100 characters")
-    .optional()
-    .nullable(),
+  bio: z.string().max(500, "Bio must be less than 500 characters").optional().nullable(),
+  location: z.string().max(100, "Location must be less than 100 characters").optional().nullable(),
   website: z
     .string()
     .url("Invalid website URL")
@@ -66,10 +51,7 @@ export const UpdateProfileRequestSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)")
     .optional()
     .nullable(),
-  gender: z
-    .enum(["male", "female", "other", "prefer_not_to_say"])
-    .optional()
-    .nullable(),
+  gender: z.enum(["male", "female", "other", "prefer_not_to_say"]).optional().nullable(),
   isPublic: z.boolean().optional(),
   socialLinks: z
     .object({

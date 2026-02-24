@@ -48,42 +48,18 @@ router.use("/panchanga", panchangaRoutes);
 // UNIVERSAL PANCHANGA ROUTES (root-level, matching Python engine endpoints)
 // These are birth-date based and system-agnostic
 // =============================================================================
-router.post(
-  "/panchanga",
-  panchangaController.getPanchanga.bind(panchangaController),
-);
-router.post(
-  "/choghadiya_times",
-  panchangaController.getChoghadiya.bind(panchangaController),
-);
-router.post(
-  "/hora_times",
-  panchangaController.getHora.bind(panchangaController),
-);
-router.post(
-  "/lagna_times",
-  panchangaController.getLagnaTimes.bind(panchangaController),
-);
-router.post(
-  "/muhurat",
-  panchangaController.getMuhurat.bind(panchangaController),
-);
-router.post(
-  "/avakhada_chakra",
-  panchangaController.getAvakhadaChakra.bind(panchangaController),
-);
+router.post("/panchanga", panchangaController.getPanchanga.bind(panchangaController));
+router.post("/choghadiya_times", panchangaController.getChoghadiya.bind(panchangaController));
+router.post("/hora_times", panchangaController.getHora.bind(panchangaController));
+router.post("/lagna_times", panchangaController.getLagnaTimes.bind(panchangaController));
+router.post("/muhurat", panchangaController.getMuhurat.bind(panchangaController));
+router.post("/avakhada_chakra", panchangaController.getAvakhadaChakra.bind(panchangaController));
 router.post(
   "/tatkalik_maitri_chakra",
   panchangaController.getTatkalikMaitriChakra.bind(panchangaController),
 );
-router.post(
-  "/gl_chart",
-  panchangaController.getGlChart.bind(panchangaController),
-);
-router.post(
-  "/karaka_strength",
-  panchangaController.getKarakaStrength.bind(panchangaController),
-);
+router.post("/gl_chart", panchangaController.getGlChart.bind(panchangaController));
+router.post("/karaka_strength", panchangaController.getKarakaStrength.bind(panchangaController));
 router.post(
   "/pushkara-navamsha",
   panchangaController.getPushkaraNavamsha.bind(panchangaController),

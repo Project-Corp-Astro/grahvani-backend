@@ -16,11 +16,7 @@ async function debugDeep() {
   const context = { mahaLord: "Venus", antarLord: "Venus" };
 
   console.log("Context:", context);
-  const res = await astroEngineClient.getVimshottariDasha(
-    birthData,
-    "pratyantar",
-    context,
-  );
+  const res = await astroEngineClient.getVimshottariDasha(birthData, "pratyantar", context);
 
   const data = res.data || res;
   // Keys?

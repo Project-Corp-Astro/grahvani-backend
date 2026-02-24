@@ -18,18 +18,11 @@ export class LocalStorageAdapter implements StorageAdapter {
 
     // Ensure base directory exists
     fs.mkdir(this.basePath, { recursive: true }).catch((err) => {
-      logger.error(
-        { err, path: this.basePath },
-        "Failed to create storage directory",
-      );
+      logger.error({ err, path: this.basePath }, "Failed to create storage directory");
     });
   }
 
-  async upload(
-    storagePath: string,
-    buffer: Buffer,
-    _mimeType: string,
-  ): Promise<string> {
+  async upload(storagePath: string, buffer: Buffer, _mimeType: string): Promise<string> {
     const fullPath = path.join(this.basePath, storagePath);
     const dir = path.dirname(fullPath);
 
@@ -38,10 +31,7 @@ export class LocalStorageAdapter implements StorageAdapter {
 
     // Write file
     await fs.writeFile(fullPath, buffer);
-    logger.info(
-      { path: storagePath, size: buffer.length },
-      "File saved to local storage",
-    );
+    logger.info({ path: storagePath, size: buffer.length }, "File saved to local storage");
 
     return this.getPublicUrl(storagePath);
   }

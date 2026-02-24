@@ -24,14 +24,8 @@ router.delete("/me/addresses/:id", UserController.deleteAddress);
 // ============ /me/preferences Endpoints ============
 router.get("/me/preferences", PreferencesController.getPreferences);
 router.put("/me/preferences", PreferencesController.updatePreferences);
-router.patch(
-  "/me/preferences/:category/:key",
-  PreferencesController.updateSinglePreference,
-);
-router.delete(
-  "/me/preferences/:category/:key",
-  PreferencesController.deletePreference,
-);
+router.patch("/me/preferences/:category/:key", PreferencesController.updateSinglePreference);
+router.delete("/me/preferences/:category/:key", PreferencesController.deletePreference);
 
 // ============ Admin Endpoints ============
 router.get("/", adminMiddleware, UserController.getUsers);

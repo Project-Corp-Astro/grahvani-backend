@@ -50,13 +50,9 @@ export class AdvancedCacheManager {
       ...data,
       // Normalize date/time for consistency
       birthDate:
-        typeof data["birthDate"] === "string"
-          ? data["birthDate"].split("T")[0]
-          : data["birthDate"],
+        typeof data["birthDate"] === "string" ? data["birthDate"].split("T")[0] : data["birthDate"],
       // Normalize coordinates to 2 decimals
-      latitude: data["latitude"]
-        ? parseFloat((data["latitude"] as number).toFixed(2))
-        : undefined,
+      latitude: data["latitude"] ? parseFloat((data["latitude"] as number).toFixed(2)) : undefined,
       longitude: data["longitude"]
         ? parseFloat((data["longitude"] as number).toFixed(2))
         : undefined,
@@ -116,10 +112,7 @@ export class AdvancedCacheManager {
         if (dbData) {
           this.storeMemory(cacheKey, dbData);
           this.recordHit(prefix, Date.now() - startTime);
-          logger.info(
-            { key: cacheKey, source: "database" },
-            "Cache HIT (Database)",
-          );
+          logger.info({ key: cacheKey, source: "database" }, "Cache HIT (Database)");
           return { data: dbData, source: "database", cached: true };
         }
       }
@@ -129,10 +122,7 @@ export class AdvancedCacheManager {
         const freshData = await fetchStrategies.calculation();
         this.storeMemory(cacheKey, freshData);
         this.recordMiss(prefix, Date.now() - startTime);
-        logger.info(
-          { key: cacheKey, source: "calculation" },
-          "Cache MISS - Calculated",
-        );
+        logger.info({ key: cacheKey, source: "calculation" }, "Cache MISS - Calculated");
         return { data: freshData, source: "calculation", cached: false };
       }
 
@@ -147,11 +137,7 @@ export class AdvancedCacheManager {
    * Smart cache invalidation
    * Cascading invalidation: Chart change invalidates all related dashas
    */
-  invalidateRelated(
-    prefix: string,
-    clientId: string,
-    cascadeDepth: number = 2,
-  ): number {
+  invalidateRelated(prefix: string, clientId: string, cascadeDepth: number = 2): number {
     let invalidatedCount = 0;
 
     // Generate patterns to invalidate
@@ -170,10 +156,7 @@ export class AdvancedCacheManager {
       }
     }
 
-    logger.warn(
-      { prefix, clientId, invalidatedCount, cascadeDepth },
-      "Cache invalidated",
-    );
+    logger.warn({ prefix, clientId, invalidatedCount, cascadeDepth }, "Cache invalidated");
 
     return invalidatedCount;
   }

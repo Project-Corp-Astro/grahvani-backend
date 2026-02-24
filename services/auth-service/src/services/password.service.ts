@@ -14,11 +14,7 @@ import {
   ResetPasswordInput,
   ChangePasswordInput,
 } from "../validators/auth.validator";
-import {
-  NotFoundError,
-  InvalidTokenError,
-  InvalidCredentialsError,
-} from "../errors/auth.errors";
+import { NotFoundError, InvalidTokenError, InvalidCredentialsError } from "../errors/auth.errors";
 
 export class PasswordService {
   private prisma = getPrismaClient();
@@ -38,10 +34,7 @@ export class PasswordService {
 
     // Always succeed to prevent email enumeration
     if (!user) {
-      logger.info(
-        { email: data.email },
-        "Password reset requested for non-existent email",
-      );
+      logger.info({ email: data.email }, "Password reset requested for non-existent email");
       return;
     }
 
@@ -84,10 +77,7 @@ export class PasswordService {
   /**
    * Reset password with token
    */
-  async resetPassword(
-    data: ResetPasswordInput,
-    metadata: RequestMetadata,
-  ): Promise<void> {
+  async resetPassword(data: ResetPasswordInput, metadata: RequestMetadata): Promise<void> {
     // Find valid token
     const tokenHash = this.hashToken(data.token);
     const resetToken = await this.prisma.passwordResetToken.findUnique({
@@ -161,19 +151,13 @@ export class PasswordService {
       throw new InvalidCredentialsError();
     }
 
-    const isValid = await bcrypt.compare(
-      data.currentPassword,
-      user.passwordHash,
-    );
+    const isValid = await bcrypt.compare(data.currentPassword, user.passwordHash);
     if (!isValid) {
       throw new InvalidCredentialsError();
     }
 
     // Hash new password
-    const passwordHash = await bcrypt.hash(
-      data.newPassword,
-      config.bcrypt.rounds,
-    );
+    const passwordHash = await bcrypt.hash(data.newPassword, config.bcrypt.rounds);
 
     // Update password
     await this.prisma.user.update({

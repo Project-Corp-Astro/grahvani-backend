@@ -19,10 +19,7 @@ async function debugMercury() {
 
   console.log("Fetching Root (Level=Mahadasha/Deep)...");
   try {
-    const res = await astroEngineClient.getVimshottariDasha(
-      birthData,
-      "mahadasha",
-    );
+    const res = await astroEngineClient.getVimshottariDasha(birthData, "mahadasha");
     const data = res.data || res;
     const mahas = data.dasha_list || data.mahadashas || [];
 
@@ -48,8 +45,7 @@ async function debugMercury() {
         );
 
         // Inspect deeper
-        const pratyantars =
-          mercuryAntar.pratyantardashas || mercuryAntar.sublevels || [];
+        const pratyantars = mercuryAntar.pratyantardashas || mercuryAntar.sublevels || [];
         if (pratyantars.length > 0) {
           console.log(`  Mercury Antar has ${pratyantars.length} Pratyantars.`);
           const mercuryPrat = pratyantars.find((p) => p.planet === "Mercury");
@@ -59,10 +55,7 @@ async function debugMercury() {
             );
           } else {
             console.log(`    Mercury Pratyantar not found in list.`);
-            console.log(
-              "    Pratyantar List Sample:",
-              JSON.stringify(pratyantars[0]),
-            );
+            console.log("    Pratyantar List Sample:", JSON.stringify(pratyantars[0]));
           }
         } else {
           console.log("  No Pratyantars found nested in Antar.");

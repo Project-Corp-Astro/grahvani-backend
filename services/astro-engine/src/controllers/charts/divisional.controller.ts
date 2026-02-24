@@ -1,11 +1,5 @@
 import { Request, Response } from "express";
-import {
-  lahiriClient,
-  ramanClient,
-  yukteswarClient,
-  BirthData,
-  AyanamsaType,
-} from "../../clients";
+import { lahiriClient, ramanClient, yukteswarClient, BirthData, AyanamsaType } from "../../clients";
 import { cacheService } from "../../services/cache.service";
 import { logger } from "../../config/logger";
 
@@ -29,10 +23,7 @@ export class DivisionalController {
       if (!this.validateChartType(type, res)) return;
 
       const cacheKey = { ...birthData, type, ayanamsa };
-      const cached = await cacheService.get<any>(
-        `divisional:${type}:${ayanamsa}`,
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>(`divisional:${type}:${ayanamsa}`, cacheKey);
 
       if (cached) {
         res.json({
@@ -49,11 +40,7 @@ export class DivisionalController {
       const client = this.getClient(ayanamsa);
       const chartData = await client.getDivisionalChart(birthData, type);
 
-      await cacheService.set(
-        `divisional:${type}:${ayanamsa}`,
-        cacheKey,
-        chartData,
-      );
+      await cacheService.set(`divisional:${type}:${ayanamsa}`, cacheKey, chartData);
 
       res.json({
         success: true,
@@ -64,10 +51,7 @@ export class DivisionalController {
         calculatedAt: new Date().toISOString(),
       });
     } catch (error: any) {
-      logger.error(
-        { error: error.message, type: req.params.type },
-        "Divisional chart failed",
-      );
+      logger.error({ error: error.message, type: req.params.type }, "Divisional chart failed");
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -92,15 +76,8 @@ export class DivisionalController {
   }
 
   private validateBirthData(data: BirthData, res: Response): boolean {
-    if (
-      !data.birthDate ||
-      !data.birthTime ||
-      !data.latitude ||
-      !data.longitude
-    ) {
-      res
-        .status(400)
-        .json({ success: false, error: "Missing required fields" });
+    if (!data.birthDate || !data.birthTime || !data.latitude || !data.longitude) {
+      res.status(400).json({ success: false, error: "Missing required fields" });
       return false;
     }
     return true;

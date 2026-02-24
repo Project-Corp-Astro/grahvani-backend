@@ -1,9 +1,6 @@
 import { chartRepository } from "../repositories/chart.repository";
 import { clientRepository } from "../repositories/client.repository";
-import {
-  ClientNotFoundError,
-  FeatureNotSupportedError,
-} from "../errors/client.errors";
+import { ClientNotFoundError, FeatureNotSupportedError } from "../errors/client.errors";
 import { eventPublisher } from "./event.publisher";
 import { activityService } from "./activity.service";
 import { RequestMetadata } from "./client.service";
@@ -19,8 +16,7 @@ import {
   // clearEndpointFailure,
 } from "../config";
 
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Max concurrent DB operations for Supabase free tier (10 connections max)
 const MAX_CONCURRENT_OPS = 1; // Strict limit to avoid "MaxClientsInSessionMode"
@@ -72,12 +68,7 @@ export class ChartService {
   /**
    * Save a chart for a client
    */
-  async saveChart(
-    tenantId: string,
-    clientId: string,
-    data: any,
-    metadata: RequestMetadata,
-  ) {
+  async saveChart(tenantId: string, clientId: string, data: any, metadata: RequestMetadata) {
     const client = await clientRepository.findById(tenantId, clientId);
     if (!client) throw new ClientNotFoundError(clientId);
 
@@ -119,10 +110,7 @@ export class ChartService {
       },
     });
 
-    logger.info(
-      { tenantId, clientId, chartId: chart.id },
-      "Astrological chart saved",
-    );
+    logger.info({ tenantId, clientId, chartId: chart.id }, "Astrological chart saved");
 
     return chart;
   }
@@ -130,11 +118,7 @@ export class ChartService {
   /**
    * Get saved charts for client
    */
-  async getClientCharts(
-    tenantId: string,
-    clientId: string,
-    _metadata?: RequestMetadata,
-  ) {
+  async getClientCharts(tenantId: string, clientId: string, _metadata?: RequestMetadata) {
     // Pre-emptive technical audit
     // Fetch charts once
     const charts = await chartRepository.findByClientId(tenantId, clientId);
@@ -144,10 +128,7 @@ export class ChartService {
     const filteredCharts = charts.filter((c) => {
       if (c.chartType === ("dasha" as any)) {
         const config = c.chartConfig as any;
-        if (
-          config?.level === "mahadasha_to_prana" ||
-          config?.level === "exhaustive_vimshottari"
-        ) {
+        if (config?.level === "mahadasha_to_prana" || config?.level === "exhaustive_vimshottari") {
           return false;
         }
       }
@@ -236,10 +217,7 @@ export class ChartService {
     } else if (normalizedType === "moon" || normalizedType === "moon_chart") {
       chartData = await astroEngineClient.getMoonChart(birthData, system);
       dbChartType = "moon_chart";
-    } else if (
-      normalizedType === "arudha" ||
-      normalizedType === "arudha_lagna"
-    ) {
+    } else if (normalizedType === "arudha" || normalizedType === "arudha_lagna") {
       chartData = await astroEngineClient.getArudhaLagna(birthData, system);
       dbChartType = "arudha_lagna";
     } else if (normalizedType === "bhava" || normalizedType === "bhava_lagna") {
@@ -248,10 +226,7 @@ export class ChartService {
     } else if (normalizedType === "hora" || normalizedType === "hora_lagna") {
       chartData = await astroEngineClient.getHoraLagna(birthData, system);
       dbChartType = "hora_lagna";
-    } else if (
-      normalizedType === "sripathi" ||
-      normalizedType === "sripathi_bhava"
-    ) {
+    } else if (normalizedType === "sripathi" || normalizedType === "sripathi_bhava") {
       chartData = await astroEngineClient.getSripathiBhava(birthData, system);
       dbChartType = "sripathi_bhava";
     } else if (normalizedType === "kp_bhava") {
@@ -300,20 +275,17 @@ export class ChartService {
       // Daily Transit (Gochar Duration) — Lahiri-only, NO DB storage
       // Dynamic data fetched live for a date range
       const now = new Date();
-      const startDate =
-        extras?.transitStartDate || now.toISOString().split("T")[0];
+      const startDate = extras?.transitStartDate || now.toISOString().split("T")[0];
       const endDateObj = new Date(now);
       endDateObj.setDate(endDateObj.getDate() + 7); // Default: 7 day range
-      const endDate =
-        extras?.transitEndDate || endDateObj.toISOString().split("T")[0];
+      const endDate = extras?.transitEndDate || endDateObj.toISOString().split("T")[0];
 
       const dailyTransitData = {
         ...birthData,
         transitStartDate: startDate,
         transitEndDate: endDate,
       };
-      const dailyData =
-        await astroEngineClient.getDailyTransit(dailyTransitData);
+      const dailyData = await astroEngineClient.getDailyTransit(dailyTransitData);
 
       // Return directly — NO database save for dynamic transit data
       return {
@@ -325,10 +297,7 @@ export class ChartService {
         cached: dailyData.cached,
         success: true,
       };
-    } else if (
-      normalizedType === "sudarshan" ||
-      normalizedType === "sudarshana"
-    ) {
+    } else if (normalizedType === "sudarshan" || normalizedType === "sudarshana") {
       chartData = await astroEngineClient.getSudarshanChakra(birthData, system);
       dbChartType = "sudarshana";
     } else if (normalizedType === "numerology_chaldean") {
@@ -340,37 +309,16 @@ export class ChartService {
     } else if (normalizedType === "numerology_loshu") {
       chartData = await astroEngineClient.getLoShuGrid(birthData);
       dbChartType = "numerology_loshu";
-    } else if (
-      normalizedType.startsWith("yoga_") ||
-      normalizedType.startsWith("yoga:")
-    ) {
+    } else if (normalizedType.startsWith("yoga_") || normalizedType.startsWith("yoga:")) {
       const yogaType = normalizedType.replace("yoga_", "").replace("yoga:", "");
-      chartData = await astroEngineClient.getYogaAnalysis(
-        birthData,
-        yogaType,
-        system,
-      );
+      chartData = await astroEngineClient.getYogaAnalysis(birthData, yogaType, system);
       dbChartType = `yoga_${yogaType}` as any;
-    } else if (
-      normalizedType.startsWith("dosha_") ||
-      normalizedType.startsWith("dosha:")
-    ) {
-      const doshaType = normalizedType
-        .replace("dosha_", "")
-        .replace("dosha:", "");
-      chartData = await astroEngineClient.getDoshaAnalysis(
-        birthData,
-        doshaType,
-        system,
-      );
+    } else if (normalizedType.startsWith("dosha_") || normalizedType.startsWith("dosha:")) {
+      const doshaType = normalizedType.replace("dosha_", "").replace("dosha:", "");
+      chartData = await astroEngineClient.getDoshaAnalysis(birthData, doshaType, system);
       dbChartType = `dosha_${doshaType}` as any;
-    } else if (
-      normalizedType.startsWith("remedy_") ||
-      normalizedType.startsWith("remedy:")
-    ) {
-      const remedyType = normalizedType
-        .replace("remedy_", "")
-        .replace("remedy:", "");
+    } else if (normalizedType.startsWith("remedy_") || normalizedType.startsWith("remedy:")) {
+      const remedyType = normalizedType.replace("remedy_", "").replace("remedy:", "");
 
       // CRITICAL FIX: Lal Kitab requires planet/house from extras
       // PLANET MUST BE TITLE CASE (e.g. "Sun", not "sun") for Python engine
@@ -380,11 +328,7 @@ export class ChartService {
         house: extras?.house,
       };
 
-      chartData = await astroEngineClient.getRemedy(
-        remedyBirthData,
-        remedyType,
-        system,
-      );
+      chartData = await astroEngineClient.getRemedy(remedyBirthData, remedyType, system);
       // Map 'vedic' to the more specific 'remedy_vedic_remedies' database enum
       if (remedyType === "vedic" || remedyType === "vedic_remedies") {
         dbChartType = "remedy_vedic_remedies" as any;
@@ -452,10 +396,7 @@ export class ChartService {
       normalizedType === "shodasha_varga_signs" ||
       normalizedType === "shodasha_varga_summary"
     ) {
-      chartData = await astroEngineClient.getShodashaVargaSummary(
-        birthData,
-        system,
-      );
+      chartData = await astroEngineClient.getShodashaVargaSummary(birthData, system);
       dbChartType = "shodasha_varga_signs";
       // =========================================================================
       // NEW INTEGRATED ROUTES
@@ -583,10 +524,7 @@ export class ChartService {
       chartData = await astroEngineClient.getKarakaStrength(birthData, system);
       dbChartType = "karaka_strength";
     } else if (normalizedType === "tatkalik_maitri_chakra") {
-      chartData = await astroEngineClient.getTatkalikMaitriChakra(
-        birthData,
-        system,
-      );
+      chartData = await astroEngineClient.getTatkalikMaitriChakra(birthData, system);
       dbChartType = "tatkalik_maitri_chakra";
     } else if (normalizedType === "pushkara_navamsha") {
       chartData = await astroEngineClient.getPushkaraNavamsha(birthData);
@@ -596,19 +534,11 @@ export class ChartService {
       dbChartType = "yukteswar_transit";
     } else if (normalizedType.startsWith("yoga_")) {
       const yogaType = normalizedType.replace("yoga_", "");
-      chartData = await astroEngineClient.getYogaAnalysis(
-        birthData,
-        yogaType,
-        system,
-      );
+      chartData = await astroEngineClient.getYogaAnalysis(birthData, yogaType, system);
       dbChartType = normalizedType as any;
     } else if (normalizedType.startsWith("dosha_")) {
       const doshaType = normalizedType.replace("dosha_", "");
-      chartData = await astroEngineClient.getDoshaAnalysis(
-        birthData,
-        doshaType,
-        system,
-      );
+      chartData = await astroEngineClient.getDoshaAnalysis(birthData, doshaType, system);
       dbChartType = normalizedType as any;
     } else if (normalizedType === "mandi") {
       chartData = await astroEngineClient.getMandi(birthData, system);
@@ -618,11 +548,7 @@ export class ChartService {
       dbChartType = "gulika";
     } else {
       // Default to divisional chart generation
-      chartData = await astroEngineClient.getDivisionalChart(
-        birthData,
-        chartType,
-        system,
-      );
+      chartData = await astroEngineClient.getDivisionalChart(birthData, chartType, system);
     }
 
     // Save chart to database
@@ -643,14 +569,7 @@ export class ChartService {
     // ADDITIONALLY store yoga/dosha in dedicated table (non-destructive, fire-and-forget)
     if (dbChartType.startsWith("yoga_")) {
       const yogaType = dbChartType.replace("yoga_", "");
-      yogaDoshaService.storeYogaDosha(
-        tenantId,
-        clientId,
-        "yoga",
-        yogaType,
-        system,
-        chartData.data,
-      );
+      yogaDoshaService.storeYogaDosha(tenantId, clientId, "yoga", yogaType, system, chartData.data);
     } else if (dbChartType.startsWith("dosha_")) {
       const doshaType = dbChartType.replace("dosha_", "");
       yogaDoshaService.storeYogaDosha(
@@ -678,11 +597,7 @@ export class ChartService {
   /**
    * Bulk generate core charts (D1, D9) for all included systems
    */
-  async generateCoreCharts(
-    tenantId: string,
-    clientId: string,
-    metadata: RequestMetadata,
-  ) {
+  async generateCoreCharts(tenantId: string, clientId: string, metadata: RequestMetadata) {
     const systems: AyanamsaSystem[] = ["lahiri", "raman", "kp"];
     const operations: (() => Promise<any>)[] = [];
 
@@ -690,13 +605,7 @@ export class ChartService {
       const vargas = sys === "kp" ? ["D1"] : ["D1", "D9"];
       for (const varga of vargas) {
         operations.push(() =>
-          this.generateAndSaveChart(
-            tenantId,
-            clientId,
-            varga,
-            sys,
-            metadata,
-          ).catch((err) =>
+          this.generateAndSaveChart(tenantId, clientId, varga, sys, metadata).catch((err) =>
             logger.error(
               { err, clientId, sys, varga },
               "Bulk generation failed for specific chart",
@@ -717,12 +626,8 @@ export class ChartService {
       .filter((client) => client.birthDate && client.birthTime)
       .map(
         (client) => () =>
-          this.generateFullVedicProfile(tenantId, client.id, metadata).catch(
-            (err) =>
-              logger.error(
-                { err, clientId: client.id },
-                "Bulk complete profile failed for client",
-              ),
+          this.generateFullVedicProfile(tenantId, client.id, metadata).catch((err) =>
+            logger.error({ err, clientId: client.id }, "Bulk complete profile failed for client"),
           ),
       );
 
@@ -752,14 +657,8 @@ export class ChartService {
       if (!client) return;
 
       // STRICT ABORT: If client is being deleted (marked as failed), stop immediately
-      if (
-        client.generationStatus === "failed" ||
-        abortedClients.has(clientId)
-      ) {
-        logger.info(
-          { clientId },
-          "🛑 AUDIT: Aborted (Client is deleting/failed)",
-        );
+      if (client.generationStatus === "failed" || abortedClients.has(clientId)) {
+        logger.info({ clientId }, "🛑 AUDIT: Aborted (Client is deleting/failed)");
         return;
       }
 
@@ -780,28 +679,21 @@ export class ChartService {
       (async () => {
         try {
           const auditTasks = systemsToCheck.map(async (system) => {
-            const missing = await this.getMissingCharts(
-              tenantId,
-              clientId,
-              system,
-            );
+            const missing = await this.getMissingCharts(tenantId, clientId, system);
             if (missing.length > 0) {
               logger.debug(
                 { clientId, system, missingCount: missing.length },
                 "🚑 AUDIT: Missing charts detected",
               );
               // Trigger specific system generation in background
-              await this.generateSystemProfile(
-                tenantId,
-                clientId,
-                system,
-                metadata,
-              ).catch((err) => {
-                logger.error(
-                  { err: err.message, clientId, system },
-                  "❌ Background auto-healing failed",
-                );
-              });
+              await this.generateSystemProfile(tenantId, clientId, system, metadata).catch(
+                (err) => {
+                  logger.error(
+                    { err: err.message, clientId, system },
+                    "❌ Background auto-healing failed",
+                  );
+                },
+              );
             }
           });
 
@@ -835,10 +727,7 @@ export class ChartService {
 
           // Final sync: if nothing was missing but status is off, fix it
           if (!targetSystem) {
-            const finalClient = await clientRepository.findById(
-              tenantId,
-              clientId,
-            );
+            const finalClient = await clientRepository.findById(tenantId, clientId);
             if (finalClient && finalClient.generationStatus !== "completed") {
               await clientRepository.update(tenantId, clientId, {
                 generationStatus: "completed",
@@ -850,10 +739,7 @@ export class ChartService {
           generationLocks.delete(clientId);
         }
       })().catch((err) => {
-        logger.error(
-          { err: err.message, clientId },
-          "Background audit failure",
-        );
+        logger.error({ err: err.message, clientId }, "Background audit failure");
         generationLocks.delete(clientId);
       });
     } catch (error) {
@@ -889,10 +775,7 @@ export class ChartService {
         // Must explicitly cast or ensure tenantId is present on the client object
         const tenantId = client.tenantId;
         if (!tenantId) {
-          logger.warn(
-            { clientId: client.id },
-            "RECOVERY: Skipping client with missing tenantId",
-          );
+          logger.warn({ clientId: client.id }, "RECOVERY: Skipping client with missing tenantId");
           return;
         }
 
@@ -902,10 +785,7 @@ export class ChartService {
           userAgent: "Backend/StartupScript",
         };
 
-        logger.info(
-          { clientId: client.id },
-          "🚑 RECOVERY: Resuming generation for client",
-        );
+        logger.info({ clientId: client.id }, "🚑 RECOVERY: Resuming generation for client");
         // Force check all systems
         await this.ensureFullVedicProfile(tenantId, client.id, metadata);
       });
@@ -962,14 +842,8 @@ export class ChartService {
       if (!client) throw new Error("Client not found");
 
       // STRICT ABORT: If client is being deleted (marked as failed), stop immediately
-      if (
-        client.generationStatus === "failed" ||
-        abortedClients.has(clientId)
-      ) {
-        logger.info(
-          { clientId },
-          "🛑 GENERATION: Aborted (Client is deleting/failed)",
-        );
+      if (client.generationStatus === "failed" || abortedClients.has(clientId)) {
+        logger.info({ clientId }, "🛑 GENERATION: Aborted (Client is deleting/failed)");
         return { status: "aborted" };
       }
 
@@ -989,17 +863,8 @@ export class ChartService {
       ];
       for (const chartType of universalChartTypes) {
         try {
-          logger.info(
-            { clientId, chartType },
-            `📅 Generating ${chartType} (universal)`,
-          );
-          await this.generateAndSaveChart(
-            tenantId,
-            clientId,
-            chartType,
-            "lahiri" as any,
-            metadata,
-          );
+          logger.info({ clientId, chartType }, `📅 Generating ${chartType} (universal)`);
+          await this.generateAndSaveChart(tenantId, clientId, chartType, "lahiri" as any, metadata);
         } catch (err: any) {
           // Non-fatal: Log but continue with other charts
           logger.error(
@@ -1009,12 +874,7 @@ export class ChartService {
         }
       }
 
-      const ayanamsas: AyanamsaSystem[] = [
-        "lahiri",
-        "kp",
-        "raman",
-        "yukteswar",
-      ];
+      const ayanamsas: AyanamsaSystem[] = ["lahiri", "kp", "raman", "yukteswar"];
 
       // 2. Sequential-Parallel Orchestration
       // To prevent connection pool exhaustion, we run 2 systems at a time
@@ -1025,9 +885,7 @@ export class ChartService {
 
       for (const batch of [batch1, batch2]) {
         const outcomes = await Promise.allSettled(
-          batch.map((system) =>
-            this.generateSystemProfile(tenantId, clientId, system, metadata),
-          ),
+          batch.map((system) => this.generateSystemProfile(tenantId, clientId, system, metadata)),
         );
 
         batch.forEach((system, index) => {
@@ -1035,10 +893,7 @@ export class ChartService {
           if (outcome.status === "fulfilled") {
             results[system] = outcome.value;
           } else {
-            logger.error(
-              { system, err: outcome.reason, clientId },
-              "❌ System generation failed",
-            );
+            logger.error({ system, err: outcome.reason, clientId }, "❌ System generation failed");
             results[system] = { status: "failed", error: outcome.reason };
           }
         });
@@ -1051,17 +906,11 @@ export class ChartService {
       } as any);
 
       const duration = Date.now() - startTime;
-      logger.info(
-        { clientId, duration },
-        "✅ Full Vedic Profile orchestrated finished (Parallel)",
-      );
+      logger.info({ clientId, duration }, "✅ Full Vedic Profile orchestrated finished (Parallel)");
 
       return { status: "success", duration, results };
     } catch (error: any) {
-      logger.error(
-        { error: error.message, clientId },
-        "Vedic Profile orchestration failed",
-      );
+      logger.error({ error: error.message, clientId }, "Vedic Profile orchestration failed");
       await clientRepository.update(tenantId, clientId, {
         generationStatus: "failed",
       } as any);
@@ -1090,18 +939,9 @@ export class ChartService {
       );
       // Batch within a system is still safe to avoid connection spikes,
       // but multiple systems now run their batches in parallel.
-      await this.generateMissingCharts(
-        tenantId,
-        clientId,
-        missing,
-        system,
-        metadata,
-      );
+      await this.generateMissingCharts(tenantId, clientId, missing, system, metadata);
     } else {
-      logger.debug(
-        { system, clientId },
-        `✅ [${system.toUpperCase()}] Already complete`,
-      );
+      logger.debug({ system, clientId }, `✅ [${system.toUpperCase()}] Already complete`);
     }
 
     return { missingCount: missing.length, status: "success" };
@@ -1125,61 +965,40 @@ export class ChartService {
 
       // ABORT CHECK: If client was deleted (lock removed or aborted flag set)
       if (!generationLocks.has(clientId) || abortedClients.has(clientId)) {
-        logger.info(
-          { clientId, system },
-          "🛑 GENERATION: Aborted (Client likely deleted)",
-        );
+        logger.info({ clientId, system }, "🛑 GENERATION: Aborted (Client likely deleted)");
         return;
       }
 
       // Skip endpoints that have recently failed
       if (shouldSkipEndpoint(system, chartType)) {
-        logger.debug(
-          { system, chartType },
-          "Skipping previously failed endpoint",
-        );
+        logger.debug({ system, chartType }, "Skipping previously failed endpoint");
         continue;
       }
 
       // DOUBLE CHECK: Validate chart is still applicable (in case of cached old missing list)
       if (!isChartAvailable(system, chartType)) {
-        logger.debug(
-          { system, chartType },
-          "Skipping inapplicable chart for system",
-        );
+        logger.debug({ system, chartType }, "Skipping inapplicable chart for system");
         continue;
       }
 
       if (lowerType.startsWith("ashtakavarga_")) {
-        const type = lowerType.replace("ashtakavarga_", "") as
-          | "sarva"
-          | "bhinna"
-          | "shodasha";
+        const type = lowerType.replace("ashtakavarga_", "") as "sarva" | "bhinna" | "shodasha";
         operations.push(() =>
-          this.generateAndSaveAshtakavarga(
-            tenantId,
-            clientId,
-            type,
-            system,
-            metadata,
-          ).catch((err) => {
-            if (err?.statusCode === 404 || err?.statusCode === 500) {
-              markEndpointFailed(system, chartType);
-            }
-            logger.warn(
-              { clientId, chartType, system },
-              "Chart generation failed - endpoint marked",
-            );
-          }),
+          this.generateAndSaveAshtakavarga(tenantId, clientId, type, system, metadata).catch(
+            (err) => {
+              if (err?.statusCode === 404 || err?.statusCode === 500) {
+                markEndpointFailed(system, chartType);
+              }
+              logger.warn(
+                { clientId, chartType, system },
+                "Chart generation failed - endpoint marked",
+              );
+            },
+          ),
         );
       } else if (lowerType === "sudarshana" || lowerType === "sudarshan") {
         operations.push(() =>
-          this.generateAndSaveSudarshanChakra(
-            tenantId,
-            clientId,
-            system,
-            metadata,
-          ).catch((err) => {
+          this.generateAndSaveSudarshanChakra(tenantId, clientId, system, metadata).catch((err) => {
             if (err?.statusCode === 404 || err?.statusCode === 500) {
               markEndpointFailed(system, chartType);
             }
@@ -1192,32 +1011,22 @@ export class ChartService {
       } else if (lowerType === "dasha" && system !== "kp") {
         // 'dasha' is specifically for Raw Prana Vimshottari (Lahiri/Raman)
         operations.push(() =>
-          this.generateDeepDasha(tenantId, clientId, system, metadata).catch(
-            (err) => {
-              if (err?.statusCode === 404 || err?.statusCode === 500) {
-                markEndpointFailed(system, chartType);
-              }
-              logger.warn(
-                { clientId, chartType, system },
-                "Background deep dasha generation failed",
-              );
-            },
-          ),
+          this.generateDeepDasha(tenantId, clientId, system, metadata).catch((err) => {
+            if (err?.statusCode === 404 || err?.statusCode === 500) {
+              markEndpointFailed(system, chartType);
+            }
+            logger.warn({ clientId, chartType, system }, "Background deep dasha generation failed");
+          }),
         );
       } else if (lowerType === "dasha_vimshottari") {
         // 'dasha_vimshottari' is for UI-optimized Tree
         operations.push(() =>
-          this.generateDasha(tenantId, clientId, "tree", system, {}).catch(
-            (err) => {
-              if (err?.statusCode === 404 || err?.statusCode === 500) {
-                markEndpointFailed(system, chartType);
-              }
-              logger.warn(
-                { clientId, chartType, system },
-                "Background tree dasha generation failed",
-              );
-            },
-          ),
+          this.generateDasha(tenantId, clientId, "tree", system, {}).catch((err) => {
+            if (err?.statusCode === 404 || err?.statusCode === 500) {
+              markEndpointFailed(system, chartType);
+            }
+            logger.warn({ clientId, chartType, system }, "Background tree dasha generation failed");
+          }),
         );
       } else if (lowerType.startsWith("dasha_")) {
         // Correctly route dasha_tribhagi etc to generateAlternativeDasha
@@ -1245,14 +1054,9 @@ export class ChartService {
       } else if (lowerType === "dasha_summary") {
         // Correctly route dasha_summary to internal logic
         operations.push(() =>
-          this.generateDashaSummary(tenantId, clientId, system, metadata).catch(
-            (err) => {
-              logger.warn(
-                { clientId, system, err: err.message },
-                "Background dasha summary failed",
-              );
-            },
-          ),
+          this.generateDashaSummary(tenantId, clientId, system, metadata).catch((err) => {
+            logger.warn({ clientId, system, err: err.message }, "Background dasha summary failed");
+          }),
         );
       } else if (lowerType.startsWith("kp_")) {
         // Specialized KP methods
@@ -1274,22 +1078,12 @@ export class ChartService {
         if (methodName) {
           const task =
             (this as any)[methodName] === this.generateAndSaveChart
-              ? () =>
-                  this.generateAndSaveChart(
-                    tenantId,
-                    clientId,
-                    chartType,
-                    system,
-                    metadata,
-                  )
+              ? () => this.generateAndSaveChart(tenantId, clientId, chartType, system, metadata)
               : () => (this as any)[methodName](tenantId, clientId, metadata);
 
           operations.push(() =>
             task().catch((err: any) => {
-              logger.warn(
-                { err: err.message, clientId, chartType },
-                "KP chart generation failed",
-              );
+              logger.warn({ err: err.message, clientId, chartType }, "KP chart generation failed");
               if (err?.statusCode === 404 || err?.statusCode === 500)
                 markEndpointFailed(system, chartType);
             }),
@@ -1297,20 +1091,16 @@ export class ChartService {
         } else {
           // Fallback to general router for any KP charts not in map
           operations.push(() =>
-            this.generateAndSaveChart(
-              tenantId,
-              clientId,
-              chartType,
-              system,
-              metadata,
-            ).catch((err: any) => {
-              logger.warn(
-                { err: err.message, clientId, chartType },
-                "KP chart generation fallback failed",
-              );
-              if (err?.statusCode === 404 || err?.statusCode === 500)
-                markEndpointFailed(system, chartType);
-            }),
+            this.generateAndSaveChart(tenantId, clientId, chartType, system, metadata).catch(
+              (err: any) => {
+                logger.warn(
+                  { err: err.message, clientId, chartType },
+                  "KP chart generation fallback failed",
+                );
+                if (err?.statusCode === 404 || err?.statusCode === 500)
+                  markEndpointFailed(system, chartType);
+              },
+            ),
           );
         }
       } else {
@@ -1323,21 +1113,17 @@ export class ChartService {
         // 6. Panchanga (panchanga, hora, etc)
         // The generateAndSaveChart method handles routing based on prefix/type.
         operations.push(() =>
-          this.generateAndSaveChart(
-            tenantId,
-            clientId,
-            chartType,
-            system,
-            metadata,
-          ).catch((err) => {
-            if (err?.statusCode === 404 || err?.statusCode === 500) {
-              markEndpointFailed(system, chartType);
-            }
-            logger.warn(
-              { clientId, chartType, system },
-              "Chart generation failed - endpoint marked",
-            );
-          }),
+          this.generateAndSaveChart(tenantId, clientId, chartType, system, metadata).catch(
+            (err) => {
+              if (err?.statusCode === 404 || err?.statusCode === 500) {
+                markEndpointFailed(system, chartType);
+              }
+              logger.warn(
+                { clientId, chartType, system },
+                "Chart generation failed - endpoint marked",
+              );
+            },
+          ),
         );
       }
     }
@@ -1395,24 +1181,11 @@ export class ChartService {
     // ENGINE CALL: Fetch raw data from Python engine
     let dashaResponse: any;
     if (level === "tree" || level === "prana_raw") {
-      logger.info(
-        { clientId, ayanamsa },
-        "Fetching full Prana Dasha (raw) from engine",
-      );
-      dashaResponse = await astroEngineClient.getPranaDasha(
-        birthData,
-        ayanamsa,
-      );
+      logger.info({ clientId, ayanamsa }, "Fetching full Prana Dasha (raw) from engine");
+      dashaResponse = await astroEngineClient.getPranaDasha(birthData, ayanamsa);
     } else {
-      logger.info(
-        { clientId, ayanamsa, level },
-        "Fetching level-specific dasha from engine",
-      );
-      dashaResponse = await astroEngineClient.getVimshottariDasha(
-        birthData,
-        level,
-        options,
-      );
+      logger.info({ clientId, ayanamsa, level }, "Fetching level-specific dasha from engine");
+      dashaResponse = await astroEngineClient.getVimshottariDasha(birthData, level, options);
     }
 
     // Use the raw data from response
@@ -1431,12 +1204,7 @@ export class ChartService {
     // AUTO-SAVE: Store the EXACT data from engine in DB
     // unless it's a very specific drill-down (to avoid polluting DB with millions of small branches)
     // However, per user requirement "We need to store exactly whatever is coming from the Python engine"
-    if (
-      level === "tree" ||
-      level === "mahadasha" ||
-      level === "prana_raw" ||
-      !options.mahaLord
-    ) {
+    if (level === "tree" || level === "mahadasha" || level === "prana_raw" || !options.mahaLord) {
       await this.saveChart(
         tenantId,
         clientId,
@@ -1452,10 +1220,7 @@ export class ChartService {
       );
     }
 
-    logger.info(
-      { tenantId, clientId, level, ayanamsa },
-      "Dasha raw data stored and returned",
-    );
+    logger.info({ tenantId, clientId, level, ayanamsa }, "Dasha raw data stored and returned");
 
     return result;
   }
@@ -1526,13 +1291,7 @@ export class ChartService {
     const client = await clientRepository.findById(tenantId, clientId);
     if (!client) throw new ClientNotFoundError(clientId);
 
-    const dashaResult = await this.generateDasha(
-      tenantId,
-      clientId,
-      level,
-      ayanamsa,
-      options,
-    );
+    const dashaResult = await this.generateDasha(tenantId, clientId, level, ayanamsa, options);
     // const dbChartType = this.getDashaChartType("vimshottari");
 
     const chart = await this.saveChart(
@@ -1583,9 +1342,7 @@ export class ChartService {
     const normalizedType = dashaType.toLowerCase().replace(/-dasha$/, "");
 
     const isSupported = capabilities?.dashas?.some(
-      (d) =>
-        d.toLowerCase() === normalizedType ||
-        d.toLowerCase() === dashaType.toLowerCase(),
+      (d) => d.toLowerCase() === normalizedType || d.toLowerCase() === dashaType.toLowerCase(),
     );
 
     if (!isSupported) {
@@ -1650,10 +1407,7 @@ export class ChartService {
 
     const birthData = this.prepareBirthData(client, ayanamsa);
 
-    const dashaResult = await astroEngineClient.getPranaDasha(
-      birthData,
-      ayanamsa,
-    );
+    const dashaResult = await astroEngineClient.getPranaDasha(birthData, ayanamsa);
     const finalData = dashaResult.data || dashaResult;
 
     const chart = await this.saveChart(
@@ -1725,9 +1479,7 @@ export class ChartService {
   ): Promise<void> {
     const charts = await chartRepository.findByClientId(tenantId, clientId);
     const dashaCharts = charts.filter(
-      (c) =>
-        c.chartType.toString().startsWith("dasha_") &&
-        (c as any).system === ayanamsa,
+      (c) => c.chartType.toString().startsWith("dasha_") && (c as any).system === ayanamsa,
     );
 
     const analysis: any = {
@@ -1739,8 +1491,7 @@ export class ChartService {
     for (const chart of dashaCharts) {
       const data = chart.chartData as any;
       const periods =
-        data.dasha_list ||
-        (Array.isArray(data) ? data : data.periods || data.mahadashas || []);
+        data.dasha_list || (Array.isArray(data) ? data : data.periods || data.mahadashas || []);
       const current = this.findCurrentDasha(periods);
 
       if (current) {
@@ -1796,20 +1547,14 @@ export class ChartService {
 
     let result;
     if (type === "sarva") {
-      result = await astroEngineClient.getSarvaAshtakavarga(
-        birthData,
-        ayanamsa,
-      );
+      result = await astroEngineClient.getSarvaAshtakavarga(birthData, ayanamsa);
     } else if (type === "shodasha") {
       result = await astroEngineClient.getShodashaVarga(birthData, ayanamsa);
     } else {
       result = await astroEngineClient.getAshtakavarga(birthData, ayanamsa);
     }
 
-    logger.info(
-      { tenantId, clientId, ayanamsa, type },
-      "Ashtakavarga calculated",
-    );
+    logger.info({ tenantId, clientId, ayanamsa, type }, "Ashtakavarga calculated");
 
     return {
       clientId,
@@ -1840,12 +1585,7 @@ export class ChartService {
     const client = await clientRepository.findById(tenantId, clientId);
     if (!client) throw new ClientNotFoundError(clientId);
 
-    const result = await this.generateAshtakavarga(
-      tenantId,
-      clientId,
-      type,
-      ayanamsa,
-    );
+    const result = await this.generateAshtakavarga(tenantId, clientId, type, ayanamsa);
 
     const chartTypeMap = {
       bhinna: "ashtakavarga_bhinna",
@@ -1890,10 +1630,7 @@ export class ChartService {
 
     const birthData = this.prepareBirthData(client, ayanamsa);
 
-    const chakraData = await astroEngineClient.getSudarshanChakra(
-      birthData,
-      ayanamsa,
-    );
+    const chakraData = await astroEngineClient.getSudarshanChakra(birthData, ayanamsa);
 
     logger.info({ tenantId, clientId, ayanamsa }, "Sudarshan Chakra generated");
 
@@ -1919,11 +1656,7 @@ export class ChartService {
     const client = await clientRepository.findById(tenantId, clientId);
     if (!client) throw new ClientNotFoundError(clientId);
 
-    const result = await this.generateSudarshanChakra(
-      tenantId,
-      clientId,
-      ayanamsa,
-    );
+    const result = await this.generateSudarshanChakra(tenantId, clientId, ayanamsa);
 
     try {
       const chart = await this.saveChart(
@@ -1965,9 +1698,7 @@ export class ChartService {
    * Extract time string from various time value formats
    * Handles PostgreSQL Time type, Date objects, and raw strings
    */
-  private extractTimeString(
-    timeValue: Date | string | null | undefined,
-  ): string {
+  private extractTimeString(timeValue: Date | string | null | undefined): string {
     if (!timeValue) return "12:00:00";
 
     if (typeof timeValue === "string") {
@@ -1992,11 +1723,7 @@ export class ChartService {
     if (!timezone) return 5.5; // Default to IST if missing
 
     // 1. Common Indian Standard Time check (Performance Optimization)
-    if (
-      timezone.includes("Kolkata") ||
-      timezone === "IST" ||
-      timezone === "Asia/Calcutta"
-    ) {
+    if (timezone.includes("Kolkata") || timezone === "IST" || timezone === "Asia/Calcutta") {
       return 5.5;
     }
 
@@ -2027,10 +1754,7 @@ export class ChartService {
         }
       }
     } catch (err) {
-      logger.warn(
-        { timezone, err },
-        "Failed to parse IANA timezone name. Falling back to IST 5.5",
-      );
+      logger.warn({ timezone, err }, "Failed to parse IANA timezone name. Falling back to IST 5.5");
     }
 
     return 5.5;
@@ -2040,10 +1764,7 @@ export class ChartService {
    * Centralized builder for Astro Engine birth data.
    * Ensures all fields (including userName) are consistently mapped.
    */
-  private prepareBirthData(
-    client: any,
-    ayanamsa: AyanamsaSystem = "lahiri",
-  ): any {
+  private prepareBirthData(client: any, ayanamsa: AyanamsaSystem = "lahiri"): any {
     if (!client.birthDate) {
       throw new Error("Incomplete client birth details");
     }
@@ -2067,188 +1788,78 @@ export class ChartService {
   /**
    * Get KP Planets and Cusps with sub-lords
    */
-  async getKpPlanetsCusps(
-    tenantId: string,
-    clientId: string,
-    metadata: RequestMetadata,
-  ) {
-    return this.generateAndSaveChart(
-      tenantId,
-      clientId,
-      "kp_planets_cusps",
-      "kp",
-      metadata,
-    );
+  async getKpPlanetsCusps(tenantId: string, clientId: string, metadata: RequestMetadata) {
+    return this.generateAndSaveChart(tenantId, clientId, "kp_planets_cusps", "kp", metadata);
   }
 
   /**
    * Get KP Ruling Planets
    */
-  async getKpRulingPlanets(
-    tenantId: string,
-    clientId: string,
-    metadata: RequestMetadata,
-  ) {
-    return this.generateAndSaveChart(
-      tenantId,
-      clientId,
-      "kp_ruling_planets",
-      "kp",
-      metadata,
-    );
+  async getKpRulingPlanets(tenantId: string, clientId: string, metadata: RequestMetadata) {
+    return this.generateAndSaveChart(tenantId, clientId, "kp_ruling_planets", "kp", metadata);
   }
 
   /**
    * Get KP Bhava Details
    */
-  async getKpBhavaDetails(
-    tenantId: string,
-    clientId: string,
-    metadata: RequestMetadata,
-  ) {
-    return this.generateAndSaveChart(
-      tenantId,
-      clientId,
-      "kp_bhava_details",
-      "kp",
-      metadata,
-    );
+  async getKpBhavaDetails(tenantId: string, clientId: string, metadata: RequestMetadata) {
+    return this.generateAndSaveChart(tenantId, clientId, "kp_bhava_details", "kp", metadata);
   }
 
   /**
    * Get KP Significations
    */
-  async getKpSignifications(
-    tenantId: string,
-    clientId: string,
-    metadata: RequestMetadata,
-  ) {
-    return this.generateAndSaveChart(
-      tenantId,
-      clientId,
-      "kp_significations",
-      "kp",
-      metadata,
-    );
+  async getKpSignifications(tenantId: string, clientId: string, metadata: RequestMetadata) {
+    return this.generateAndSaveChart(tenantId, clientId, "kp_significations", "kp", metadata);
   }
 
   /**
    * Get KP House Significations
    */
-  async getKpHouseSignifications(
-    tenantId: string,
-    clientId: string,
-    metadata: RequestMetadata,
-  ) {
-    return this.generateAndSaveChart(
-      tenantId,
-      clientId,
-      "kp_house_significations",
-      "kp",
-      metadata,
-    );
+  async getKpHouseSignifications(tenantId: string, clientId: string, metadata: RequestMetadata) {
+    return this.generateAndSaveChart(tenantId, clientId, "kp_house_significations", "kp", metadata);
   }
 
   /**
    * Get KP Planet Significators
    */
-  async getKpPlanetSignificators(
-    tenantId: string,
-    clientId: string,
-    metadata: RequestMetadata,
-  ) {
-    return this.generateAndSaveChart(
-      tenantId,
-      clientId,
-      "kp_planet_significators",
-      "kp",
-      metadata,
-    );
+  async getKpPlanetSignificators(tenantId: string, clientId: string, metadata: RequestMetadata) {
+    return this.generateAndSaveChart(tenantId, clientId, "kp_planet_significators", "kp", metadata);
   }
 
   /**
    * Get KP Interlinks
    */
-  async getKpInterlinks(
-    tenantId: string,
-    clientId: string,
-    metadata: RequestMetadata,
-  ) {
-    return this.generateAndSaveChart(
-      tenantId,
-      clientId,
-      "kp_interlinks",
-      "kp",
-      metadata,
-    );
+  async getKpInterlinks(tenantId: string, clientId: string, metadata: RequestMetadata) {
+    return this.generateAndSaveChart(tenantId, clientId, "kp_interlinks", "kp", metadata);
   }
 
   /**
    * Get KP Advanced Interlinks
    */
-  async getKpAdvancedInterlinks(
-    tenantId: string,
-    clientId: string,
-    metadata: RequestMetadata,
-  ) {
-    return this.generateAndSaveChart(
-      tenantId,
-      clientId,
-      "kp_interlinks_advanced",
-      "kp",
-      metadata,
-    );
+  async getKpAdvancedInterlinks(tenantId: string, clientId: string, metadata: RequestMetadata) {
+    return this.generateAndSaveChart(tenantId, clientId, "kp_interlinks_advanced", "kp", metadata);
   }
 
   /**
    * Get KP Interlinks (Sub-Lord)
    */
-  async getKpInterlinksSL(
-    tenantId: string,
-    clientId: string,
-    metadata: RequestMetadata,
-  ) {
-    return this.generateAndSaveChart(
-      tenantId,
-      clientId,
-      "kp_interlinks_sl",
-      "kp",
-      metadata,
-    );
+  async getKpInterlinksSL(tenantId: string, clientId: string, metadata: RequestMetadata) {
+    return this.generateAndSaveChart(tenantId, clientId, "kp_interlinks_sl", "kp", metadata);
   }
 
   /**
    * Get KP Nakshatra Nadi
    */
-  async getKpNakshatraNadi(
-    tenantId: string,
-    clientId: string,
-    metadata: RequestMetadata,
-  ) {
-    return this.generateAndSaveChart(
-      tenantId,
-      clientId,
-      "kp_nakshatra_nadi",
-      "kp",
-      metadata,
-    );
+  async getKpNakshatraNadi(tenantId: string, clientId: string, metadata: RequestMetadata) {
+    return this.generateAndSaveChart(tenantId, clientId, "kp_nakshatra_nadi", "kp", metadata);
   }
 
   /**
    * Get KP Fortuna
    */
-  async getKpFortuna(
-    tenantId: string,
-    clientId: string,
-    metadata: RequestMetadata,
-  ) {
-    return this.generateAndSaveChart(
-      tenantId,
-      clientId,
-      "kp_fortuna",
-      "kp",
-      metadata,
-    );
+  async getKpFortuna(tenantId: string, clientId: string, metadata: RequestMetadata) {
+    return this.generateAndSaveChart(tenantId, clientId, "kp_fortuna", "kp", metadata);
   }
 
   /**
@@ -2309,28 +1920,18 @@ export class ChartService {
     const capabilities = SYSTEM_CAPABILITIES[system];
     if (!capabilities) return [];
 
-    const existing = await chartRepository.findMetadataByClientId(
-      tenantId,
-      clientId,
-    );
+    const existing = await chartRepository.findMetadataByClientId(tenantId, clientId);
     const existingTypes = new Set(
       existing
         .filter((c) => (c as any).system === system) // Strict system filtering
         .map((c) => c.chartType!.toString().toLowerCase()),
     );
 
-    const expected: string[] = [
-      ...capabilities.charts,
-      ...capabilities.specialCharts,
-    ];
+    const expected: string[] = [...capabilities.charts, ...capabilities.specialCharts];
 
     // 1. ASHTAKAVARGA
     if (capabilities.hasAshtakavarga) {
-      expected.push(
-        "ashtakavarga_sarva",
-        "ashtakavarga_bhinna",
-        "ashtakavarga_shodasha",
-      );
+      expected.push("ashtakavarga_sarva", "ashtakavarga_bhinna", "ashtakavarga_shodasha");
     }
 
     // 2. DASHAS
@@ -2387,8 +1988,7 @@ export class ChartService {
         const exists = existing.some(
           (c) =>
             c.chartType?.toString().toLowerCase() === type.toLowerCase() &&
-            ((c as any).system === "universal" ||
-              (c as any).chartConfig?.system === "universal"),
+            ((c as any).system === "universal" || (c as any).chartConfig?.system === "universal"),
         );
         if (!exists) {
           expected.push(type);

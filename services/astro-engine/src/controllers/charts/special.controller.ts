@@ -27,10 +27,7 @@ export class SpecialChartsController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type: "transit", ayanamsa };
-      const cached = await cacheService.get<any>(
-        `transit:${ayanamsa}`,
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>(`transit:${ayanamsa}`, cacheKey);
 
       if (cached) {
         res.json({
@@ -192,10 +189,7 @@ export class SpecialChartsController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type: "sudarshan", ayanamsa };
-      const cached = await cacheService.get<any>(
-        `sudarshan:${ayanamsa}`,
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>(`sudarshan:${ayanamsa}`, cacheKey);
 
       if (cached) {
         res.json({
@@ -233,10 +227,7 @@ export class SpecialChartsController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type: "arudha", ayanamsa };
-      const cached = await cacheService.get<any>(
-        `arudha:${ayanamsa}`,
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>(`arudha:${ayanamsa}`, cacheKey);
       if (cached) {
         res.json({
           success: true,
@@ -519,10 +510,7 @@ export class SpecialChartsController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type: "shodasha-varga", ayanamsa };
-      const cached = await cacheService.get<any>(
-        `shodasha-varga:${ayanamsa}`,
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>(`shodasha-varga:${ayanamsa}`, cacheKey);
       if (cached) {
         res.json({
           success: true,
@@ -555,15 +543,8 @@ export class SpecialChartsController {
   }
 
   private validateBirthData(data: BirthData, res: Response): boolean {
-    if (
-      !data.birthDate ||
-      !data.birthTime ||
-      !data.latitude ||
-      !data.longitude
-    ) {
-      res
-        .status(400)
-        .json({ success: false, error: "Missing required fields" });
+    if (!data.birthDate || !data.birthTime || !data.latitude || !data.longitude) {
+      res.status(400).json({ success: false, error: "Missing required fields" });
       return false;
     }
     return true;

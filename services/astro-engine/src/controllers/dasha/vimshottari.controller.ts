@@ -82,28 +82,15 @@ export class VimshottariController {
   }
 
   private validateBirthData(data: BirthData, res: Response): boolean {
-    if (
-      !data.birthDate ||
-      !data.birthTime ||
-      !data.latitude ||
-      !data.longitude
-    ) {
-      res
-        .status(400)
-        .json({ success: false, error: "Missing required fields" });
+    if (!data.birthDate || !data.birthTime || !data.latitude || !data.longitude) {
+      res.status(400).json({ success: false, error: "Missing required fields" });
       return false;
     }
     return true;
   }
 
   private validateLevel(level: string, res: Response): boolean {
-    const validLevels = [
-      "mahadasha",
-      "antardasha",
-      "pratyantardasha",
-      "sookshma",
-      "prana",
-    ];
+    const validLevels = ["mahadasha", "antardasha", "pratyantardasha", "sookshma", "prana"];
     if (!validLevels.includes(level.toLowerCase())) {
       res.status(400).json({
         success: false,

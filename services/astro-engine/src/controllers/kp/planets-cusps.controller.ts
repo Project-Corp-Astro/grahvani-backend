@@ -200,10 +200,7 @@ export class KpPlanetsCuspsController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type: "kp-house-significations" };
-      const cached = await cacheService.get<any>(
-        "kp-house-significations",
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>("kp-house-significations", cacheKey);
       if (cached) {
         res.json({ success: true, data: cached, cached: true });
         return;
@@ -226,10 +223,7 @@ export class KpPlanetsCuspsController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type: "kp-planet-significators" };
-      const cached = await cacheService.get<any>(
-        "kp-planet-significators",
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>("kp-planet-significators", cacheKey);
       if (cached) {
         res.json({ success: true, data: cached, cached: true });
         return;
@@ -359,15 +353,8 @@ export class KpPlanetsCuspsController {
   }
 
   private validateBirthData(data: BirthData, res: Response): boolean {
-    if (
-      !data.birthDate ||
-      !data.birthTime ||
-      !data.latitude ||
-      !data.longitude
-    ) {
-      res
-        .status(400)
-        .json({ success: false, error: "Missing required fields" });
+    if (!data.birthDate || !data.birthTime || !data.latitude || !data.longitude) {
+      res.status(400).json({ success: false, error: "Missing required fields" });
       return false;
     }
     return true;
@@ -383,9 +370,7 @@ export class KpHoraryController {
       const { horaryNumber, question, ...birthData } = req.body;
 
       if (!horaryNumber || !question) {
-        res
-          .status(400)
-          .json({ success: false, error: "Missing horaryNumber or question" });
+        res.status(400).json({ success: false, error: "Missing horaryNumber or question" });
         return;
       }
 

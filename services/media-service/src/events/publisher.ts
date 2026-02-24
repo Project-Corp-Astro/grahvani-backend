@@ -17,10 +17,7 @@ export interface MediaEvent {
 /**
  * Publish media events via Redis Pub/Sub
  */
-export async function publishMediaEvent(
-  type: string,
-  data: Record<string, unknown>,
-) {
+export async function publishMediaEvent(type: string, data: Record<string, unknown>) {
   try {
     const redis = getRedisClient();
     const event: MediaEvent = {
@@ -35,10 +32,7 @@ export async function publishMediaEvent(
     };
 
     await redis.publish(MEDIA_CHANNEL, JSON.stringify(event));
-    logger.debug(
-      { type, eventId: event.metadata.eventId },
-      "Media event published",
-    );
+    logger.debug({ type, eventId: event.metadata.eventId }, "Media event published");
   } catch (err) {
     logger.error({ err, type }, "Failed to publish media event");
   }
@@ -48,13 +42,7 @@ export async function publishMediaEvent(
  * Convenience methods for common media events
  */
 export const mediaEvents = {
-  uploaded: (
-    fileId: string,
-    tenantId: string,
-    bucket: string,
-    mimeType: string,
-    size: number,
-  ) =>
+  uploaded: (fileId: string, tenantId: string, bucket: string, mimeType: string, size: number) =>
     publishMediaEvent("media.uploaded", {
       fileId,
       tenantId,

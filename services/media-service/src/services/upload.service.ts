@@ -3,16 +3,8 @@ import crypto from "crypto";
 import { Prisma } from "../generated/prisma";
 import { getStorageAdapter } from "../storage";
 import { ImageProcessor } from "../processors/image.processor";
-import {
-  FileRepository,
-  VariantRepository,
-} from "../repositories/file.repository";
-import {
-  BUCKETS,
-  IMAGE_VARIANTS,
-  BucketName,
-  getStorageConfig,
-} from "../config/storage";
+import { FileRepository, VariantRepository } from "../repositories/file.repository";
+import { BUCKETS, IMAGE_VARIANTS, BucketName, getStorageConfig } from "../config/storage";
 import {
   InvalidFileTypeError,
   FileTooLargeError,
@@ -32,17 +24,9 @@ function getFileCategory(mimeType: string): string {
   if (mimeType.startsWith("image/")) return "image";
   if (mimeType.startsWith("video/")) return "video";
   if (mimeType.startsWith("audio/")) return "audio";
-  if (
-    mimeType.includes("pdf") ||
-    mimeType.includes("document") ||
-    mimeType.includes("msword")
-  )
+  if (mimeType.includes("pdf") || mimeType.includes("document") || mimeType.includes("msword"))
     return "document";
-  if (
-    mimeType.includes("zip") ||
-    mimeType.includes("gzip") ||
-    mimeType.includes("tar")
-  )
+  if (mimeType.includes("zip") || mimeType.includes("gzip") || mimeType.includes("tar"))
     return "archive";
   return "other";
 }
@@ -130,11 +114,7 @@ export async function uploadFile(
     }
 
     // 6. Upload original to storage
-    const publicUrl = await storage.upload(
-      storagePath,
-      processedBuffer,
-      processedMimeType,
-    );
+    const publicUrl = await storage.upload(storagePath, processedBuffer, processedMimeType);
 
     // 7. Save file metadata to database
     const visibility = options.visibility || bucketConfig.visibility;
@@ -167,18 +147,11 @@ export async function uploadFile(
     }> = [];
 
     if (isImage && bucketConfig.generateVariants) {
-      const variants = await imageProcessor.generateVariants(
-        file.buffer,
-        IMAGE_VARIANTS,
-      );
+      const variants = await imageProcessor.generateVariants(file.buffer, IMAGE_VARIANTS);
 
       for (const variant of variants) {
         const variantPath = `${bucket}/${tenantId}/${fileId}_${variant.name}.webp`;
-        const variantUrl = await storage.upload(
-          variantPath,
-          variant.buffer,
-          variant.mimeType,
-        );
+        const variantUrl = await storage.upload(variantPath, variant.buffer, variant.mimeType);
 
         variantResults.push({
           name: variant.name,
@@ -203,8 +176,7 @@ export async function uploadFile(
             height: v.height,
             quality: IMAGE_VARIANTS.find((iv) => iv.name === v.name)?.quality,
             format: v.format,
-            publicUrl: variantResults.find((vr) => vr.name === v.name)
-              ?.publicUrl,
+            publicUrl: variantResults.find((vr) => vr.name === v.name)?.publicUrl,
           })),
         );
       }

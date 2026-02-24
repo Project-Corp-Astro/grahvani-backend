@@ -16,10 +16,7 @@ async function inspectDasha() {
 
   try {
     console.log("\n--- Fetching Mahadasha Level ---");
-    const maha = await astroEngineClient.getVimshottariDasha(
-      birthData,
-      "mahadasha",
-    );
+    const maha = await astroEngineClient.getVimshottariDasha(birthData, "mahadasha");
     console.log("Maha Keys:", Object.keys(maha));
     console.log("Maha Sample:", JSON.stringify(maha, null, 2));
 
@@ -32,13 +29,9 @@ async function inspectDasha() {
     // Let's try sending just birthdata + level as per existing signature
     try {
       // The signature in astro-engine.client.ts: (birthData, level, context)
-      const antar = await astroEngineClient.getVimshottariDasha(
-        birthData,
-        "antardasha",
-        {
-          mahaLord: "Venus", // hypothetical context
-        },
-      );
+      const antar = await astroEngineClient.getVimshottariDasha(birthData, "antardasha", {
+        mahaLord: "Venus", // hypothetical context
+      });
       console.log("Antar Sample:", JSON.stringify(antar, null, 2));
     } catch (e) {
       console.log("Antar fetch failed:", e.message);

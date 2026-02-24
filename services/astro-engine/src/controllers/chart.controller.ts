@@ -20,8 +20,7 @@ export class ChartController {
       ) {
         res.status(400).json({
           success: false,
-          error:
-            "Missing required fields: birthDate, birthTime, latitude, longitude",
+          error: "Missing required fields: birthDate, birthTime, latitude, longitude",
         });
         return;
       }
@@ -135,10 +134,7 @@ export class ChartController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type };
-      const cached = await cacheService.get<any>(
-        `divisional:${type}`,
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>(`divisional:${type}`, cacheKey);
       if (cached) {
         res.json({
           success: true,
@@ -149,10 +145,7 @@ export class ChartController {
         return;
       }
 
-      const chartData = await astroEngineClient.getDivisionalChart(
-        birthData,
-        type,
-      );
+      const chartData = await astroEngineClient.getDivisionalChart(birthData, type);
       await cacheService.set(`divisional:${type}`, cacheKey, chartData);
 
       res.json({
@@ -162,10 +155,7 @@ export class ChartController {
         calculatedAt: new Date().toISOString(),
       });
     } catch (error: any) {
-      logger.error(
-        { error: error.message, type: req.params.type },
-        "Divisional chart failed",
-      );
+      logger.error({ error: error.message, type: req.params.type }, "Divisional chart failed");
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -303,10 +293,7 @@ export class ChartController {
         calculatedAt: new Date().toISOString(),
       });
     } catch (error: any) {
-      logger.error(
-        { error: error.message, type: req.params.type },
-        "Yoga analysis failed",
-      );
+      logger.error({ error: error.message, type: req.params.type }, "Yoga analysis failed");
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -342,10 +329,7 @@ export class ChartController {
         calculatedAt: new Date().toISOString(),
       });
     } catch (error: any) {
-      logger.error(
-        { error: error.message, type: req.params.type },
-        "Dosha analysis failed",
-      );
+      logger.error({ error: error.message, type: req.params.type }, "Dosha analysis failed");
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -381,10 +365,7 @@ export class ChartController {
         calculatedAt: new Date().toISOString(),
       });
     } catch (error: any) {
-      logger.error(
-        { error: error.message, type: req.params.type },
-        "Remedy retrieval failed",
-      );
+      logger.error({ error: error.message, type: req.params.type }, "Remedy retrieval failed");
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -420,10 +401,7 @@ export class ChartController {
         calculatedAt: new Date().toISOString(),
       });
     } catch (error: any) {
-      logger.error(
-        { error: error.message, type },
-        "Panchanga calculation failed",
-      );
+      logger.error({ error: error.message, type }, "Panchanga calculation failed");
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -459,10 +437,7 @@ export class ChartController {
         calculatedAt: new Date().toISOString(),
       });
     } catch (error: any) {
-      logger.error(
-        { error: error.message, type: req.params.type },
-        "Special chart failed",
-      );
+      logger.error({ error: error.message, type: req.params.type }, "Special chart failed");
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -554,10 +529,7 @@ export class ChartController {
       if (!this.validateBirthData(birthData, res)) return;
 
       const cacheKey = { ...birthData, type: "sarva" };
-      const cached = await cacheService.get<any>(
-        "sarva-ashtakavarga",
-        cacheKey,
-      );
+      const cached = await cacheService.get<any>("sarva-ashtakavarga", cacheKey);
       if (cached) {
         res.json({
           success: true,
@@ -652,15 +624,8 @@ export class ChartController {
 
   // Helper method for validation
   private validateBirthData(data: BirthData, res: Response): boolean {
-    if (
-      !data.birthDate ||
-      !data.birthTime ||
-      !data.latitude ||
-      !data.longitude
-    ) {
-      res
-        .status(400)
-        .json({ success: false, error: "Missing required fields" });
+    if (!data.birthDate || !data.birthTime || !data.latitude || !data.longitude) {
+      res.status(400).json({ success: false, error: "Missing required fields" });
       return false;
     }
     return true;

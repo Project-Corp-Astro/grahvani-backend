@@ -12,12 +12,7 @@ export class FamilyService {
   /**
    * Link two clients
    */
-  async linkFamilyMember(
-    tenantId: string,
-    clientId: string,
-    data: any,
-    metadata: RequestMetadata,
-  ) {
+  async linkFamilyMember(tenantId: string, clientId: string, data: any, metadata: RequestMetadata) {
     // 1. Validate input
     const validated = FamilyLinkSchema.parse(data);
 
@@ -28,13 +23,10 @@ export class FamilyService {
     ]);
 
     if (!client) throw new ClientNotFoundError(clientId);
-    if (!relatedClient)
-      throw new ClientNotFoundError(validated.relatedClientId);
+    if (!relatedClient) throw new ClientNotFoundError(validated.relatedClientId);
 
     // 3. Determine reciprocal relationship
-    const reciprocalType = this.getReciprocalType(
-      validated.relationshipType as RelationshipType,
-    );
+    const reciprocalType = this.getReciprocalType(validated.relationshipType as RelationshipType);
 
     // 4. Create bidirectional links
     await familyRepository.createBidirectional(
@@ -140,10 +132,7 @@ export class FamilyService {
       },
     });
 
-    logger.info(
-      { tenantId, clientId, relatedId: relatedClientId },
-      "Family link removed",
-    );
+    logger.info({ tenantId, clientId, relatedId: relatedClientId }, "Family link removed");
     return { success: true };
   }
 

@@ -73,11 +73,7 @@ export async function updateFile(
 /**
  * Delete file (soft delete in DB, actual delete from storage)
  */
-export async function deleteFile(
-  fileId: string,
-  tenantId: string,
-  userId: string,
-) {
+export async function deleteFile(fileId: string, tenantId: string, userId: string) {
   const file = await fileRepo.findById(fileId, tenantId);
   if (!file) {
     throw new FileNotFoundError(fileId);
@@ -96,10 +92,7 @@ export async function deleteFile(
   try {
     await storage.deleteMany(storagePaths);
   } catch (err) {
-    logger.warn(
-      { err, fileId },
-      "Failed to delete from storage (will still soft-delete)",
-    );
+    logger.warn({ err, fileId }, "Failed to delete from storage (will still soft-delete)");
   }
 
   // Soft delete in database

@@ -94,10 +94,7 @@ export class ImageProcessor {
           "Variant generated",
         );
       } catch (err) {
-        logger.error(
-          { err, variant: config.name },
-          "Failed to generate variant",
-        );
+        logger.error({ err, variant: config.name }, "Failed to generate variant");
         // Continue with other variants even if one fails
       }
     }
@@ -108,11 +105,7 @@ export class ImageProcessor {
   /**
    * Process original image: auto-orient, strip metadata, convert to WebP
    */
-  async processOriginal(
-    buffer: Buffer,
-    maxWidth = 4096,
-    quality = 90,
-  ): Promise<ProcessedVariant> {
+  async processOriginal(buffer: Buffer, maxWidth = 4096, quality = 90): Promise<ProcessedVariant> {
     const processed = await sharp(buffer)
       .rotate() // Auto-orient based on EXIF
       .resize(maxWidth, maxWidth, {
@@ -137,12 +130,6 @@ export class ImageProcessor {
    * Check if a MIME type is a processable image
    */
   static isImage(mimeType: string): boolean {
-    return [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "image/gif",
-      "image/tiff",
-    ].includes(mimeType);
+    return ["image/jpeg", "image/png", "image/webp", "image/gif", "image/tiff"].includes(mimeType);
   }
 }

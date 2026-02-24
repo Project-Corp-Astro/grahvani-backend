@@ -82,9 +82,7 @@ async function main() {
   await redis.publish("grahvani:events:auth", event);
   await redis.publish("grahvani:events:user", event);
 
-  console.log(
-    "✅ Event published! User-service should now create profile in app_users.users",
-  );
+  console.log("✅ Event published! User-service should now create profile in app_users.users");
 
   await redis.disconnect();
 }

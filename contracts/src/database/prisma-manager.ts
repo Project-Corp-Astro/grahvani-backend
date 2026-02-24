@@ -83,8 +83,7 @@ export class DatabaseManager<T extends PrismaClientLike = PrismaClientLike> {
 
   private initializeClient(): void {
     try {
-      let url =
-        process.env[this.config.databaseUrlEnvKey] || process.env.DATABASE_URL;
+      let url = process.env[this.config.databaseUrlEnvKey] || process.env.DATABASE_URL;
 
       if (!url) {
         throw new Error("DATABASE_URL not configured in environment");
@@ -95,10 +94,7 @@ export class DatabaseManager<T extends PrismaClientLike = PrismaClientLike> {
       if (isPoolerMode && !url.includes("pgbouncer=true")) {
         url += (url.includes("?") ? "&" : "?") + "pgbouncer=true";
       }
-      if (
-        process.env.NODE_ENV === "development" &&
-        !url.includes("connection_limit")
-      ) {
+      if (process.env.NODE_ENV === "development" && !url.includes("connection_limit")) {
         url += (url.includes("?") ? "&" : "?") + "connection_limit=5";
       }
 
@@ -125,10 +121,7 @@ export class DatabaseManager<T extends PrismaClientLike = PrismaClientLike> {
         },
       }) as T;
 
-      this.logger.info(
-        { service: this.config.serviceName },
-        "Database client initialized",
-      );
+      this.logger.info({ service: this.config.serviceName }, "Database client initialized");
     } catch (error) {
       this.logger.error({ error }, "Failed to initialize database client");
       throw error;
@@ -195,10 +188,7 @@ export class DatabaseManager<T extends PrismaClientLike = PrismaClientLike> {
       });
     } catch (error: any) {
       this.metrics.failedQueries++;
-      this.logger.error(
-        { error: error.message, code: error.code },
-        "Transaction failed",
-      );
+      this.logger.error({ error: error.message, code: error.code }, "Transaction failed");
       throw error;
     }
   }
@@ -239,16 +229,10 @@ export class DatabaseManager<T extends PrismaClientLike = PrismaClientLike> {
     }
 
     if (this.prismaClient) {
-      this.logger.info(
-        { service: this.config.serviceName },
-        "Disconnecting database...",
-      );
+      this.logger.info({ service: this.config.serviceName }, "Disconnecting database...");
       await this.prismaClient.$disconnect();
       this.prismaClient = null;
-      this.logger.info(
-        { service: this.config.serviceName },
-        "Database disconnected",
-      );
+      this.logger.info({ service: this.config.serviceName }, "Database disconnected");
     }
   }
 }
@@ -256,9 +240,7 @@ export class DatabaseManager<T extends PrismaClientLike = PrismaClientLike> {
 /**
  * Creates a singleton-managed DatabaseManager with helper functions.
  */
-export function createDatabaseManager<T extends PrismaClientLike>(
-  config: DatabaseManagerConfig,
-) {
+export function createDatabaseManager<T extends PrismaClientLike>(config: DatabaseManagerConfig) {
   let instance: DatabaseManager<T> | null = null;
 
   const getDatabaseManager = (): DatabaseManager<T> => {

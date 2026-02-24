@@ -3,11 +3,7 @@
 export type Gender = "male" | "female" | "other";
 export type MaritalStatus = "single" | "married" | "divorced" | "widowed";
 export type ClientSource = "manual" | "website" | "import" | "ocr";
-export type BirthTimeAccuracy =
-  | "exact"
-  | "approximate"
-  | "rectified"
-  | "unknown";
+export type BirthTimeAccuracy = "exact" | "approximate" | "rectified" | "unknown";
 export type RelationshipType =
   | "spouse"
   | "child"
@@ -63,11 +59,7 @@ export type RemedyType =
   | "yantra"
   | "fasting"
   | "other";
-export type RemedyStatus =
-  | "prescribed"
-  | "in_progress"
-  | "completed"
-  | "discontinued";
+export type RemedyStatus = "prescribed" | "in_progress" | "completed" | "discontinued";
 export type ImportStatus =
   | "pending"
   | "processing"

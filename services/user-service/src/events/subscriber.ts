@@ -163,9 +163,7 @@ export class EventSubscriber {
       this.handleAuthEvent(message);
     });
 
-    logger.info(
-      "[EventSubscriber] Subscribed to grahvani:events:auth and grahvani:events:user",
-    );
+    logger.info("[EventSubscriber] Subscribed to grahvani:events:auth and grahvani:events:user");
   }
 
   /**
@@ -201,10 +199,7 @@ export class EventSubscriber {
           await this.handlePasswordChanged(event);
           break;
         default:
-          logger.warn(
-            { type: (event as any).type },
-            "[EventSubscriber] Unknown event type",
-          );
+          logger.warn({ type: (event as any).type }, "[EventSubscriber] Unknown event type");
       }
     } catch (error) {
       logger.error({ error }, "[EventSubscriber] Failed to process event");
@@ -214,9 +209,7 @@ export class EventSubscriber {
   /**
    * Handle user.registered - Create user profile in User Service
    */
-  private async handleUserRegistered(
-    event: UserRegisteredEvent,
-  ): Promise<void> {
+  private async handleUserRegistered(event: UserRegisteredEvent): Promise<void> {
     const { userId, tenantId, email, name, avatarUrl, role } = event.data;
 
     try {
@@ -260,10 +253,7 @@ export class EventSubscriber {
         });
       }
     } catch (error) {
-      logger.error(
-        { userId, error },
-        "[EventSubscriber] Failed to create user profile",
-      );
+      logger.error({ userId, error }, "[EventSubscriber] Failed to create user profile");
       throw error;
     }
   }
@@ -337,10 +327,7 @@ export class EventSubscriber {
 
       logger.info({ userId }, "[EventSubscriber] Login activity logged");
     } catch (error) {
-      logger.error(
-        { userId, error },
-        "[EventSubscriber] Failed to log login activity",
-      );
+      logger.error({ userId, error }, "[EventSubscriber] Failed to log login activity");
     }
   }
 
@@ -366,19 +353,14 @@ export class EventSubscriber {
 
       logger.info({ userId }, "[EventSubscriber] Logout activity logged");
     } catch (error) {
-      logger.error(
-        { userId, error },
-        "[EventSubscriber] Failed to log logout activity",
-      );
+      logger.error({ userId, error }, "[EventSubscriber] Failed to log logout activity");
     }
   }
 
   /**
    * Handle auth.session_revoked - Log activity in User Service
    */
-  private async handleAuthSessionRevoked(
-    event: AuthSessionRevokedEvent,
-  ): Promise<void> {
+  private async handleAuthSessionRevoked(event: AuthSessionRevokedEvent): Promise<void> {
     const { userId, sessionId, metadata } = event.data;
 
     try {
@@ -397,19 +379,14 @@ export class EventSubscriber {
 
       logger.info({ userId }, "[EventSubscriber] Session revocation logged");
     } catch (error) {
-      logger.error(
-        { userId, error },
-        "[EventSubscriber] Failed to log session revocation",
-      );
+      logger.error({ userId, error }, "[EventSubscriber] Failed to log session revocation");
     }
   }
 
   /**
    * Handle auth.password_reset - Log activity
    */
-  private async handlePasswordReset(
-    event: AuthPasswordResetEvent,
-  ): Promise<void> {
+  private async handlePasswordReset(event: AuthPasswordResetEvent): Promise<void> {
     const { userId, metadata } = event.data;
 
     try {
@@ -426,19 +403,14 @@ export class EventSubscriber {
 
       logger.info({ userId }, "[EventSubscriber] Password reset logged");
     } catch (error) {
-      logger.error(
-        { userId, error },
-        "[EventSubscriber] Failed to log password reset",
-      );
+      logger.error({ userId, error }, "[EventSubscriber] Failed to log password reset");
     }
   }
 
   /**
    * Handle auth.password_changed - Log activity
    */
-  private async handlePasswordChanged(
-    event: AuthPasswordChangedEvent,
-  ): Promise<void> {
+  private async handlePasswordChanged(event: AuthPasswordChangedEvent): Promise<void> {
     const { userId, metadata } = event.data;
 
     try {
@@ -455,10 +427,7 @@ export class EventSubscriber {
 
       logger.info({ userId }, "[EventSubscriber] Password change logged");
     } catch (error) {
-      logger.error(
-        { userId, error },
-        "[EventSubscriber] Failed to log password change",
-      );
+      logger.error({ userId, error }, "[EventSubscriber] Failed to log password change");
     }
   }
 

@@ -7,13 +7,7 @@
  * @version 2.0.0 - Updated 2026-01-21 based on actual API testing
  */
 
-export type AyanamsaSystem =
-  | "lahiri"
-  | "raman"
-  | "kp"
-  | "yukteswar"
-  | "western"
-  | "universal";
+export type AyanamsaSystem = "lahiri" | "raman" | "kp" | "yukteswar" | "western" | "universal";
 
 export interface SystemCapabilities {
   charts: string[];
@@ -40,10 +34,7 @@ const FAILURE_RETRY_DELAY = 30000; // 30 seconds before retrying failed endpoint
 /**
  * Check if an endpoint should be skipped due to recent failure
  */
-export function shouldSkipEndpoint(
-  system: AyanamsaSystem,
-  chartType: string,
-): boolean {
+export function shouldSkipEndpoint(system: AyanamsaSystem, chartType: string): boolean {
   const key = `${system}:${chartType.toLowerCase()}`;
   const lastFailure = failedEndpoints.get(key);
   if (!lastFailure) return false;
@@ -53,10 +44,7 @@ export function shouldSkipEndpoint(
 /**
  * Mark an endpoint as failed (called on 404/500 errors)
  */
-export function markEndpointFailed(
-  system: AyanamsaSystem,
-  chartType: string,
-): void {
+export function markEndpointFailed(system: AyanamsaSystem, chartType: string): void {
   const key = `${system}:${chartType.toLowerCase()}`;
   failedEndpoints.set(key, Date.now());
 }
@@ -64,10 +52,7 @@ export function markEndpointFailed(
 /**
  * Clear failure status for an endpoint
  */
-export function clearEndpointFailure(
-  system: AyanamsaSystem,
-  chartType: string,
-): void {
+export function clearEndpointFailure(system: AyanamsaSystem, chartType: string): void {
   const key = `${system}:${chartType.toLowerCase()}`;
   failedEndpoints.delete(key);
 }
@@ -183,15 +168,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "guru_mangal_only",
     ],
     // Doshas - verified endpoints lines 152-157
-    doshas: [
-      "kala_sarpa",
-      "angarak",
-      "guru_chandal",
-      "shrapit",
-      "sade_sati",
-      "pitra",
-      "dhaiya",
-    ],
+    doshas: ["kala_sarpa", "angarak", "guru_chandal", "shrapit", "sade_sati", "pitra", "dhaiya"],
     // Remedies - verified endpoints lines 159-164
     remedies: [
       "yantra",
@@ -272,14 +249,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
   kp: {
     // KP System - ApiEndPoints.txt lines 183-196
     charts: ["D1"],
-    features: [
-      "natal",
-      "dasha",
-      "horary",
-      "significations",
-      "ruling_planets",
-      "bhava_details",
-    ],
+    features: ["natal", "dasha", "horary", "significations", "ruling_planets", "bhava_details"],
     // KP-specific charts
     specialCharts: [
       "kp_planets_cusps",
@@ -399,10 +369,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
 /**
  * Validate if a chart type is available for a system
  */
-export function isChartAvailable(
-  system: AyanamsaSystem,
-  chartType: string,
-): boolean {
+export function isChartAvailable(system: AyanamsaSystem, chartType: string): boolean {
   const capabilities = SYSTEM_CAPABILITIES[system];
   if (!capabilities) return false;
 
@@ -414,9 +381,7 @@ export function isChartAvailable(
 
   return (
     capabilities.charts.includes(upperType) ||
-    capabilities.specialCharts.some(
-      (s) => s.toLowerCase() === normalizedType,
-    ) ||
+    capabilities.specialCharts.some((s) => s.toLowerCase() === normalizedType) ||
     (capabilities.yogas?.some(
       (s) => `yoga:${s}` === normalizedType || `yoga_${s}` === normalizedType,
     ) ??
@@ -426,12 +391,10 @@ export function isChartAvailable(
     ) ??
       false) ||
     (capabilities.remedies?.some(
-      (s) =>
-        `remedy:${s}` === normalizedType || `remedy_${s}` === normalizedType,
+      (s) => `remedy:${s}` === normalizedType || `remedy_${s}` === normalizedType,
     ) ??
       false) ||
-    (capabilities.panchanga?.some((s) => `panchanga:${s}` === normalizedType) ??
-      false) ||
+    (capabilities.panchanga?.some((s) => `panchanga:${s}` === normalizedType) ?? false) ||
     (capabilities.dashas?.some((s) => {
       const type = s.toLowerCase().startsWith("dasha_")
         ? s.toLowerCase()
@@ -445,10 +408,7 @@ export function isChartAvailable(
 /**
  * Validate if a feature is available for a system
  */
-export function isFeatureAvailable(
-  system: AyanamsaSystem,
-  feature: string,
-): boolean {
+export function isFeatureAvailable(system: AyanamsaSystem, feature: string): boolean {
   const capabilities = SYSTEM_CAPABILITIES[system];
   if (!capabilities) return false;
   return capabilities.features.includes(feature.toLowerCase());
@@ -470,9 +430,7 @@ export function getAvailableCharts(system: AyanamsaSystem): string[] {
 /**
  * Get system capabilities
  */
-export function getSystemCapabilities(
-  system: AyanamsaSystem,
-): SystemCapabilities | null {
+export function getSystemCapabilities(system: AyanamsaSystem): SystemCapabilities | null {
   return SYSTEM_CAPABILITIES[system] || null;
 }
 

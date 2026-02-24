@@ -12,11 +12,7 @@ export interface StorageAdapter {
    * @param mimeType - MIME type of the file
    * @returns Public URL or storage path
    */
-  upload(
-    storagePath: string,
-    buffer: Buffer,
-    mimeType: string,
-  ): Promise<string>;
+  upload(storagePath: string, buffer: Buffer, mimeType: string): Promise<string>;
 
   /**
    * Download a file from storage

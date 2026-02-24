@@ -8,13 +8,7 @@ const router = Router();
 // =============================================================================
 
 // Vimshottari Dasha (5 levels)
-router.post(
-  "/vimshottari",
-  vimshottariController.getDasha.bind(vimshottariController),
-);
-router.post(
-  "/prana",
-  vimshottariController.getPranaDasha.bind(vimshottariController),
-);
+router.post("/vimshottari", vimshottariController.getDasha.bind(vimshottariController));
+router.post("/prana", vimshottariController.getPranaDasha.bind(vimshottariController));
 
 export default router;

@@ -1,10 +1,7 @@
 import { jest } from "@jest/globals";
 import { prismaMock } from "./setup";
 import { ClientService, RequestMetadata } from "../services/client.service";
-import {
-  ClientNotFoundError,
-  DuplicateClientError,
-} from "../errors/client.errors";
+import { ClientNotFoundError, DuplicateClientError } from "../errors/client.errors";
 
 // Mock chart service to prevent side effects
 jest.mock("../services/chart.service", () => ({
@@ -58,11 +55,10 @@ const mockClient = {
 
 // Re-apply chart service mocks after each clearAllMocks
 beforeEach(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { chartService } = require("../services/chart.service");
   chartService.ensureFullVedicProfile = jest.fn();
-  chartService.generateFullVedicProfile = (jest.fn() as any).mockResolvedValue(
-    undefined,
-  );
+  chartService.generateFullVedicProfile = (jest.fn() as any).mockResolvedValue(undefined);
 });
 
 describe("ClientService", () => {
@@ -132,13 +128,14 @@ describe("ClientService", () => {
     it("throws ClientNotFoundError when client does not exist", async () => {
       (prismaMock.client.findFirst as any).mockResolvedValue(null);
 
-      await expect(
-        clientService.getClient(tenantId, "nonexistent"),
-      ).rejects.toThrow(ClientNotFoundError);
+      await expect(clientService.getClient(tenantId, "nonexistent")).rejects.toThrow(
+        ClientNotFoundError,
+      );
     });
 
     it("triggers chart audit when metadata and birthDate present", async () => {
       (prismaMock.client.findFirst as any).mockResolvedValue(mockClient);
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { chartService } = require("../services/chart.service");
 
       await clientService.getClient(tenantId, "client-1", metadata);
@@ -172,11 +169,7 @@ describe("ClientService", () => {
         ...validData,
       });
 
-      const result = await clientService.createClient(
-        tenantId,
-        validData,
-        metadata,
-      );
+      const result = await clientService.createClient(tenantId, validData, metadata);
 
       expect(result).toBeDefined();
       expect(prismaMock.client.create).toHaveBeenCalled();
@@ -188,19 +181,17 @@ describe("ClientService", () => {
         email: validData.email,
       });
 
-      await expect(
-        clientService.createClient(tenantId, validData, metadata),
-      ).rejects.toThrow(DuplicateClientError);
+      await expect(clientService.createClient(tenantId, validData, metadata)).rejects.toThrow(
+        DuplicateClientError,
+      );
     });
 
     it("generates a client code", async () => {
       (prismaMock.client.findFirst as any).mockResolvedValue(null);
-      (prismaMock.client.create as any).mockImplementation(
-        async ({ data }: any) => ({
-          ...mockClient,
-          ...data,
-        }),
-      );
+      (prismaMock.client.create as any).mockImplementation(async ({ data }: any) => ({
+        ...mockClient,
+        ...data,
+      }));
 
       await clientService.createClient(tenantId, validData, metadata);
 
@@ -212,7 +203,9 @@ describe("ClientService", () => {
       (prismaMock.client.findFirst as any).mockResolvedValue(null);
       (prismaMock.client.create as any).mockResolvedValue(mockClient);
 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { activityService } = require("../services/activity.service");
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { eventPublisher } = require("../services/event.publisher");
 
       await clientService.createClient(tenantId, validData, metadata);
@@ -234,6 +227,7 @@ describe("ClientService", () => {
       (prismaMock.client.findFirst as any).mockResolvedValue(null);
       (prismaMock.client.create as any).mockResolvedValue(mockClient);
 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { chartService } = require("../services/chart.service");
 
       await clientService.createClient(
@@ -247,11 +241,7 @@ describe("ClientService", () => {
 
     it("rejects invalid data (missing fullName)", async () => {
       await expect(
-        clientService.createClient(
-          tenantId,
-          { email: "test@test.com" },
-          metadata,
-        ),
+        clientService.createClient(tenantId, { email: "test@test.com" }, metadata),
       ).rejects.toThrow();
     });
   });
@@ -278,12 +268,7 @@ describe("ClientService", () => {
       (prismaMock.client.findFirst as any).mockResolvedValue(null);
 
       await expect(
-        clientService.updateClient(
-          tenantId,
-          "nonexistent",
-          { fullName: "X" },
-          metadata,
-        ),
+        clientService.updateClient(tenantId, "nonexistent", { fullName: "X" }, metadata),
       ).rejects.toThrow(ClientNotFoundError);
     });
   });
@@ -300,11 +285,7 @@ describe("ClientService", () => {
         });
       });
 
-      const result = await clientService.deleteClient(
-        tenantId,
-        "client-1",
-        metadata,
-      );
+      const result = await clientService.deleteClient(tenantId, "client-1", metadata);
 
       expect(result).toEqual({ success: true });
     });
@@ -312,9 +293,9 @@ describe("ClientService", () => {
     it("throws ClientNotFoundError when client does not exist", async () => {
       (prismaMock.client.findFirst as any).mockResolvedValue(null);
 
-      await expect(
-        clientService.deleteClient(tenantId, "nonexistent", metadata),
-      ).rejects.toThrow(ClientNotFoundError);
+      await expect(clientService.deleteClient(tenantId, "nonexistent", metadata)).rejects.toThrow(
+        ClientNotFoundError,
+      );
     });
   });
 });

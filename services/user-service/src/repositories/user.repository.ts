@@ -117,11 +117,7 @@ export class UserRepository {
   /**
    * Update user by ID within tenant
    */
-  async update(
-    tenantId: string,
-    id: string,
-    data: Record<string, any>,
-  ): Promise<User> {
+  async update(tenantId: string, id: string, data: Record<string, any>): Promise<User> {
     const user = await getPrismaClient().user.update({
       where: { id },
       data,

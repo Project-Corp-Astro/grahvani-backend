@@ -6,11 +6,7 @@ import { UnauthorizedAccessError } from "../errors/client.errors";
  * Ensures a tenantId is present in the request user object.
  * This should be placed AFTER authMiddleware.
  */
-export const tenantMiddleware = (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) => {
+export const tenantMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (!req.user || !req.user.tenantId) {
     return next(new UnauthorizedAccessError());
   }

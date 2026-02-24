@@ -84,12 +84,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     "admin:users",
     "admin:content",
   ],
-  moderator: [
-    "read:profile",
-    "write:profile",
-    "moderate:content",
-    "moderate:users",
-  ],
+  moderator: ["read:profile", "write:profile", "moderate:content", "moderate:users"],
   superadmin: [
     "*", // All permissions
   ],
@@ -168,11 +163,7 @@ export class TokenService {
     });
 
     // Store token family in Redis for rotation detection
-    await this.redis.setex(
-      `token_family:${sessionId}`,
-      refreshExpSeconds,
-      refreshPayload.family,
-    );
+    await this.redis.setex(`token_family:${sessionId}`, refreshExpSeconds, refreshPayload.family);
 
     logger.debug({ userId: user.id, sessionId }, "Token pair generated");
 
@@ -238,10 +229,7 @@ export class TokenService {
 
       return payload;
     } catch (error: any) {
-      logger.debug(
-        { error: error.message },
-        "Access token verification failed",
-      );
+      logger.debug({ error: error.message }, "Access token verification failed");
       throw new Error("Invalid or expired token");
     }
   }
@@ -293,25 +281,17 @@ export class TokenService {
       }
 
       // Check token family for rotation detection
-      const storedFamily = await this.redis.get(
-        `token_family:${payload.sessionId}`,
-      );
+      const storedFamily = await this.redis.get(`token_family:${payload.sessionId}`);
       if (storedFamily !== payload.family) {
         // Token reuse detected - revoke all tokens for this user
-        logger.warn(
-          { sessionId: payload.sessionId },
-          "Refresh token reuse detected",
-        );
+        logger.warn({ sessionId: payload.sessionId }, "Refresh token reuse detected");
         await this.invalidateAllUserTokens(payload.sub);
         throw new Error("Token reuse detected - all sessions invalidated");
       }
 
       return payload;
     } catch (error: any) {
-      logger.debug(
-        { error: error.message },
-        "Refresh token verification failed",
-      );
+      logger.debug({ error: error.message }, "Refresh token verification failed");
       throw new Error("Invalid or expired refresh token");
     }
   }

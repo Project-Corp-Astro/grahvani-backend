@@ -1,14 +1,8 @@
 import { clientRepository } from "../repositories/client.repository";
 import { chartRepository } from "../repositories/chart.repository";
 import { yogaDoshaRepository } from "../repositories/yoga-dosha.repository";
-import {
-  ClientNotFoundError,
-  DuplicateClientError,
-} from "../errors/client.errors";
-import {
-  CreateClientSchema,
-  UpdateClientSchema,
-} from "../validators/client.validator";
+import { ClientNotFoundError, DuplicateClientError } from "../errors/client.errors";
+import { CreateClientSchema, UpdateClientSchema } from "../validators/client.validator";
 import { geocodeService } from "./geocode.service";
 import { eventPublisher } from "./event.publisher";
 import { activityService } from "./activity.service";
@@ -43,11 +37,7 @@ export class ClientService {
         gender: query.gender,
         maritalStatus: query.maritalStatus,
         city: query.city,
-        tags: query.tags
-          ? Array.isArray(query.tags)
-            ? query.tags
-            : [query.tags]
-          : undefined,
+        tags: query.tags ? (Array.isArray(query.tags) ? query.tags : [query.tags]) : undefined,
       }),
       clientRepository.count(tenantId, {
         searchTerm: query.search as string,
@@ -55,11 +45,7 @@ export class ClientService {
         gender: query.gender,
         maritalStatus: query.maritalStatus,
         city: query.city,
-        tags: query.tags
-          ? Array.isArray(query.tags)
-            ? query.tags
-            : [query.tags]
-          : undefined,
+        tags: query.tags ? (Array.isArray(query.tags) ? query.tags : [query.tags]) : undefined,
       }),
     ]);
 
@@ -107,9 +93,7 @@ export class ClientService {
 
     if (existing) {
       const field = existing.email === validatedData.email ? "email" : "phone";
-      const value =
-        (field === "email" ? existing.email : existing.phonePrimary) ||
-        "unknown";
+      const value = (field === "email" ? existing.email : existing.phonePrimary) || "unknown";
       throw new DuplicateClientError(field, value);
     }
 
@@ -128,9 +112,7 @@ export class ClientService {
         clientData.birthLongitude === null)
     ) {
       try {
-        const geo = await geocodeService.geocodeBirthPlace(
-          clientData.birthPlace,
-        );
+        const geo = await geocodeService.geocodeBirthPlace(clientData.birthPlace);
         clientData.birthLatitude = geo.latitude;
         clientData.birthLongitude = geo.longitude;
         clientData.birthTimezone = geo.timezone;
@@ -164,9 +146,7 @@ export class ClientService {
       } else {
         // Create a dummy date with the provided time
         // CRITICAL: Treat "HH:mm:ss" as UTC face value to avoid timezone shifts
-        const [hours, minutes, seconds] = prismaData.birthTime
-          .split(":")
-          .map(Number);
+        const [hours, minutes, seconds] = prismaData.birthTime.split(":").map(Number);
         const timeDate = new Date();
         timeDate.setUTCHours(hours, minutes, seconds || 0, 0); // Use UTC setters
         prismaData.birthTime = timeDate;
@@ -208,17 +188,9 @@ export class ClientService {
       // DO NOT AWAIT - fire and forget for instant client creation
       chartService
         .generateFullVedicProfile(tenantId, client.id, metadata)
-        .then(() =>
-          logger.info(
-            { clientId: client.id },
-            "Background chart generation completed",
-          ),
-        )
+        .then(() => logger.info({ clientId: client.id }, "Background chart generation completed"))
         .catch((err: any) =>
-          logger.error(
-            { err, clientId: client.id },
-            "Background chart generation failed",
-          ),
+          logger.error({ err, clientId: client.id }, "Background chart generation failed"),
         );
     }
 
@@ -233,12 +205,7 @@ export class ClientService {
   /**
    * Update client
    */
-  async updateClient(
-    tenantId: string,
-    id: string,
-    data: any,
-    metadata: RequestMetadata,
-  ) {
+  async updateClient(tenantId: string, id: string, data: any, metadata: RequestMetadata) {
     // 1. Check existence
     const existing = await clientRepository.findById(tenantId, id);
     if (!existing) {
@@ -261,9 +228,7 @@ export class ClientService {
       } else {
         // Create a dummy date with the provided time
         // CRITICAL: Treat "HH:mm:ss" as UTC face value to avoid timezone shifts (matching createClient)
-        const [hours, minutes, seconds] = prismaData.birthTime
-          .split(":")
-          .map(Number);
+        const [hours, minutes, seconds] = prismaData.birthTime.split(":").map(Number);
         const timeDate = new Date();
         timeDate.setUTCHours(hours, minutes, seconds || 0, 0); // Use UTC setters
         prismaData.birthTime = timeDate;
@@ -276,26 +241,17 @@ export class ClientService {
       prismaData.notes = data.notes;
     }
 
-    const updatedClient = await clientRepository.update(
-      tenantId,
-      id,
-      prismaData,
-    );
+    const updatedClient = await clientRepository.update(tenantId, id, prismaData);
 
     // 5. Check if birth details OR name changed to trigger chart regeneration
     // This indicates a "Critical Update" where old charts are invalidated
     const isChartRegenerationTriggered =
       (prismaData.fullName && existing.fullName !== prismaData.fullName) ||
-      (prismaData.birthDate &&
-        existing.birthDate?.getTime() !== prismaData.birthDate.getTime()) ||
-      (prismaData.birthTime &&
-        existing.birthTime?.getTime() !== prismaData.birthTime.getTime()) ||
-      (prismaData.birthLatitude &&
-        existing.birthLatitude !== prismaData.birthLatitude) ||
-      (prismaData.birthLongitude &&
-        existing.birthLongitude !== prismaData.birthLongitude) ||
-      (prismaData.birthTimezone &&
-        existing.birthTimezone !== prismaData.birthTimezone);
+      (prismaData.birthDate && existing.birthDate?.getTime() !== prismaData.birthDate.getTime()) ||
+      (prismaData.birthTime && existing.birthTime?.getTime() !== prismaData.birthTime.getTime()) ||
+      (prismaData.birthLatitude && existing.birthLatitude !== prismaData.birthLatitude) ||
+      (prismaData.birthLongitude && existing.birthLongitude !== prismaData.birthLongitude) ||
+      (prismaData.birthTimezone && existing.birthTimezone !== prismaData.birthTimezone);
 
     if (isChartRegenerationTriggered) {
       try {
@@ -320,19 +276,11 @@ export class ClientService {
         logger.info({ tenantId, clientId: id }, "Verified: Old charts deleted");
 
         // Run full profile generation in background
-        chartService
-          .generateFullVedicProfile(tenantId, id, metadata)
-          .catch((err) => {
-            logger.error(
-              { err, clientId: id },
-              "Background chart regeneration failed after update",
-            );
-          });
+        chartService.generateFullVedicProfile(tenantId, id, metadata).catch((err) => {
+          logger.error({ err, clientId: id }, "Background chart regeneration failed after update");
+        });
       } catch (err) {
-        logger.error(
-          { err, clientId: id },
-          "Failed to initiate chart regeneration",
-        );
+        logger.error({ err, clientId: id }, "Failed to initiate chart regeneration");
       }
     }
 
@@ -416,10 +364,7 @@ export class ClientService {
         },
       });
 
-      logger.info(
-        { tenantId, clientId: id },
-        "Client permanently deleted successfully",
-      );
+      logger.info({ tenantId, clientId: id }, "Client permanently deleted successfully");
 
       return { success: true };
     } finally {

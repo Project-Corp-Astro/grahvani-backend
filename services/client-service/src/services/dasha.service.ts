@@ -48,12 +48,7 @@ export class EnhancedDashaService {
     const client = await clientRepository.findById(tenantId, clientId);
     if (!client) throw new ClientNotFoundError(clientId);
 
-    if (
-      !client.birthDate ||
-      !client.birthTime ||
-      !client.birthLatitude ||
-      !client.birthLongitude
-    ) {
+    if (!client.birthDate || !client.birthTime || !client.birthLatitude || !client.birthLongitude) {
       throw new Error("Client birth details incomplete.");
     }
 
@@ -67,77 +62,61 @@ export class EnhancedDashaService {
     };
 
     // Use multi-layer caching
-    const cacheResult = await advancedCacheManager.multiLayerGet(
-      `dasha:${dashaType}`,
-      birthData,
-      {
-        // Layer 1: Check if saved in database previously
-        database: async () => {
-          try {
-            const savedCharts = await chartRepository.findByClientId(
-              tenantId,
-              clientId,
-            );
-            const matching = savedCharts.find(
-              (chart) =>
-                chart.chartType === "dasha" &&
-                (chart.chartConfig as any)?.dashaType === dashaType &&
-                (chart.chartConfig as any)?.system === ayanamsa,
-            );
+    const cacheResult = await advancedCacheManager.multiLayerGet(`dasha:${dashaType}`, birthData, {
+      // Layer 1: Check if saved in database previously
+      database: async () => {
+        try {
+          const savedCharts = await chartRepository.findByClientId(tenantId, clientId);
+          const matching = savedCharts.find(
+            (chart) =>
+              chart.chartType === "dasha" &&
+              (chart.chartConfig as any)?.dashaType === dashaType &&
+              (chart.chartConfig as any)?.system === ayanamsa,
+          );
 
-            if (matching) {
-              logger.info(
-                {
-                  dashaType,
-                  ayanamsa,
-                  chartId: matching.id,
-                },
-                "✅ Dasha found in database cache",
-              );
-              return matching.chartData;
-            }
-            return null;
-          } catch (error) {
-            logger.error({ error }, "Database cache lookup failed");
-            return null;
-          }
-        },
-
-        // Layer 2: Call Astro Engine (has Redis cache internally)
-        redis: async () => {
-          try {
-            const result = await astroEngineClient.getAlternativeDasha(
-              birthData,
-              dashaType,
-            );
+          if (matching) {
             logger.info(
               {
                 dashaType,
-                cached: result.cached,
+                ayanamsa,
+                chartId: matching.id,
               },
-              "🟢 Astro Engine response received",
+              "✅ Dasha found in database cache",
             );
-            return result.data;
-          } catch (error) {
-            logger.error({ error, dashaType }, "Astro Engine call failed");
-            return null;
+            return matching.chartData;
           }
-        },
+          return null;
+        } catch (error) {
+          logger.error({ error }, "Database cache lookup failed");
+          return null;
+        }
+      },
 
-        // Layer 3: Calculate fresh (fallback)
-        calculation: async () => {
-          logger.warn(
-            { dashaType },
-            "⚠️ Calculating fresh dasha (all caches missed)",
-          );
-          const result = await astroEngineClient.getAlternativeDasha(
-            birthData,
-            dashaType,
+      // Layer 2: Call Astro Engine (has Redis cache internally)
+      redis: async () => {
+        try {
+          const result = await astroEngineClient.getAlternativeDasha(birthData, dashaType);
+          logger.info(
+            {
+              dashaType,
+              cached: result.cached,
+            },
+            "🟢 Astro Engine response received",
           );
           return result.data;
-        },
+        } catch (error) {
+          logger.error({ error, dashaType }, "Astro Engine call failed");
+          return null;
+        }
       },
-    );
+
+      // Layer 3: Calculate fresh (fallback)
+      calculation: async () => {
+        logger.warn({ dashaType }, "⚠️ Calculating fresh dasha (all caches missed)");
+        const result = await astroEngineClient.getAlternativeDasha(birthData, dashaType);
+        return result.data;
+      },
+    });
 
     const result = {
       clientId,
@@ -209,12 +188,7 @@ export class EnhancedDashaService {
     const client = await clientRepository.findById(tenantId, clientId);
     if (!client) throw new ClientNotFoundError(clientId);
 
-    if (
-      !client.birthDate ||
-      !client.birthTime ||
-      !client.birthLatitude ||
-      !client.birthLongitude
-    ) {
+    if (!client.birthDate || !client.birthTime || !client.birthLatitude || !client.birthLongitude) {
       throw new Error("Client birth details incomplete.");
     }
 
@@ -228,14 +202,10 @@ export class EnhancedDashaService {
     };
 
     const preloadResults = await Promise.allSettled(
-      dashaTypes.map((dashaType) =>
-        astroEngineClient.getAlternativeDasha(birthData, dashaType),
-      ),
+      dashaTypes.map((dashaType) => astroEngineClient.getAlternativeDasha(birthData, dashaType)),
     );
 
-    const successful = preloadResults.filter(
-      (r) => r.status === "fulfilled",
-    ).length;
+    const successful = preloadResults.filter((r) => r.status === "fulfilled").length;
     const failed = preloadResults.filter((r) => r.status === "rejected").length;
 
     logger.info(
@@ -262,10 +232,7 @@ export class EnhancedDashaService {
    * Clear dasha cache for a specific client
    * Useful when birth data changes
    */
-  invalidateDashaCache(
-    clientId: string,
-    reason: string = "client_data_update",
-  ): number {
+  invalidateDashaCache(clientId: string, reason: string = "client_data_update"): number {
     logger.warn({ clientId, reason }, "🗑️ Invalidating dasha cache");
     return advancedCacheManager.invalidateRelated("dasha", clientId);
   }

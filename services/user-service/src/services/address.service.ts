@@ -1,9 +1,5 @@
 import { userRepository } from "../repositories/user.repository";
-import {
-  AddressResponse,
-  CreateAddressRequest,
-  UpdateAddressRequest,
-} from "../dtos/address.dto";
+import { AddressResponse, CreateAddressRequest, UpdateAddressRequest } from "../dtos/address.dto";
 import { RequestMetadata } from "./user.service";
 import { UserNotFoundError, NotFoundError } from "../errors";
 
@@ -18,9 +14,7 @@ export class AddressService {
     )) as any;
     if (!user) throw new UserNotFoundError();
 
-    return (user.addresses || []).map((addr: any) =>
-      this.toAddressResponse(addr),
-    );
+    return (user.addresses || []).map((addr: any) => this.toAddressResponse(addr));
   }
 
   /**
@@ -78,11 +72,7 @@ export class AddressService {
   /**
    * Delete an address
    */
-  async deleteAddress(
-    userId: string,
-    addressId: string,
-    metadata: RequestMetadata,
-  ): Promise<void> {
+  async deleteAddress(userId: string, addressId: string, metadata: RequestMetadata): Promise<void> {
     const existing = await userRepository.findAddressById(userId, addressId);
     if (!existing) throw new NotFoundError("Address");
 

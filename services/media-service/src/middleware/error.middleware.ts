@@ -2,12 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { MediaError } from "../errors/media.errors";
 import { logger } from "../config/logger";
 
-export function errorMiddleware(
-  err: Error,
-  req: Request,
-  res: Response,
-  _next: NextFunction,
-) {
+export function errorMiddleware(err: Error, req: Request, res: Response, _next: NextFunction) {
   // Multer errors
   if (err.message?.includes("File type not allowed")) {
     return res.status(400).json({

@@ -19,9 +19,7 @@ async function backfill() {
   console.log(`Found ${clients.length} clients with valid birth data.`);
 
   for (const client of clients) {
-    console.log(
-      `Generating core charts for: ${client.fullName} (${client.id})`,
-    );
+    console.log(`Generating core charts for: ${client.fullName} (${client.id})`);
 
     const metadata = {
       userId: "00000000-0000-0000-0000-000000000000",
@@ -30,11 +28,7 @@ async function backfill() {
     };
 
     try {
-      await chartService.generateCoreCharts(
-        client.tenantId,
-        client.id,
-        metadata,
-      );
+      await chartService.generateCoreCharts(client.tenantId, client.id, metadata);
       console.log(`Successfully generated charts for ${client.fullName}`);
     } catch (err) {
       console.error(`Failed to generate charts for ${client.fullName}:`, err);

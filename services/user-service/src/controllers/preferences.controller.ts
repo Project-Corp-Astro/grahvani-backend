@@ -36,10 +36,7 @@ export const PreferencesController = {
       }
 
       const userId = req.user!.id;
-      const preferences = await preferencesService.getPreferences(
-        userId,
-        validation.data.category,
-      );
+      const preferences = await preferencesService.getPreferences(userId, validation.data.category);
 
       // If no preferences found, return defaults
       if (Object.keys(preferences).length === 0) {
@@ -80,14 +77,10 @@ export const PreferencesController = {
       const userId = req.user!.id;
       // Ensure all preferences have a value (filter out undefined)
       const validPreferences = validation.data.preferences.filter(
-        (p): p is { category: string; key: string; value: unknown } =>
-          p.value !== undefined,
+        (p): p is { category: string; key: string; value: unknown } => p.value !== undefined,
       );
 
-      const result = await preferencesService.bulkUpdatePreferences(
-        userId,
-        validPreferences,
-      );
+      const result = await preferencesService.bulkUpdatePreferences(userId, validPreferences);
 
       res.json(result);
     } catch (error) {
@@ -98,11 +91,7 @@ export const PreferencesController = {
   /**
    * PATCH /me/preferences/:category/:key - Update single preference
    */
-  async updateSinglePreference(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async updateSinglePreference(req: AuthRequest, res: Response, next: NextFunction) {
     const requestId = uuidv4();
     try {
       const { category, key } = req.params;
@@ -120,12 +109,7 @@ export const PreferencesController = {
       }
 
       const userId = req.user!.id;
-      const result = await preferencesService.updatePreference(
-        userId,
-        category,
-        key,
-        value,
-      );
+      const result = await preferencesService.updatePreference(userId, category, key, value);
 
       res.json(result);
     } catch (error) {

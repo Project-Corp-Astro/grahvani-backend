@@ -15,12 +15,7 @@ export class FamilyController {
         ipAddress: req.ip,
         userAgent: req.get("user-agent"),
       };
-      const result = await familyService.linkFamilyMember(
-        tenantId,
-        id,
-        req.body,
-        metadata,
-      );
+      const result = await familyService.linkFamilyMember(tenantId, id, req.body, metadata);
       res.status(201).json(result);
     } catch (error) {
       next(error);

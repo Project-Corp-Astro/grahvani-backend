@@ -113,10 +113,7 @@ export class VariantRepository {
     return getPrisma();
   }
 
-  async createMany(
-    fileId: string,
-    variants: Omit<Prisma.FileVariantCreateManyInput, "fileId">[],
-  ) {
+  async createMany(fileId: string, variants: Omit<Prisma.FileVariantCreateManyInput, "fileId">[]) {
     return this.prisma.fileVariant.createMany({
       data: variants.map((v) => ({ ...v, fileId })),
     });
