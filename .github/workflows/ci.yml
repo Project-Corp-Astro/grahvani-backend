@@ -23,7 +23,8 @@ jobs:
       astro-engine: ${{ steps.filter.outputs.astro-engine }}
       gateway: ${{ steps.filter.outputs.gateway }}
       media: ${{ steps.filter.outputs.media }}
-      any-service: ${{ steps.filter.outputs.auth == 'true' || steps.filter.outputs.user == 'true' || steps.filter.outputs.client == 'true' || steps.filter.outputs.astro-engine == 'true' || steps.filter.outputs.contracts == 'true' || steps.filter.outputs.gateway == 'true' || steps.filter.outputs.media == 'true' }}
+      slack: ${{ steps.filter.outputs.slack }}
+      any-service: ${{ steps.filter.outputs.auth == 'true' || steps.filter.outputs.user == 'true' || steps.filter.outputs.client == 'true' || steps.filter.outputs.astro-engine == 'true' || steps.filter.outputs.contracts == 'true' || steps.filter.outputs.gateway == 'true' || steps.filter.outputs.media == 'true' || steps.filter.outputs.slack == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -60,6 +61,10 @@ jobs:
               - 'services/media-service/**'
               - 'contracts/**'
               - 'Dockerfile.media'
+            slack:
+              - 'services/slack-service/**'
+              - 'contracts/**'
+              - 'Dockerfile.slack'
 
   secrets-scan:
     runs-on: ubuntu-latest
@@ -144,6 +149,9 @@ jobs:
           - service: media
             dockerfile: Dockerfile.media
             image: grahvani-media-service
+          - service: slack
+            dockerfile: Dockerfile.slack
+            image: grahvani-slack-service
     steps:
       - name: Skip if no changes
         if: needs.detect-changes.outputs[matrix.service] != 'true'
@@ -203,6 +211,9 @@ jobs:
           - service: media
             uuid_secret: COOLIFY_MEDIA_UUID
             health_url: https://api-media.grahvani.in/health
+          - service: slack
+            uuid_secret: COOLIFY_SLACK_UUID
+            health_url: https://api-slack.grahvani.in/health
     steps:
       - name: Deploy ${{ matrix.service }}
         if: needs.detect-changes.outputs[matrix.service] == 'true'
