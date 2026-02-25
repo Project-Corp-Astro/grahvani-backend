@@ -7,6 +7,8 @@ import { errorMiddleware } from "./middleware/error.middleware";
 import { metricsMiddleware, metricsHandler } from "./middleware/metrics.middleware";
 import { requestIdMiddleware } from "@grahvani/contracts";
 import { getSlackConfig } from "./config/slack";
+import { getCoolifyConfig } from "./config/coolify";
+import { coolifyMonitor } from "./services/coolify-monitor.service";
 
 const app: Express = express();
 
@@ -28,15 +30,30 @@ app.get("/metrics", metricsHandler);
 
 // Health Check
 app.get("/health", (req: Request, res: Response) => {
-  const config = getSlackConfig();
+  const slackConfig = getSlackConfig();
+  const coolifyConfig = getCoolifyConfig();
   res.status(200).json({
     status: "ok",
     service: "slack-service",
     slack: {
-      enabled: config.enabled,
-      defaultChannel: config.defaultChannel,
+      enabled: slackConfig.enabled,
+      defaultChannel: slackConfig.defaultChannel,
+    },
+    coolify: {
+      monitoring: coolifyConfig.enabled,
+      pollIntervalMs: coolifyConfig.pollIntervalMs,
     },
   });
+});
+
+// Force a status dashboard post to #grahvani-ops
+app.post("/status", async (req: Request, res: Response) => {
+  try {
+    await coolifyMonitor.forceStatusUpdate();
+    res.json({ message: "Status dashboard posted to #grahvani-ops" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to post status" });
+  }
 });
 
 // Global Error Handler (must be last)

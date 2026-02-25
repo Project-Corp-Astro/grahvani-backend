@@ -18,11 +18,12 @@ export interface SlackMessage {
   blocks: SlackBlock[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface SlackBlock {
   type: string;
   text?: { type: string; text: string; emoji?: boolean };
   fields?: { type: string; text: string }[];
-  elements?: { type: string; text: string }[];
+  elements?: Record<string, unknown>[];
   block_id?: string;
 }
 
