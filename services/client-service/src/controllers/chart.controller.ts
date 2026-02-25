@@ -184,6 +184,8 @@ export class ChartController {
         shastihayani: "shastihayani",
         satabdika: "satabdika",
         dwisaptati: "dwisaptati",
+        chara: "chara",
+        "chara-dasha": "chara",
         other: "tribhagi", // Default for 'other'
       };
 
