@@ -630,13 +630,17 @@ export class AstroEngineClient {
     if (context.pratyantarLord) extras.pratyantar_lord = context.pratyantarLord;
 
     const response = await this.client.post(endpoint, this.buildPayload(data, extras));
-    let result = response.data;
+    const result = response.data;
 
     // Yukteswar: Handle potential repetition by limiting to one cycle (9 segments)
     // if the requested level is coarse (mahadasha or antardasha).
-    if (system === "yukteswar" &&
+    if (
+      system === "yukteswar" &&
       (level.toLowerCase() === "mahadasha" || level.toLowerCase() === "antardasha") &&
-      result && result.vimshottari_dasha && Array.isArray(result.vimshottari_dasha)) {
+      result &&
+      result.vimshottari_dasha &&
+      Array.isArray(result.vimshottari_dasha)
+    ) {
       result.vimshottari_dasha = result.vimshottari_dasha.slice(0, 9);
     }
 

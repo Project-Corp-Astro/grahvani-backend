@@ -28,9 +28,12 @@ export class DashaController {
 
       if (cached) {
         // Apply truncation even to cached data if it was saved with repetitions
-        if (birthData.ayanamsa === "yukteswar" &&
+        if (
+          birthData.ayanamsa === "yukteswar" &&
           (level.toLowerCase() === "mahadasha" || level.toLowerCase() === "antardasha") &&
-          cached.vimshottari_dasha && Array.isArray(cached.vimshottari_dasha)) {
+          cached.vimshottari_dasha &&
+          Array.isArray(cached.vimshottari_dasha)
+        ) {
           cached.vimshottari_dasha = cached.vimshottari_dasha.slice(0, 9);
         }
 
@@ -48,9 +51,13 @@ export class DashaController {
 
       // Yukteswar: Handle potential repetition by limiting to one cycle (9 segments)
       // for coarse levels (mahadasha or antardasha).
-      if (birthData.ayanamsa === "yukteswar" &&
+      if (
+        birthData.ayanamsa === "yukteswar" &&
         (level.toLowerCase() === "mahadasha" || level.toLowerCase() === "antardasha") &&
-        data && data.vimshottari_dasha && Array.isArray(data.vimshottari_dasha)) {
+        data &&
+        data.vimshottari_dasha &&
+        Array.isArray(data.vimshottari_dasha)
+      ) {
         data.vimshottari_dasha = data.vimshottari_dasha.slice(0, 9);
       }
 
