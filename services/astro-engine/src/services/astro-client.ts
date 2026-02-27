@@ -164,7 +164,10 @@ export class AstroEngineClient {
    */
   async getTransitChart(data: BirthData): Promise<any> {
     const system = this.getAyanamsa(data);
-    const endpoint = `/${system}/transit`;
+    let endpoint: string = `/${system}/transit`;
+    if (system === "yukteswar") endpoint = YUKTESWAR_ENDPOINTS.TRANSIT;
+    if (system === "raman") endpoint = RAMAN_ENDPOINTS.TRANSIT;
+    if (system === "lahiri") endpoint = LAHIRI_ENDPOINTS.TRANSIT;
 
     // Cache for 1 hour (3600 seconds)
     const cached = await cacheService.get<any>(`transit:${system}`, data);
@@ -604,14 +607,10 @@ export class AstroEngineClient {
       };
       endpoint = kpEndpoints[level.toLowerCase()] || kpEndpoints["mahadasha"];
     } else if (system === "yukteswar") {
-      const yukteswarEndpoints: Record<string, string> = {
-        mahadasha: "/yukteswar/calculate_mahaantar_dasha",
-        antardasha: "/yukteswar/calculate_mahaantar_dasha",
-        pratyantardasha: "/yukteswar/calculate_pratyantar_dasha",
-        sookshma: "/yukteswar/calculate_sookshma_dasha",
-        prana: "/yukteswar/calculate_prana_dasha",
-      };
-      endpoint = yukteswarEndpoints[level.toLowerCase()] || yukteswarEndpoints["mahadasha"];
+      // Yukteswar: Redirect ALL levels to prana-based endpoint
+      // The dedicated calculate_mahaantar_dasha returns sign-lord sequences (Aries-Pisces),
+      // while calculate_prana_dasha returns standard Vimshottari planets.
+      endpoint = "/yukteswar/calculate_prana_dasha";
     } else {
       // Lahiri/Default
       const lahiriEndpoints: Record<string, string> = {
@@ -631,7 +630,17 @@ export class AstroEngineClient {
     if (context.pratyantarLord) extras.pratyantar_lord = context.pratyantarLord;
 
     const response = await this.client.post(endpoint, this.buildPayload(data, extras));
-    return response.data;
+    let result = response.data;
+
+    // Yukteswar: Handle potential repetition by limiting to one cycle (9 segments)
+    // if the requested level is coarse (mahadasha or antardasha).
+    if (system === "yukteswar" &&
+      (level.toLowerCase() === "mahadasha" || level.toLowerCase() === "antardasha") &&
+      result && result.vimshottari_dasha && Array.isArray(result.vimshottari_dasha)) {
+      result.vimshottari_dasha = result.vimshottari_dasha.slice(0, 9);
+    }
+
+    return result;
   }
 
   /**

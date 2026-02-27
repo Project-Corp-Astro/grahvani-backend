@@ -257,6 +257,7 @@ export class ChartService {
         birthDate: now.toISOString().split("T")[0],
         birthTime: now.toTimeString().split(" ")[0], // HH:MM:SS
       };
+
       chartData = await astroEngineClient.getTransitChart(transitData, system);
 
       // RETURN DIRECTLY - NO DB STORAGE for dynamic transit data
@@ -1339,10 +1340,23 @@ export class ChartService {
     // VALIDATION: Ensure dasha type is actually supported for this system
     // This prevents invalid calls (like Tribhagi for Raman) from reaching Astro Engine
     const capabilities = SYSTEM_CAPABILITIES[ayanamsa];
-    const normalizedType = dashaType.toLowerCase().replace(/-dasha$/, "");
+    const normalizedTarget = dashaType.toLowerCase().replace(/-dasha$/, "").replace(/-/g, "_");
+
+    // Alias map: frontend short names → canonical config names
+    const dashaAliases: Record<string, string> = {
+      dwisaptati: "dwisaptatisama",
+      chaturshiti: "chaturshitisama",
+      shattrimshat: "shattrimshatsama",
+    };
+    const resolvedTarget = dashaAliases[normalizedTarget] || normalizedTarget;
 
     const isSupported = capabilities?.dashas?.some(
-      (d) => d.toLowerCase() === normalizedType || d.toLowerCase() === dashaType.toLowerCase(),
+      (d) => {
+        const normalizedD = d.toLowerCase().replace(/-/g, "_");
+        return normalizedD === resolvedTarget ||
+          normalizedD === normalizedTarget ||
+          d.toLowerCase() === dashaType.toLowerCase();
+      },
     );
 
     if (!isSupported) {
