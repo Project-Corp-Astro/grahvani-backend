@@ -1340,7 +1340,10 @@ export class ChartService {
     // VALIDATION: Ensure dasha type is actually supported for this system
     // This prevents invalid calls (like Tribhagi for Raman) from reaching Astro Engine
     const capabilities = SYSTEM_CAPABILITIES[ayanamsa];
-    const normalizedTarget = dashaType.toLowerCase().replace(/-dasha$/, "").replace(/-/g, "_");
+    const normalizedTarget = dashaType
+      .toLowerCase()
+      .replace(/-dasha$/, "")
+      .replace(/-/g, "_");
 
     // Alias map: frontend short names → canonical config names
     const dashaAliases: Record<string, string> = {
@@ -1350,14 +1353,14 @@ export class ChartService {
     };
     const resolvedTarget = dashaAliases[normalizedTarget] || normalizedTarget;
 
-    const isSupported = capabilities?.dashas?.some(
-      (d) => {
-        const normalizedD = d.toLowerCase().replace(/-/g, "_");
-        return normalizedD === resolvedTarget ||
-          normalizedD === normalizedTarget ||
-          d.toLowerCase() === dashaType.toLowerCase();
-      },
-    );
+    const isSupported = capabilities?.dashas?.some((d) => {
+      const normalizedD = d.toLowerCase().replace(/-/g, "_");
+      return (
+        normalizedD === resolvedTarget ||
+        normalizedD === normalizedTarget ||
+        d.toLowerCase() === dashaType.toLowerCase()
+      );
+    });
 
     if (!isSupported) {
       logger.warn(
