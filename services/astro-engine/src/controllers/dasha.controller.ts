@@ -27,6 +27,16 @@ export class DashaController {
       const cached = await cacheService.get<any>(`dasha:${level}`, cacheKey);
 
       if (cached) {
+        // Apply truncation even to cached data if it was saved with repetitions
+        if (
+          birthData.ayanamsa === "yukteswar" &&
+          (level.toLowerCase() === "mahadasha" || level.toLowerCase() === "antardasha") &&
+          cached.vimshottari_dasha &&
+          Array.isArray(cached.vimshottari_dasha)
+        ) {
+          cached.vimshottari_dasha = cached.vimshottari_dasha.slice(0, 9);
+        }
+
         res.json({
           success: true,
           data: cached,
@@ -38,6 +48,19 @@ export class DashaController {
       }
 
       const data = await astroEngineClient.getVimshottariDasha(birthData, level);
+
+      // Yukteswar: Handle potential repetition by limiting to one cycle (9 segments)
+      // for coarse levels (mahadasha or antardasha).
+      if (
+        birthData.ayanamsa === "yukteswar" &&
+        (level.toLowerCase() === "mahadasha" || level.toLowerCase() === "antardasha") &&
+        data &&
+        data.vimshottari_dasha &&
+        Array.isArray(data.vimshottari_dasha)
+      ) {
+        data.vimshottari_dasha = data.vimshottari_dasha.slice(0, 9);
+      }
+
       await cacheService.set(`dasha:${level}`, cacheKey, data);
 
       res.json({
