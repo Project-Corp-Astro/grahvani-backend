@@ -7,6 +7,7 @@ import {
   KP_ENDPOINTS,
   RAMAN_ENDPOINTS,
   YUKTESWAR_ENDPOINTS,
+  BHASIN_ENDPOINTS,
 } from "../constants/endpoints";
 import { kpClient } from "../clients/kp.client";
 
@@ -21,7 +22,7 @@ export interface BirthData {
   longitude: number;
   timezoneOffset: number;
   userName?: string; // Optional user identifier
-  ayanamsa?: "lahiri" | "kp" | "raman" | "yukteswar" | "western"; // Standardized field
+  ayanamsa?: "lahiri" | "kp" | "raman" | "yukteswar" | "bhasin" | "western"; // Standardized field
   planet?: string; // Optional planet for specific remedies (e.g., Lal Kitab)
   house?: number; // Optional house for specific remedies
 }
@@ -95,9 +96,11 @@ export class AstroEngineClient {
   /**
    * Get the resolved ayanamsa system from birth data
    */
-  private getAyanamsa(data: BirthData): "lahiri" | "kp" | "raman" | "yukteswar" | "western" {
+  private getAyanamsa(
+    data: BirthData,
+  ): "lahiri" | "kp" | "raman" | "yukteswar" | "bhasin" | "western" {
     const ayanamsa = data.ayanamsa || "lahiri";
-    return ayanamsa.toLowerCase() as "lahiri" | "kp" | "raman" | "yukteswar" | "western";
+    return ayanamsa.toLowerCase() as "lahiri" | "kp" | "raman" | "yukteswar" | "bhasin" | "western";
   }
 
   /**
@@ -146,6 +149,7 @@ export class AstroEngineClient {
     let endpoint: string = `/${system}/natal`;
     if (system === "kp") endpoint = KP_ENDPOINTS.PLANETS_CUSPS;
     if (system === "yukteswar") endpoint = YUKTESWAR_ENDPOINTS.NATAL;
+    if (system === "bhasin") endpoint = BHASIN_ENDPOINTS.NATAL;
     if (system === "raman") endpoint = RAMAN_ENDPOINTS.NATAL;
     if (system === "lahiri") endpoint = LAHIRI_ENDPOINTS.NATAL;
 
@@ -166,6 +170,7 @@ export class AstroEngineClient {
     const system = this.getAyanamsa(data);
     let endpoint: string = `/${system}/transit`;
     if (system === "yukteswar") endpoint = YUKTESWAR_ENDPOINTS.TRANSIT;
+    if (system === "bhasin") endpoint = BHASIN_ENDPOINTS.TRANSIT;
     if (system === "raman") endpoint = RAMAN_ENDPOINTS.TRANSIT;
     if (system === "lahiri") endpoint = LAHIRI_ENDPOINTS.TRANSIT;
 
@@ -204,7 +209,8 @@ export class AstroEngineClient {
    */
   async getMoonChart(data: BirthData): Promise<any> {
     const system = this.getAyanamsa(data);
-    const endpoint = `/${system}/calculate_moon_chart`;
+    let endpoint = `/${system}/calculate_moon_chart`;
+    if (system === "bhasin") endpoint = BHASIN_ENDPOINTS.MOON_CHART;
 
     const cached = await cacheService.get<any>(`moon:${system}`, data);
     if (cached) return { data: cached, cached: true };
@@ -220,7 +226,8 @@ export class AstroEngineClient {
    */
   async getSunChart(data: BirthData): Promise<any> {
     const system = this.getAyanamsa(data);
-    const endpoint = `/${system}/calculate_sun_chart`;
+    let endpoint = `/${system}/calculate_sun_chart`;
+    if (system === "bhasin") endpoint = BHASIN_ENDPOINTS.SUN_CHART;
 
     const cached = await cacheService.get<any>(`sun:${system}`, data);
     if (cached) return { data: cached, cached: true };
@@ -493,6 +500,23 @@ export class AstroEngineClient {
         d45: "calculate_d45",
         d60: "calculate_d60",
       },
+      bhasin: {
+        d2: "calculate_d2",
+        d3: "calculate_d3",
+        d4: "calculate_d4",
+        d7: "calculate_d7",
+        d9: "calculate_d9",
+        d10: "calculate_d10",
+        d12: "calculate_d12",
+        d16: "calculate_d16",
+        d20: "calculate_d20",
+        d24: "calculate_d24",
+        d27: "calculate_d27",
+        d30: "calculate_d30",
+        d40: "calculate_d40",
+        d45: "calculate_d45",
+        d60: "calculate_d60",
+      },
     };
 
     const endpointPath = systemMappings[system]?.[type] || type;
@@ -611,6 +635,15 @@ export class AstroEngineClient {
       // The dedicated calculate_mahaantar_dasha returns sign-lord sequences (Aries-Pisces),
       // while calculate_prana_dasha returns standard Vimshottari planets.
       endpoint = "/yukteswar/calculate_prana_dasha";
+    } else if (system === "bhasin") {
+      const bhasinEndpoints: Record<string, string> = {
+        mahadasha: BHASIN_ENDPOINTS.MAHA_ANTAR_DASHA,
+        antardasha: BHASIN_ENDPOINTS.MAHA_ANTAR_DASHA,
+        pratyantardasha: BHASIN_ENDPOINTS.PRATYANTAR_DASHA,
+        sookshma: BHASIN_ENDPOINTS.SOOKSHMA_DASHA,
+        prana: BHASIN_ENDPOINTS.PRANA_DASHA,
+      };
+      endpoint = bhasinEndpoints[level.toLowerCase()] || bhasinEndpoints["mahadasha"];
     } else {
       // Lahiri/Default
       const lahiriEndpoints: Record<string, string> = {
@@ -690,6 +723,29 @@ export class AstroEngineClient {
         chaturshitisama: YUKTESWAR_ENDPOINTS.CHATURSHITISAMA,
       };
       endpoint = yukteswarMap[lowerType];
+    } else if (system === "bhasin") {
+      const bhasinMap: Record<string, string> = {
+        mahaantar: BHASIN_ENDPOINTS.MAHA_ANTAR_DASHA,
+        pratyantar: BHASIN_ENDPOINTS.PRATYANTAR_DASHA,
+        sookshma: BHASIN_ENDPOINTS.SOOKSHMA_DASHA,
+        prana: BHASIN_ENDPOINTS.PRANA_DASHA,
+        ashtottari: BHASIN_ENDPOINTS.ASHTOTTARI_ANTAR,
+        ashtottari_antar: BHASIN_ENDPOINTS.ASHTOTTARI_ANTAR,
+        ashtottari_pd: BHASIN_ENDPOINTS.ASHTOTTARI_PD,
+        ashtottari_pratyantardasha: BHASIN_ENDPOINTS.ASHTOTTARI_PD,
+        tribhagi: BHASIN_ENDPOINTS.TRIBHAGI,
+        tribhagi_40: BHASIN_ENDPOINTS.TRIBHAGI_40,
+        shodashottari: BHASIN_ENDPOINTS.SHODASHOTTARI,
+        dwadashottari: BHASIN_ENDPOINTS.DWADASHOTTARI,
+        dwisaptati: BHASIN_ENDPOINTS.DWISAPTATISAMA,
+        dwisaptatisama: BHASIN_ENDPOINTS.DWISAPTATISAMA,
+        shastihayani: BHASIN_ENDPOINTS.SHASTIHAYANI,
+        shattrimshatsama: BHASIN_ENDPOINTS.SHATTRIMSHATSAMA,
+        panchottari: BHASIN_ENDPOINTS.PANCHOTTARI,
+        satabdika: BHASIN_ENDPOINTS.SATABDIKA,
+        chaturshitisama: BHASIN_ENDPOINTS.CHATURSHITISAMA,
+      };
+      endpoint = bhasinMap[lowerType];
     } else {
       // Default to Lahiri map (existing logic)
       const endpointMap: Record<string, string> = {
@@ -797,6 +853,7 @@ export class AstroEngineClient {
 
     if (system === "raman") endpoint = RAMAN_ENDPOINTS.BHINNA_ASHTAKAVARGA;
     if (system === "yukteswar") endpoint = YUKTESWAR_ENDPOINTS.BHINNA_ASHTAKAVARGA;
+    if (system === "bhasin") endpoint = BHASIN_ENDPOINTS.BHINNA_ASHTAKAVARGA;
     if (system === "kp") endpoint = "/lahiri/calculate_binnatakvarga"; // Fallback for KP
 
     const response = await this.client.post(endpoint, this.buildPayload(data));
@@ -812,6 +869,7 @@ export class AstroEngineClient {
 
     if (system === "raman") endpoint = RAMAN_ENDPOINTS.SARVA_ASHTAKAVARGA;
     if (system === "yukteswar") endpoint = YUKTESWAR_ENDPOINTS.SARVA_ASHTAKAVARGA;
+    if (system === "bhasin") endpoint = BHASIN_ENDPOINTS.SARVA_ASHTAKAVARGA;
     if (system === "kp") endpoint = "/lahiri/calculate_sarvashtakavarga"; // Fallback for KP
 
     const response = await this.client.post(endpoint, this.buildPayload(data));
@@ -828,6 +886,7 @@ export class AstroEngineClient {
     if (system === "raman") endpoint = RAMAN_ENDPOINTS.SHODASHA_VARGA;
     if (system === "kp") endpoint = KP_ENDPOINTS.SHODASHA_VARGA;
     if (system === "yukteswar") endpoint = YUKTESWAR_ENDPOINTS.SHODASHA_VARGA_SUMMARY;
+    if (system === "bhasin") endpoint = BHASIN_ENDPOINTS.SHODASHA_VARGA_SUMMARY;
 
     const response = await this.client.post(endpoint, this.buildPayload(data));
     return response.data;

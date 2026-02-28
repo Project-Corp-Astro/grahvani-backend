@@ -1,5 +1,12 @@
 import { Request, Response } from "express";
-import { lahiriClient, ramanClient, yukteswarClient, BirthData, AyanamsaType } from "../../clients";
+import {
+  lahiriClient,
+  ramanClient,
+  yukteswarClient,
+  bhasinClient,
+  BirthData,
+  AyanamsaType,
+} from "../../clients";
 import { cacheService } from "../../services/cache.service";
 import { logger } from "../../config/logger";
 
@@ -72,6 +79,7 @@ export class DivisionalController {
   private getClient(ayanamsa: AyanamsaType) {
     if (ayanamsa === "raman") return ramanClient;
     if (ayanamsa === "yukteswar") return yukteswarClient;
+    if (ayanamsa === "bhasin") return bhasinClient;
     return lahiriClient;
   }
 

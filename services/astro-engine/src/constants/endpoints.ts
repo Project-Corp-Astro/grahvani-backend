@@ -293,6 +293,69 @@ export const YUKTESWAR_ENDPOINTS = {
   CHATURSHITISAMA: "/yukteswar/calculate_chaturshitisama_dasha",
 } as const;
 
+/****************************************************** Bhasin Ayanamsa System Endpoints*******************************************/
+export const BHASIN_ENDPOINTS = {
+  // Natal & Transit
+  NATAL: "/bhasin/calculate_d1",
+  TRANSIT: "/bhasin/calculate_transit",
+  MOON_CHART: "/bhasin/calculate_moon",
+  SUN_CHART: "/bhasin/calculate_sun",
+  SUDARSHAN_CHAKRA: "/bhasin/calculate_sudarshan_chakra",
+  SHODASHA_VARGA_SUMMARY: "/bhasin/shodasha_varga_summary",
+
+  // Divisional Charts
+  D2_HORA: "/bhasin/calculate_d2",
+  D3_DREKKANA: "/bhasin/calculate_d3",
+  D4_CHATURTHAMSHA: "/bhasin/calculate_d4",
+  D7_SAPTAMSHA: "/bhasin/calculate_d7",
+  D9_NAVAMSA: "/bhasin/calculate_d9",
+  D10_DASAMSA: "/bhasin/calculate_d10",
+  D12_DWADASAMSA: "/bhasin/calculate_d12",
+  D16_SHODASAMSA: "/bhasin/calculate_d16",
+  D20_VIMSHAMSA: "/bhasin/calculate_d20",
+  D24_CHATURVIMSHAMSA: "/bhasin/calculate_d24",
+  D27_SAPTAVIMSHAMSA: "/bhasin/calculate_d27",
+  D30_TRIMSHAMSA: "/bhasin/calculate_d30",
+  D40_KHAVEDAMSA: "/bhasin/calculate_d40",
+  D45_AKSHAVEDAMSA: "/bhasin/calculate_d45",
+  D60_SHASHTIAMSA: "/bhasin/calculate_d60",
+
+  // Lagna & Bhava
+  ARUDHA_LAGNA: "/bhasin/calculate_arudha_lagna",
+  BHAVA_LAGNA: "/bhasin/calculate_bhava_lagna",
+  HORA_LAGNA: "/bhasin/calculate_hora_lagna",
+  SRIPATHI_BHAVA: "/bhasin/calculate_sripathi",
+  KP_BHAVA: "/bhasin/calculate_kp",
+  EQUAL_BHAVA: "/bhasin/calculate_equal_bhava",
+  GL_CHART: "/bhasin/calculate_gatika_lagna",
+  KARKAMSHA_D1: "/bhasin/calculate_karkamsha_d1",
+  KARKAMSHA_D9: "/bhasin/calculate_karkamsha_d9",
+
+  // Ashtakavarga
+  BHINNA_ASHTAKAVARGA: "/bhasin/calculate_binnashtakvarga",
+  SARVA_ASHTAKAVARGA: "/bhasin/calculate_sarvashtakavarga",
+
+  // Dashas
+  MAHA_ANTAR_DASHA: "/bhasin/calculate_maha_antar",
+  PRATYANTAR_DASHA: "/bhasin/calculate_pratyantar",
+  SOOKSHMA_DASHA: "/bhasin/calculate_sookshma",
+  PRANA_DASHA: "/bhasin/calculate_prana_dasha",
+
+  // Other Dashas
+  ASHTOTTARI_ANTAR: "/bhasin/calculate_ashtottari_antar",
+  ASHTOTTARI_PD: "/bhasin/calculate_ashtottari_pd",
+  TRIBHAGI: "/bhasin/calculate_tribhagi",
+  TRIBHAGI_40: "/bhasin/calculate_tribhagi_40",
+  SHODASHOTTARI: "/bhasin/calculate_shodashottari_antar",
+  DWADASHOTTARI: "/bhasin/calculate_dwadashottari_antar",
+  DWISAPTATISAMA: "/bhasin/calculate_dwisaptatisama_antar",
+  SHASTIHAYANI: "/bhasin/calculate_shastihayani",
+  SHATTRIMSHATSAMA: "/bhasin/calculate_shattrimshat_antar",
+  PANCHOTTARI: "/bhasin/calculate_panchottari_antar",
+  SATABDIKA: "/bhasin/calculate_satabdika_antar",
+  CHATURSHITISAMA: "/bhasin/calculate_chaturshitisama_antar",
+} as const;
+
 /************************************************Divisional chart type to endpoint mapping*******************************************/
 export const DIVISIONAL_CHART_MAP: Record<string, string> = {
   d2: "calculate_d2_hora",

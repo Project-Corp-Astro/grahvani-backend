@@ -599,7 +599,7 @@ export class ChartService {
    * Bulk generate core charts (D1, D9) for all included systems
    */
   async generateCoreCharts(tenantId: string, clientId: string, metadata: RequestMetadata) {
-    const systems: AyanamsaSystem[] = ["lahiri", "raman", "kp"];
+    const systems: AyanamsaSystem[] = ["lahiri", "raman", "kp", "bhasin"];
     const operations: (() => Promise<any>)[] = [];
 
     for (const sys of systems) {
@@ -671,7 +671,7 @@ export class ChartService {
       // 3. Define systems to check
       const systemsToCheck: AyanamsaSystem[] = targetSystem
         ? [targetSystem]
-        : ["lahiri", "kp", "raman", "yukteswar"];
+        : ["lahiri", "kp", "raman", "yukteswar", "bhasin"];
 
       // Set lock to prevent overlapping audits
       generationLocks.add(clientId);
@@ -875,16 +875,15 @@ export class ChartService {
         }
       }
 
-      const ayanamsas: AyanamsaSystem[] = ["lahiri", "kp", "raman", "yukteswar"];
+      const ayanamsas: AyanamsaSystem[] = ["lahiri", "kp", "raman", "yukteswar", "bhasin"];
 
       // 2. Sequential-Parallel Orchestration
       // To prevent connection pool exhaustion, we run 2 systems at a time
-      const batch1 = ayanamsas.slice(0, 2);
-      const batch2 = ayanamsas.slice(2, 4);
-
+      const BATCH_SIZE = 2;
       const results: any = {};
 
-      for (const batch of [batch1, batch2]) {
+      for (let i = 0; i < ayanamsas.length; i += BATCH_SIZE) {
+        const batch = ayanamsas.slice(i, i + BATCH_SIZE);
         const outcomes = await Promise.allSettled(
           batch.map((system) => this.generateSystemProfile(tenantId, clientId, system, metadata)),
         );
@@ -1337,6 +1336,38 @@ export class ChartService {
     const client = await clientRepository.findById(tenantId, clientId);
     if (!client) throw new ClientNotFoundError(clientId);
 
+    // DB-FIRST: Check if this alternative dasha already exists in database (High Performance)
+    // IMPORTANT: Skip DB cache for drill-down requests (mahaLord/antarLord present)
+    // because multiple dasha sub-types (e.g. ashtottari, ashtottari_antar, ashtottari_pratyantardasha)
+    // all map to the same DB chartType, so a cached mahadasha record would be returned
+    // instead of the specific sub-period data needed.
+    const hasDrillDownContext = !!(options.mahaLord || options.antarLord || options.pratyantarLord);
+
+    if (!hasDrillDownContext) {
+      const cachedDbChartType = this.getDashaChartType(dashaType);
+      const matchingDasha = await chartRepository.findOneByTypeAndSystem(
+        tenantId,
+        clientId,
+        cachedDbChartType,
+        ayanamsa,
+      );
+
+      if (matchingDasha) {
+        logger.info(
+          { clientId, dashaType, ayanamsa, dbChartType: cachedDbChartType },
+          "Alternative Dasha found in database - returning stored data",
+        );
+        return {
+          ...matchingDasha,
+          data: matchingDasha.chartData,
+          clientName: client.fullName,
+          ayanamsa,
+          cached: true,
+          calculatedAt: matchingDasha.calculatedAt,
+        };
+      }
+    }
+
     // VALIDATION: Ensure dasha type is actually supported for this system
     // This prevents invalid calls (like Tribhagi for Raman) from reaching Astro Engine
     const capabilities = SYSTEM_CAPABILITIES[ayanamsa];
@@ -1350,6 +1381,11 @@ export class ChartService {
       dwisaptati: "dwisaptatisama",
       chaturshiti: "chaturshitisama",
       shattrimshat: "shattrimshatsama",
+      // Ashtottari sub-levels should validate against base 'ashtottari'
+      ashtottari_pratyantardasha: "ashtottari",
+      ashtottari_pratyantardashas: "ashtottari",
+      ashtottari_antar: "ashtottari",
+      ashtottari_pd: "ashtottari",
     };
     const resolvedTarget = dashaAliases[normalizedTarget] || normalizedTarget;
 

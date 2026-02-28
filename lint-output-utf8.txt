@@ -1,0 +1,38 @@
+﻿
+> @grahvani/client-service@1.0.0 lint
+> eslint . --ext .ts --format stylish
+
+
+D:\Grahvani\grahvani-backend\services\client-service\src\clients\astro-engine.client.ts
+  821:23  error  Replace `"GL┬╖Chart┬╖is┬╖currently┬╖only┬╖available┬╖for┬╖Lahiri,┬╖Yukteswar,┬╖and┬╖Bhasin┬╖systems"` with `ΓÉìΓÅÄ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖"GL┬╖Chart┬╖is┬╖currently┬╖only┬╖available┬╖for┬╖Lahiri,┬╖Yukteswar,┬╖and┬╖Bhasin┬╖systems",ΓÉìΓÅÄ┬╖┬╖┬╖┬╖┬╖┬╖`  prettier/prettier
+
+D:\Grahvani\grahvani-backend\services\client-service\src\config\endpoint-availability.ts
+  10:29  error  Replace `┬╖"lahiri"┬╖|┬╖"raman"┬╖|┬╖"kp"┬╖|┬╖"yukteswar"┬╖|┬╖"bhasin"┬╖|┬╖"western"` with `ΓÉìΓÅÄ┬╖┬╖|┬╖"lahiri"ΓÉìΓÅÄ┬╖┬╖|┬╖"raman"ΓÉìΓÅÄ┬╖┬╖|┬╖"kp"ΓÉìΓÅÄ┬╖┬╖|┬╖"yukteswar"ΓÉìΓÅÄ┬╖┬╖|┬╖"bhasin"ΓÉìΓÅÄ┬╖┬╖|┬╖"western"ΓÉìΓÅÄ┬╖`  prettier/prettier
+
+Γ£û 2 problems (2 errors, 0 warnings)
+  2 errors and 0 warnings potentially fixable with the `--fix` option.
+
+node.exe : npm error Lifecycle script 
+`lint` failed with error:
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecif 
+   ied: (npm error Lifec...led with er  
+  ror::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCom 
+   mandError
+ 
+npm error code 1
+npm error path D:\Grahvani\grahvani-back
+end\services\client-service
+npm error workspace 
+@grahvani/client-service@1.0.0
+npm error location D:\Grahvani\grahvani-
+backend\services\client-service
+npm error command failed
+npm error command 
+C:\WINDOWS\system32\cmd.exe /d /s /c 
+eslint . --ext .ts --format stylish
