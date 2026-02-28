@@ -7,7 +7,7 @@ import { decompressChartData } from "../utils/compression";
 // Types & Interfaces
 // =============================================================================
 
-export type Ayanamsa = "lahiri" | "raman" | "kp" | "yukteswar" | "western" | "universal";
+export type Ayanamsa = "lahiri" | "raman" | "kp" | "yukteswar" | "bhasin" | "western" | "universal";
 
 export interface BirthData {
   birthDate: string; // YYYY-MM-DD
@@ -407,6 +407,7 @@ class AstroEngineClient {
         panchottari: "panchottari",
         satabdika: "satabdika",
         chaturshitisama: "chaturshitisama",
+        shastihayani: "shastihayani",
 
         // Ashtottari variants
         ashtottari: "ashtottari",
@@ -414,6 +415,30 @@ class AstroEngineClient {
         ashtottari_pratyantardashas: "ashtottari_pratyantardashas",
       };
       return yukMapping[type] || type;
+    }
+
+    if (ayanamsa === "bhasin") {
+      // Bhasin uses same endpoint names as Yukteswar
+      const bhasinMapping: Record<string, string> = {
+        vimshottari: "vimshottari",
+        mahaantar: "mahaantar",
+        tribhagi: "tribhagi",
+        tribhagi_40: "tribhagi_40",
+        dwisaptati: "dwisaptatisama",
+        dwisaptatisama: "dwisaptatisama",
+        shattrimshatsama: "shattrimshatsama",
+        shodashottari: "shodashottari",
+        dwadashottari: "dwadashottari",
+        panchottari: "panchottari",
+        satabdika: "satabdika",
+        chaturshitisama: "chaturshitisama",
+        ashtottari: "ashtottari",
+        ashtottari_antar: "ashtottari_antar",
+        ashtottari_pratyantardasha: "ashtottari_pd",
+        ashtottari_pd: "ashtottari_pd",
+        shastihayani: "shastihayani",
+      };
+      return bhasinMapping[type] || type;
     }
 
     return type;
@@ -792,8 +817,8 @@ class AstroEngineClient {
    * Gati Kalagna Chart (GL Chart) - Specialist chart for Lahiri and Yukteswar systems
    */
   async getGlChart(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
-    if (ayanamsa !== "lahiri" && ayanamsa !== "yukteswar") {
-      throw new Error("GL Chart is currently only available for Lahiri and Yukteswar systems");
+    if (ayanamsa !== "lahiri" && ayanamsa !== "yukteswar" && ayanamsa !== "bhasin") {
+      throw new Error("GL Chart is currently only available for Lahiri, Yukteswar, and Bhasin systems");
     }
     const payload = { ...birthData, ayanamsa: ayanamsa };
     return (await this.apiClient.post("/gl_chart", payload)).data;

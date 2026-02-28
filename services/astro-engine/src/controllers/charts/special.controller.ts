@@ -3,6 +3,7 @@ import {
   lahiriClient,
   ramanClient,
   yukteswarClient,
+  bhasinClient,
   BirthData,
   DailyTransitData,
   AyanamsaType,
@@ -539,6 +540,7 @@ export class SpecialChartsController {
   private getClient(ayanamsa: AyanamsaType) {
     if (ayanamsa === "raman") return ramanClient;
     if (ayanamsa === "yukteswar") return yukteswarClient;
+    if (ayanamsa === "bhasin") return bhasinClient;
     return lahiriClient;
   }
 

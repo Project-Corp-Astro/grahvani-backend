@@ -4,6 +4,7 @@ import kpRoutes from "./kp.routes";
 import dashaRoutes from "./dasha.routes";
 import ashtakavargaRoutes from "./ashtakavarga.routes";
 import ramanRoutes from "./raman.routes";
+import bhasinRoutes from "./bhasin.routes";
 import compatibilityRoutes from "./compatibility.routes";
 import numerologyRoutes from "./numerology.routes";
 import analysisRoutes from "./analysis.routes";
@@ -31,6 +32,9 @@ router.use("/ashtakavarga", ashtakavargaRoutes);
 
 // Raman Ayanamsa System: /api/raman/*
 router.use("/raman", ramanRoutes);
+
+// Bhasin Ayanamsa System: /api/bhasin/*
+router.use("/bhasin", bhasinRoutes);
 
 // Compatibility & Relationship: /api/compatibility/*
 router.use("/compatibility", compatibilityRoutes);
