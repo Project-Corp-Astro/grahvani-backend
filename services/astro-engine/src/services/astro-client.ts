@@ -96,7 +96,9 @@ export class AstroEngineClient {
   /**
    * Get the resolved ayanamsa system from birth data
    */
-  private getAyanamsa(data: BirthData): "lahiri" | "kp" | "raman" | "yukteswar" | "bhasin" | "western" {
+  private getAyanamsa(
+    data: BirthData,
+  ): "lahiri" | "kp" | "raman" | "yukteswar" | "bhasin" | "western" {
     const ayanamsa = data.ayanamsa || "lahiri";
     return ayanamsa.toLowerCase() as "lahiri" | "kp" | "raman" | "yukteswar" | "bhasin" | "western";
   }

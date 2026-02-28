@@ -15,9 +15,7 @@ async function checkUniversalCharts() {
 
     console.log(`Found ${charts.length} universal charts:`);
     charts.forEach((c) => {
-      console.log(
-        `- ${c.chartType}: Client ${c.clientId}, Calculated at: ${c.calculatedAt}`,
-      );
+      console.log(`- ${c.chartType}: Client ${c.clientId}, Calculated at: ${c.calculatedAt}`);
     });
   } catch (err) {
     console.error("Error checking charts:", err);

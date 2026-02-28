@@ -818,7 +818,9 @@ class AstroEngineClient {
    */
   async getGlChart(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
     if (ayanamsa !== "lahiri" && ayanamsa !== "yukteswar" && ayanamsa !== "bhasin") {
-      throw new Error("GL Chart is currently only available for Lahiri, Yukteswar, and Bhasin systems");
+      throw new Error(
+        "GL Chart is currently only available for Lahiri, Yukteswar, and Bhasin systems",
+      );
     }
     const payload = { ...birthData, ayanamsa: ayanamsa };
     return (await this.apiClient.post("/gl_chart", payload)).data;

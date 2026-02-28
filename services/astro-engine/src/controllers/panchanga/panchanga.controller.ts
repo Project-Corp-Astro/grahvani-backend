@@ -1,5 +1,12 @@
 import { Request, Response } from "express";
-import { lahiriClient, ramanClient, yukteswarClient, bhasinClient, BirthData, AyanamsaType } from "../../clients";
+import {
+  lahiriClient,
+  ramanClient,
+  yukteswarClient,
+  bhasinClient,
+  BirthData,
+  AyanamsaType,
+} from "../../clients";
 import { cacheService } from "../../services/cache.service";
 import { logger } from "../../config/logger";
 

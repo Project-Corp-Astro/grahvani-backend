@@ -7,7 +7,14 @@
  * @version 2.0.0 - Updated 2026-01-21 based on actual API testing
  */
 
-export type AyanamsaSystem = "lahiri" | "raman" | "kp" | "yukteswar" | "bhasin" | "western" | "universal";
+export type AyanamsaSystem =
+  | "lahiri"
+  | "raman"
+  | "kp"
+  | "yukteswar"
+  | "bhasin"
+  | "western"
+  | "universal";
 
 export interface SystemCapabilities {
   charts: string[];

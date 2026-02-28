@@ -9,16 +9,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.test.ts",
-    "**/__tests__/**"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.test.ts", "**/__tests__/**"]
 }
