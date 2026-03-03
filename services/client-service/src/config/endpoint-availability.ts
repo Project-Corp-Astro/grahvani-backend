@@ -106,8 +106,8 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
     ],
     // Special Charts - verified endpoints
     specialCharts: [
-      "moon",
-      "sun",
+      "moon_chart",
+      "sun_chart",
       "sudarshana",
       "transit",
       "daily_transit",
@@ -230,8 +230,8 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
     features: ["natal", "transit", "dasha", "ashtakavarga"],
     // Special Charts - verified from ApiEndPoints.txt lines 6-36
     specialCharts: [
-      "moon",
-      "sun",
+      "moon_chart",
+      "sun_chart",
       "sripathi_bhava",
       "sudarshana",
       "transit",
