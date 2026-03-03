@@ -2,9 +2,6 @@
 // EXTERNAL ASTRO ENGINE ENDPOINT MAPPINGS
 // =============================================================================
 
-
-
-
 /***********************************Lahiri Ayanamsa System Endpoints******************************************
  * Base: /{system}/ where system = 'lahiri'
  */

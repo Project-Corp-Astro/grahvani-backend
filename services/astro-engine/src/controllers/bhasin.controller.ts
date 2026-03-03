@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { bhasinClient } from "../clients";
-import { BirthData, AyanamsaType } from "../types/birth-data.types";
+import { BirthData } from "../types/birth-data.types";
 import { cacheService } from "../services/cache.service";
 import { logger } from "../config/logger";
 
