@@ -137,7 +137,7 @@ export const LAHIRI_ENDPOINTS = {
 
   // New integrated routes
   GL_CHART: "/lahiri/calculate_gl_chart",
-  KARAKA_STRENGTH: "/lahiri/calculate_karaka_strength",
+  KARAKA_STRENGTH: "/lahiri/chara_karakas",
 
   // New integrated routes
   CALCULATE_DHAIYA: "/lahiri/calculate_dhaiya",
