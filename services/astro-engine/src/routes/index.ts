@@ -7,6 +7,7 @@ import ramanRoutes from "./raman.routes";
 import bhasinRoutes from "./bhasin.routes";
 import compatibilityRoutes from "./compatibility.routes";
 import numerologyRoutes from "./numerology.routes";
+import chaldeanNumerologyRoutes from "./chaldean-numerology.routes";
 import analysisRoutes from "./analysis.routes";
 import panchangaRoutes from "./panchanga.routes";
 import { panchangaController } from "../controllers/panchanga/panchanga.controller";
@@ -39,7 +40,10 @@ router.use("/bhasin", bhasinRoutes);
 // Compatibility & Relationship: /api/compatibility/*
 router.use("/compatibility", compatibilityRoutes);
 
-// Numerology: /api/numerology/*
+// Chaldean Numerology: /api/numerology/chaldean/* (more specific prefix first)
+router.use("/numerology/chaldean", chaldeanNumerologyRoutes);
+
+// Numerology (Lo Shu, etc.): /api/numerology/*
 router.use("/numerology", numerologyRoutes);
 
 // Analysis (Yogas, Doshas, Remedies): /api/analysis/*
