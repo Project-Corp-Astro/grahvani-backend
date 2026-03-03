@@ -245,8 +245,11 @@ export class AuthService {
     }
 
     // Enforce Strict Device Policy (Single Login)
+    // Pass bumpTokenVersion=false — generateTokenPair will atomically bump the
+    // version itself, preventing the race condition where concurrent logins could
+    // double-increment the version (Redis=N+2) while the JWT only captures N+1.
     if (config.security.strictDevicePolicy) {
-      await this.sessionService.revokeAllSessions(user.id);
+      await this.sessionService.revokeAllSessions(user.id, false);
       logger.info({ userId: user.id }, "Strict Device Policy: Revoked all existing sessions");
     }
 
@@ -260,7 +263,8 @@ export class AuthService {
       rememberMe: data.rememberMe,
     });
 
-    // Generate tokens
+    // Generate tokens — bumpVersion=true ensures the JWT version atomically matches
+    // the Redis token_version via a single INCR call (no separate read that can race)
     const tokenPair = await this.tokenService.generateTokenPair(
       {
         id: user.id,
@@ -270,6 +274,7 @@ export class AuthService {
       },
       sessionId,
       data.rememberMe,
+      { bumpVersion: true },
     );
 
     // Update last login (AWAITED to ensure sequential connection usage)
@@ -553,8 +558,9 @@ export class AuthService {
     }
 
     // Enforce Strict Device Policy (Single Login)
+    // bumpTokenVersion=false — generateTokenPair handles version atomically
     if (config.security.strictDevicePolicy) {
-      await this.sessionService.revokeAllSessions(user.id);
+      await this.sessionService.revokeAllSessions(user.id, false);
       logger.info(
         { userId: user.id },
         "Strict Device Policy: Revoked all existing sessions (Social Login)",
@@ -570,7 +576,7 @@ export class AuthService {
       deviceName: metadata.deviceName,
     });
 
-    // 4. Generate local tokens
+    // 4. Generate local tokens — bumpVersion=true for atomic version sync
     const tokenPair = await this.tokenService.generateTokenPair(
       {
         id: user.id,
@@ -580,6 +586,7 @@ export class AuthService {
       },
       sessionId,
       false,
+      { bumpVersion: true },
     );
 
     // 5. Publish login event
