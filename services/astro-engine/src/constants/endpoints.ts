@@ -69,6 +69,7 @@ export const LAHIRI_ENDPOINTS = {
   DWISAPTATI: "/lahiri/calculate_dwisaptati",
   SHASTIHAYANI: "/lahiri/calculate_shastihayani",
   SHATTRIMSHATSAMA: "/lahiri/calculate_Shattrimshatsama_dasha",
+  CHARA_DASHA: "/lahiri/jaimini-chara-dasha",
 
   // Dasha Reports
   DASHA_3MONTHS: "/lahiri/calculate_vimshottari_dasha_3months",
@@ -137,7 +138,6 @@ export const LAHIRI_ENDPOINTS = {
 
   // New integrated routes
   GL_CHART: "/lahiri/calculate_gl_chart",
-  KARAKA_STRENGTH: "/lahiri/chara_karakas",
 
   // New integrated routes
   CALCULATE_DHAIYA: "/lahiri/calculate_dhaiya",
@@ -168,7 +168,6 @@ export const KP_ENDPOINTS = {
   PRATYANTAR_DASHA: "/kp/calculate_maha_antar_pratyantar_dasha",
   SOOKSHMA_DASHA: "/kp/calculate_maha_antar_pratyantar_sooksha_dasha",
   PRANA_DASHA: "/kp/calculate_maha_antar_pratyantar_pran_dasha",
-  CHARA_DASHA: "/kp/chara-dasha",
 
   // Horary & Varga
   HORARY: "/kp/kp_horary",

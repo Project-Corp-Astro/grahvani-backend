@@ -422,11 +422,6 @@ export class LahiriClient extends BaseAstroClient {
     return this.post(LAHIRI_ENDPOINTS.GL_CHART, data);
   }
 
-  /** Karaka Strength Analysis */
-  async getKarakaStrength(data: BirthData) {
-    return this.post(LAHIRI_ENDPOINTS.KARAKA_STRENGTH, data);
-  }
-
   /** Tatkalik Maitri Chakra (Lahiri-specific special chart) */
   async getTatkalikMaitriChakra(data: BirthData) {
     return this.post(LAHIRI_ENDPOINTS.TATKALIK_MAITRI_CHAKRA, data);

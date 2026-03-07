@@ -190,6 +190,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
     // Dashas - verified endpoints
     dashas: [
       "vimshottari",
+      "chara",
       "tribhagi",
       "tribhagi-40",
       "ashtottari",
@@ -277,7 +278,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "avakhada_chakra",
     ],
     // Dashas listed in KP section lines 188-192
-    dashas: ["vimshottari", "chara"],
+    dashas: ["vimshottari"],
     hasDivisional: false,
     hasAshtakavarga: false,
     hasNumerology: false,

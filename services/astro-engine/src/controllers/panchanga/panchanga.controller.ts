@@ -163,34 +163,6 @@ export class PanchangaController {
     }
   }
 
-  async getKarakaStrength(req: Request, res: Response): Promise<void> {
-    try {
-      const birthData: BirthData = req.body;
-      const ayanamsa: AyanamsaType = birthData.ayanamsa || "lahiri";
-      if (!this.validateBirthData(birthData, res)) return;
-
-      const cacheKey = { ...birthData, type: "karaka_strength", ayanamsa };
-      const cached = await cacheService.get("karaka_strength", cacheKey);
-      if (cached) return res.json({ success: true, data: cached, cached: true }) as any;
-
-      const client = this.getClient(ayanamsa);
-      // Karaka Strength might not be available for all systems, handle potential error
-      if (typeof (client as any).getKarakaStrength !== "function") {
-        res.status(400).json({
-          success: false,
-          error: `Karaka Strength is not available for ${ayanamsa} system`,
-        });
-        return;
-      }
-
-      const data = await (client as any).getKarakaStrength(birthData);
-      await cacheService.set("karaka_strength", cacheKey, data);
-      res.json({ success: true, data, cached: false });
-    } catch (error: any) {
-      this.handleError(res, error, "Karaka Strength");
-    }
-  }
-
   async getPushkaraNavamsha(req: Request, res: Response): Promise<void> {
     try {
       const birthData: BirthData = req.body;

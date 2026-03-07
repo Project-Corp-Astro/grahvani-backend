@@ -67,7 +67,6 @@ router.post(
   panchangaController.getTatkalikMaitriChakra.bind(panchangaController),
 );
 router.post("/gl_chart", panchangaController.getGlChart.bind(panchangaController));
-router.post("/karaka_strength", panchangaController.getKarakaStrength.bind(panchangaController));
 router.post(
   "/pushkara-navamsha",
   panchangaController.getPushkaraNavamsha.bind(panchangaController),

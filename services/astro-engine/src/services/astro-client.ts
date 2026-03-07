@@ -760,7 +760,7 @@ export class AstroEngineClient {
         dwisaptati: "/lahiri/calculate_dwisaptati",
         shastihayani: "/lahiri/calculate_shastihayani",
         shattrimshatsama: "/lahiri/calculate_Shattrimshatsama_dasha",
-        chara: "/kp/chara-dasha",
+        chara: LAHIRI_ENDPOINTS.CHARA_DASHA,
         ashtottari: "/lahiri/calculate_ashtottari_antar",
         ashtottari_antar: "/lahiri/calculate_ashtottari_antar",
         ashtottari_pratyantardasha: "/lahiri/calculate_ashtottari_prathyantar",
