@@ -24,7 +24,7 @@ Error: DATABASE_URL not configured in environment
 ```
 Fix: Copy the master .env to the backend root:
 ```bash
-cp /path/to/master/.env ./grahvani-backend/.env
+cp /path/to/master/.env ./backend/.env
 ```
 
 **Check 3: Redis not running**
@@ -377,4 +377,4 @@ done
 | Cloudflare API | `/Users/dr.tumulraathi/.env.corpastro` |
 | Database password | Backend `.env` file or Coolify app env vars |
 | JWT secrets | Backend `.env` file or Coolify app env vars |
-| GitHub repo access | Project-Corp-Astro org membership |
+| GitHub repo access | GrahVani org membership |

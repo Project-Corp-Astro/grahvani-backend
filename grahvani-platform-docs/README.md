@@ -32,8 +32,8 @@ All secrets, credentials, and connection strings are stored in the `.env` file (
 | 14 | [Sprint Changelog](./14-sprint-changelog.md) | Detailed record of all 4 production-readiness sprints |
 
 ## Quick Links
-- Backend repo: `Project-Corp-Astro/grahvani-backend` (branch: main)
-- Frontend repo: `Project-Corp-Astro/frontend-grahvani-software` (branch: main)
+- Backend repo: `GrahVani/backend` (branch: main)
+- Frontend repo: `GrahVani/frontend` (branch: main)
 - Production: https://grahvani.in
 - Coolify Dashboard: http://147.93.30.201:8000
 - API Auth: https://api-auth.grahvani.in
@@ -44,7 +44,7 @@ All secrets, credentials, and connection strings are stored in the `.env` file (
 - API Gateway: https://api-gateway.grahvani.in
 
 ## Team & Access
-- GitHub Org: Project-Corp-Astro
+- GitHub Org: GrahVani
 - Cloud: DigitalOcean (KVM4 Droplet)
 - DNS: Cloudflare (grahvani.in zone)
 - Backups: Daily 2AM + Weekly Sunday 3AM (PostgreSQL)

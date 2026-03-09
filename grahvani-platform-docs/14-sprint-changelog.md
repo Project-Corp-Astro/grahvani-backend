@@ -370,7 +370,7 @@ interface ErrorResponse {
 | Step | Detail |
 |------|--------|
 | Authentication | `GHCR_TOKEN` stored in GitHub Actions secrets |
-| Image naming | `ghcr.io/project-corp-astro/grahvani-{service}` |
+| Image naming | `ghcr.io/grahvani/grahvani-{service}` |
 | Tagging | Dual tags: `:{git-sha}` (immutable) + `:latest` (rolling) |
 | Caching | Docker layer caching via `cache-from: type=gha` |
 | Matrix | 5-service matrix: auth, user, client, astro-engine, gateway |
@@ -390,7 +390,7 @@ Steps:   1. Validate SHA format
 **Usage example:**
 ```bash
 gh workflow run rollback.yml \
-  -R Project-Corp-Astro/grahvani-backend \
+  -R GrahVani/backend \
   -f service=auth \
   -f sha=abc1234
 ```

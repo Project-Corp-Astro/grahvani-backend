@@ -89,7 +89,7 @@ CREATE SCHEMA IF NOT EXISTS app_media;
 1. Go to **Coolify Dashboard**
 2. **Create New Application** → Docker → GitHub
 3. Set:
-   - **Repository:** `Project-Corp-Astro/grahvani-backend`
+   - **Repository:** `GrahVani/backend`
    - **Branch:** `main`
    - **Dockerfile:** `Dockerfile.media`
    - **Port:** `3007`
@@ -99,7 +99,7 @@ CREATE SCHEMA IF NOT EXISTS app_media;
 
 #### 4. Add GitHub Secret
 
-Go to GitHub → `grahvani-backend` repo → Settings → Secrets → Actions:
+Go to GitHub → `backend` repo → Settings → Secrets → Actions:
 - **Name:** `COOLIFY_MEDIA_UUID`
 - **Value:** The UUID from step 3
 

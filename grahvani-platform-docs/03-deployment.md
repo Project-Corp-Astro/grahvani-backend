@@ -34,7 +34,7 @@ Traefik routes traffic to new container
 
 ### Step-by-Step Detail
 
-1. **Code push**: Developer pushes to `main` branch on GitHub (org: `Project-Corp-Astro`).
+1. **Code push**: Developer pushes to `main` branch on GitHub (org: `GrahVani`).
 2. **CI triggered**: GitHub Actions workflow runs lint, test, and build steps. If any step fails, the pipeline stops and no deploy happens.
 3. **Deploy trigger**: On successful CI for the `main` branch, the workflow makes a POST request to the Coolify API to restart the relevant service.
 4. **Code pull**: Coolify clones the latest code from the GitHub repository (using SSH deploy key).
@@ -134,7 +134,7 @@ All services use `node:22-alpine` as the base image:
 | Setting | Value |
 |---------|-------|
 | UUID | `eg48400cgoc8cwocos8cosg8` |
-| Git Repository | `Project-Corp-Astro/grahvani-backend` |
+| Git Repository | `GrahVani/backend` |
 | Branch | `main` |
 | Dockerfile | `Dockerfile.auth` |
 | Build Pack | dockerfile |
@@ -155,7 +155,7 @@ All services use `node:22-alpine` as the base image:
 | Setting | Value |
 |---------|-------|
 | UUID | `jscos8kcwookg48ws8408o8g` |
-| Git Repository | `Project-Corp-Astro/grahvani-backend` |
+| Git Repository | `GrahVani/backend` |
 | Branch | `main` |
 | Dockerfile | `Dockerfile.user` |
 | Build Pack | dockerfile |
@@ -176,7 +176,7 @@ All services use `node:22-alpine` as the base image:
 | Setting | Value |
 |---------|-------|
 | UUID | `r8wwc4cggko40cs0cs8s8ogs` |
-| Git Repository | `Project-Corp-Astro/grahvani-backend` |
+| Git Repository | `GrahVani/backend` |
 | Branch | `main` |
 | Dockerfile | `Dockerfile.client` |
 | Build Pack | dockerfile |
@@ -197,7 +197,7 @@ All services use `node:22-alpine` as the base image:
 | Setting | Value |
 |---------|-------|
 | UUID | `qkgsko0kkoc004w0w04okggk` |
-| Git Repository | `Project-Corp-Astro/grahvani-backend` |
+| Git Repository | `GrahVani/backend` |
 | Branch | `main` |
 | Dockerfile | `Dockerfile.astro-engine` |
 | Build Pack | dockerfile |
@@ -220,7 +220,7 @@ Note: Astro Engine has a longer `start_period` (60s vs 40s) because it pre-loads
 | Setting | Value |
 |---------|-------|
 | UUID | `eoc4w0ckg8gsw8o4kgkwsosw` |
-| Git Repository | `Project-Corp-Astro/grahvani-backend` |
+| Git Repository | `GrahVani/backend` |
 | Branch | `main` |
 | Dockerfile | `services/api-gateway/Dockerfile` |
 | Build Pack | dockerfile |
@@ -248,7 +248,7 @@ The API Gateway is the single entry point for the frontend. It routes requests b
 | Setting | Value |
 |---------|-------|
 | UUID | `lk0cksw804s4oc4c4o88ws48` |
-| Git Repository | `Project-Corp-Astro/frontend-grahvani-software` |
+| Git Repository | `GrahVani/frontend` |
 | Branch | `main` |
 | Dockerfile | `Dockerfile` |
 | Build Pack | dockerfile |
@@ -443,7 +443,7 @@ The frontend follows the same CI/CD pipeline as backend services but with some d
 
 ### Key Differences
 
-1. **Separate repository**: `Project-Corp-Astro/frontend-grahvani-software` (not the backend monorepo).
+1. **Separate repository**: `GrahVani/frontend` (not the backend monorepo).
 2. **No path filtering**: Every push to `main` triggers a build and deploy. There are no watch paths like the backend services.
 3. **Build-time env vars required**: `NEXT_PUBLIC_*` variables must be set as `is_buildtime: true` in Coolify because Next.js inlines them during the build.
 4. **Longer build times**: Next.js builds are typically 2-4 minutes due to static generation and optimization.

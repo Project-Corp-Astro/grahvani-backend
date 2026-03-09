@@ -56,7 +56,7 @@ curl -s "http://147.93.30.201:8000/api/v1/databases/eg448oos8kos08000w0k40wk" \
 
 **Workflow**: `backend/.github/workflows/monitor.yml`
 **Schedule**: Every 15 minutes (`*/15 * * * *`) + manual dispatch
-**Repo**: Project-Corp-Astro/grahvani-backend
+**Repo**: GrahVani/backend
 
 ### What It Checks
 5 external endpoints via HTTPS through Cloudflare:
@@ -70,12 +70,12 @@ Each check uses `curl -s -o /dev/null -w "%{http_code}" --max-time 10` and fails
 
 ### View Monitor Results
 ```bash
-gh run list -R Project-Corp-Astro/grahvani-backend -w monitor.yml -L 10
+gh run list -R GrahVani/backend -w monitor.yml -L 10
 ```
 
 ### Trigger Manual Check
 ```bash
-gh workflow run monitor.yml -R Project-Corp-Astro/grahvani-backend
+gh workflow run monitor.yml -R GrahVani/backend
 ```
 
 ---

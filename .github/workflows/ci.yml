@@ -180,8 +180,8 @@ jobs:
           file: ${{ matrix.dockerfile }}
           push: true
           tags: |
-            ghcr.io/project-corp-astro/${{ matrix.image }}:${{ github.sha }}
-            ghcr.io/project-corp-astro/${{ matrix.image }}:latest
+            ghcr.io/grahvani/${{ matrix.image }}:${{ github.sha }}
+            ghcr.io/grahvani/${{ matrix.image }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

@@ -10,7 +10,7 @@ Quick reference for responding to Grahvani alerts and health check failures.
 |----------|-----|
 | Production | https://grahvani.in |
 | Coolify Dashboard | http://147.93.30.201:8000 |
-| GitHub Actions | https://github.com/Project-Corp-Astro/grahvani-backend/actions |
+| GitHub Actions | https://github.com/GrahVani/backend/actions |
 | KVM4 SSH | `ssh root@147.93.30.201` |
 
 ---
@@ -147,21 +147,21 @@ docker image prune -a --filter "until=168h" -f
 
 ```bash
 # Check recent runs
-gh run list -R Project-Corp-Astro/grahvani-backend -L 5
+gh run list -R GrahVani/backend -L 5
 
 # View failed run details
-gh run view <run-id> -R Project-Corp-Astro/grahvani-backend --log-failed
+gh run view <run-id> -R GrahVani/backend --log-failed
 ```
 
 ### Rollback a Bad Deploy
 
 ```bash
 # Find last good SHA
-gh run list -R Project-Corp-Astro/grahvani-backend -w "CI" --status success -L 5
+gh run list -R GrahVani/backend -w "CI" --status success -L 5
 
 # Execute rollback
 gh workflow run rollback.yml \
-  -R Project-Corp-Astro/grahvani-backend \
+  -R GrahVani/backend \
   -f service=<service-name> \
   -f sha=<good-sha>
 ```

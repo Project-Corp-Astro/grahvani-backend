@@ -15,11 +15,11 @@
 ### 1. Clone the repositories
 ```bash
 # Backend (monorepo with all microservices)
-git clone https://github.com/Project-Corp-Astro/grahvani-backend.git
-cd grahvani-backend
+git clone https://github.com/GrahVani/backend.git
+cd backend
 
 # Frontend (separate repo)
-git clone https://github.com/Project-Corp-Astro/frontend-grahvani-software.git
+git clone https://github.com/GrahVani/frontend.git
 ```
 
 ### 2. Get the .env file
@@ -28,16 +28,16 @@ The `.env` file is gitignored and contains all secrets. Get it from:
 - The master copy at: `/Users/dr.tumulraathi/AstroCorp/APPS/Grahvani/backend/.env`
 - Or create from `.env.example` and fill in real values
 
-Place it at the root of the backend repo: `grahvani-backend/.env`
+Place it at the root of the backend repo: `backend/.env`
 
 ### 3. Install dependencies
 ```bash
 # Backend
-cd grahvani-backend
+cd backend
 npm install
 
 # Frontend
-cd frontend-grahvani-software
+cd frontend
 npm install
 ```
 
