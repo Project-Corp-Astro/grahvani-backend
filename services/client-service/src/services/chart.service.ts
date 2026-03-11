@@ -521,15 +521,15 @@ export class ChartService {
     } else if (normalizedType === "gl_chart") {
       chartData = await astroEngineClient.getGlChart(birthData, system);
       dbChartType = "gl_chart";
-    } else if (normalizedType === "karaka_strength") {
-      chartData = await astroEngineClient.getKarakaStrength(birthData, system);
-      dbChartType = "karaka_strength";
     } else if (normalizedType === "tatkalik_maitri_chakra") {
       chartData = await astroEngineClient.getTatkalikMaitriChakra(birthData, system);
       dbChartType = "tatkalik_maitri_chakra";
     } else if (normalizedType === "pushkara_navamsha") {
       chartData = await astroEngineClient.getPushkaraNavamsha(birthData);
       dbChartType = "pushkara_navamsha";
+    } else if (normalizedType === "chara_karakas") {
+      chartData = await astroEngineClient.getCharaKarakas(birthData);
+      dbChartType = "chara_karakas";
     } else if (normalizedType === "yukteswar_transit") {
       chartData = await astroEngineClient.getYukteswarTransitChart(birthData);
       dbChartType = "yukteswar_transit";

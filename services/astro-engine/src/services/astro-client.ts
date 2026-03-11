@@ -426,6 +426,27 @@ export class AstroEngineClient {
     return response.data;
   }
 
+  /**
+   * Get Chara Karakas (Lahiri only)
+   */
+  async getCharaKarakas(data: BirthData): Promise<any> {
+    const system = this.getAyanamsa(data);
+    if (system !== "lahiri") {
+      throw new Error("Chara Karakas is currently only available for Lahiri system.");
+    }
+
+    const cached = await cacheService.get<any>(`chara_karakas:${system}`, data);
+    if (cached) return { data: cached, cached: true };
+
+    const response = await this.client.post(
+      LAHIRI_ENDPOINTS.CHARA_KARAKAS,
+      this.buildPayload(data),
+    );
+    await cacheService.set(`chara_karakas:${system}`, data, response.data);
+
+    return { data: response.data, cached: false };
+  }
+
   // =========================================================================
   // DIVISIONAL CHARTS (D2-D60)
   // =========================================================================

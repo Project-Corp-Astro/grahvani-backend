@@ -24,6 +24,7 @@ router.post("/dosha/:type", chartController.getDosha.bind(chartController));
 router.post("/remedy/:type", chartController.getRemedy.bind(chartController));
 router.post("/panchanga/:type?", chartController.getPanchanga.bind(chartController));
 router.post("/special/:type", chartController.getSpecialChart.bind(chartController));
+router.post("/chara-karakas", chartController.getCharaKarakas.bind(chartController));
 router.post("/shadbala", chartController.getShadbala.bind(chartController)); // Shadbala is a special calculation
 
 // =============================================================================
