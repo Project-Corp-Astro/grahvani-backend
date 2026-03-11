@@ -5,7 +5,7 @@
 /**
  * Ayanamsa calculation systems
  */
-export type AyanamsaType = "lahiri" | "kp" | "raman" | "yukteswar" | "western";
+export type AyanamsaType = "lahiri" | "kp" | "raman" | "yukteswar" | "bhasin" | "western";
 
 /**
  * Standard birth data required for all calculations

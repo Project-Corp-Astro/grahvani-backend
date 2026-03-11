@@ -18,9 +18,7 @@ async function triggerHealing() {
   // Actually, I can just create a small script that uses the same logic as the service
   // but it's better to just use the actual service if I can.
 
-  console.log(
-    "Triggering healing for client: 96cc1c9e-1d19-4aa3-8055-eaaec597ec31",
-  );
+  console.log("Triggering healing for client: 96cc1c9e-1d19-4aa3-8055-eaaec597ec31");
   // I'll just check the DB again after a few seconds, assuming the user might have refreshed or
   // I can try to trigger a GET request if I can get a token.
 }

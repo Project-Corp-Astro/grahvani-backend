@@ -5,10 +5,9 @@ const router = Router();
 
 // =============================================================================
 // NUMEROLOGY ROUTES
+// Note: Chaldean Numerology (168 endpoints) is registered separately
+// at /api/numerology/chaldean/* via chaldean-numerology.routes.ts
 // =============================================================================
-
-// Chaldean Numerology
-router.post("/chaldean", numerologyController.getChaldeanNumerology.bind(numerologyController));
 
 // Lo Shu Grid
 router.post("/loshu", numerologyController.getLoShuGrid.bind(numerologyController));

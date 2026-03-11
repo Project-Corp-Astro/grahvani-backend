@@ -1,16 +1,6 @@
-// Client Service Specific Errors
-export class BaseError extends Error {
-  statusCode: number;
-  code: string;
-
-  constructor(message: string, statusCode: number, code: string) {
-    super(message);
-    this.statusCode = statusCode;
-    this.code = code;
-    this.name = this.constructor.name;
-    Error.captureStackTrace(this, this.constructor);
-  }
-}
+// Client Service Specific Errors — extends shared BaseError so instanceof works in error middleware
+import { BaseError } from "@grahvani/contracts";
+export { BaseError };
 
 export class ClientNotFoundError extends BaseError {
   constructor(id: string) {

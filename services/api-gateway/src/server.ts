@@ -20,6 +20,7 @@ const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || "http://localhost:3001"
 const USER_SERVICE_URL = process.env.USER_SERVICE_URL || "http://localhost:3002";
 const CLIENT_SERVICE_URL = process.env.CLIENT_SERVICE_URL || "http://localhost:3008";
 const MEDIA_SERVICE_URL = process.env.MEDIA_SERVICE_URL || "http://localhost:3007";
+const ASTRO_ENGINE_URL = process.env.ASTRO_ENGINE_URL || "http://localhost:3014";
 
 // Security & Optimization Middleware
 app.use(helmet());
@@ -27,7 +28,13 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === "production"
-        ? ["https://grahvani.in", "https://www.grahvani.in", "https://admin.grahvani.in"]
+        ? [
+            "https://grahvani.in",
+            "https://www.grahvani.in",
+            "https://grahvani.com",
+            "https://www.grahvani.com",
+            "https://admin.grahvani.in",
+          ]
         : "*",
     credentials: true,
   }),
@@ -122,6 +129,26 @@ app.use(
   }),
 );
 
+// 6. Astro Engine — Panchang (standalone, no client required)
+app.use(
+  createProxyMiddleware({
+    ...proxyOptions,
+    pathFilter: "/api/v1/panchang",
+    target: ASTRO_ENGINE_URL,
+    pathRewrite: { "^/api/v1/panchang": "/api/panchanga" },
+  }),
+);
+
+// 7. Astro Engine — Compatibility / Matchmaking
+app.use(
+  createProxyMiddleware({
+    ...proxyOptions,
+    pathFilter: "/api/v1/compatibility",
+    target: ASTRO_ENGINE_URL,
+    pathRewrite: { "^/api/v1/compatibility": "/api/compatibility" },
+  }),
+);
+
 // 404 Handler
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found via Gateway" });
@@ -136,6 +163,7 @@ app.listen(PORT, () => {
         user: USER_SERVICE_URL,
         client: CLIENT_SERVICE_URL,
         media: MEDIA_SERVICE_URL,
+        astroEngine: ASTRO_ENGINE_URL,
       },
     },
     "API Gateway started",

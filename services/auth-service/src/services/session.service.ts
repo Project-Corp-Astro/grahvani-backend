@@ -206,17 +206,24 @@ export class SessionService {
 
   /**
    * Revoke all sessions for a user (force logout)
+   *
+   * @param bumpTokenVersion - When true (default), increments the Redis token version
+   *   to immediately invalidate all JWTs. Set to false during login flows where
+   *   generateTokenPair will atomically bump the version itself, preventing the
+   *   race condition that caused JWT version mismatches (e.g., Redis=22, JWT=21).
    */
-  async revokeAllSessions(userId: string): Promise<number> {
+  async revokeAllSessions(userId: string, bumpTokenVersion: boolean = true): Promise<number> {
     const result = await this.prisma.session.updateMany({
       where: { userId, isActive: true },
       data: { isActive: false },
     });
 
-    // Increment token version (invalidates all tokens)
-    await this.tokenService.invalidateAllUserTokens(userId);
+    if (bumpTokenVersion) {
+      // Increment token version (invalidates all existing tokens immediately)
+      await this.tokenService.invalidateAllUserTokens(userId);
+    }
 
-    logger.info({ userId, revokedCount: result.count }, "All sessions revoked");
+    logger.info({ userId, revokedCount: result.count, bumpTokenVersion }, "All sessions revoked");
 
     return result.count;
   }

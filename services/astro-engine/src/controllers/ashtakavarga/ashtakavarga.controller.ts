@@ -4,6 +4,7 @@ import {
   kpClient,
   ramanClient,
   yukteswarClient,
+  bhasinClient,
   BirthData,
   AyanamsaType,
 } from "../../clients";
@@ -144,6 +145,8 @@ export class AshtakavargaController {
         return kpClient;
       case "yukteswar":
         return yukteswarClient;
+      case "bhasin":
+        return bhasinClient;
       case "lahiri":
       default:
         return lahiriClient;

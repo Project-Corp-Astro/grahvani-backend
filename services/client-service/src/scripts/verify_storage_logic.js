@@ -2,10 +2,7 @@ console.log("DEBUG: Script starting...");
 require("dotenv").config({
   path: require("path").resolve(__dirname, "../../../../.env"),
 });
-console.log(
-  "Database URL from Env:",
-  process.env.CLIENT_DATABASE_URL ? "FOUND" : "NOT FOUND",
-);
+console.log("Database URL from Env:", process.env.CLIENT_DATABASE_URL ? "FOUND" : "NOT FOUND");
 const { PrismaClient } = require("../generated/prisma");
 const crypto = require("crypto");
 
@@ -23,9 +20,7 @@ function extractPresence(data, type) {
 
   // Unwrap Astro Engine response wrapper: {data: actualData, cached: bool}
   const unwrapped =
-    data.data && typeof data.data === "object" && "cached" in data
-      ? data.data
-      : data;
+    data.data && typeof data.data === "object" && "cached" in data ? data.data : data;
 
   // 0. Prioritize Standardized Proxy Flag (Added consistency)
   if (unwrapped?.yoga_present === true) return true;
@@ -61,8 +56,7 @@ function extractPresence(data, type) {
     for (const key of specificKeys) {
       if (key in unwrapped) {
         const val = unwrapped[key];
-        if (val === true || val === 1 || val === "true" || val === "yes")
-          return true;
+        if (val === true || val === 1 || val === "true" || val === "yes") return true;
       }
     }
   }
@@ -87,8 +81,7 @@ function extractPresence(data, type) {
         lowerKey === "status";
 
       if (isPresenceKey) {
-        if (val === true || val === 1 || val === "true" || val === "yes")
-          return true;
+        if (val === true || val === 1 || val === "true" || val === "yes") return true;
       }
     }
 
@@ -119,10 +112,8 @@ function extractPresence(data, type) {
         lowerKey === "is_present" ||
         lowerKey === "status"
       ) {
-        if (val === true || val === 1 || val === "true" || val === "yes")
-          return true;
-        if (val === false || val === 0 || val === "false" || val === "no")
-          return false;
+        if (val === true || val === 1 || val === "true" || val === "yes") return true;
+        if (val === false || val === 0 || val === "false" || val === "no") return false;
       }
     }
 
@@ -142,22 +133,13 @@ function extractPresence(data, type) {
 }
 
 // Simulated Service Method
-async function storeYogaDoshaScanner(
-  tenantId,
-  clientId,
-  category,
-  type,
-  system,
-  analysisData,
-) {
+async function storeYogaDoshaScanner(tenantId, clientId, category, type, system, analysisData) {
   const isPresent = extractPresence(analysisData, type);
   console.log(`[STORE] ${category} | ${type} | isPresent: ${isPresent}`);
 
   // Clean data wrapper
   const storedData =
-    analysisData?.data &&
-    typeof analysisData.data === "object" &&
-    "cached" in analysisData
+    analysisData?.data && typeof analysisData.data === "object" && "cached" in analysisData
       ? analysisData.data
       : analysisData;
 
@@ -309,9 +291,7 @@ async function main() {
         console.log(`✅ PASSED. Stored isPresent: ${record.isPresent}`);
         passed++;
       } else {
-        console.log(
-          `❌ FAILED. Expected ${test.expected}, Got ${record?.isPresent}`,
-        );
+        console.log(`❌ FAILED. Expected ${test.expected}, Got ${record?.isPresent}`);
         failed++;
       }
     }

@@ -156,7 +156,7 @@ Grahvani is a microservice-based platform with 6 deployed services (5 backend + 
 ## Monorepo Structure
 
 ```
-grahvani-backend/
+backend/
 ├── .github/workflows/     # CI + Monitor
 ├── contracts/             # Shared TypeScript types & events
 ├── services/

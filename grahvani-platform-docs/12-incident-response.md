@@ -102,12 +102,12 @@ docker exec grahvani-redis redis-cli info memory | grep used_memory_human
 
 ### Deployment Failure
 
-1. Check CI logs: `gh run list -R Project-Corp-Astro/grahvani-backend -L 5`
-2. View specific run: `gh run view <run-id> -R Project-Corp-Astro/grahvani-backend`
+1. Check CI logs: `gh run list -R GrahVani/backend -L 5`
+2. View specific run: `gh run view <run-id> -R GrahVani/backend`
 3. If smoke test fails after deploy, rollback:
    ```bash
    gh workflow run rollback.yml \
-     -R Project-Corp-Astro/grahvani-backend \
+     -R GrahVani/backend \
      -f service=<service-name> \
      -f sha=<last-known-good-sha>
    ```
@@ -127,11 +127,11 @@ docker exec grahvani-redis redis-cli info memory | grep used_memory_human
 
 ```bash
 # 1. Find the last known good SHA
-gh run list -R Project-Corp-Astro/grahvani-backend -w "CI" --status success -L 5
+gh run list -R GrahVani/backend -w "CI" --status success -L 5
 
 # 2. Trigger rollback
 gh workflow run rollback.yml \
-  -R Project-Corp-Astro/grahvani-backend \
+  -R GrahVani/backend \
   -f service=auth \
   -f sha=<good-sha>
 ```

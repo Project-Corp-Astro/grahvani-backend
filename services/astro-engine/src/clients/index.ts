@@ -9,6 +9,8 @@ export { KpClient, kpClient } from "./kp.client";
 export { RamanClient, ramanClient } from "./raman.client";
 export { WesternClient, westernClient } from "./western.client";
 export { YukteswarClient, yukteswarClient } from "./yukteswar.client";
+export { BhasinClient, bhasinClient } from "./bhasin.client";
+export { ChaldeanNumerologyClient, chaldeanClient } from "./chaldean-numerology.client";
 
 // Re-export types for convenience
 export * from "../types";

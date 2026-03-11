@@ -15,6 +15,8 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=${DATABASE_URL}
       - DIRECT_URL=${DIRECT_URL}
+      - AUTH_DATABASE_URL=${DATABASE_URL}
+      - AUTH_DIRECT_URL=${DIRECT_URL}
       - REDIS_URL=${REDIS_URL}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
@@ -52,6 +54,8 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=${DATABASE_URL}
       - DIRECT_URL=${DIRECT_URL}
+      - USER_DATABASE_URL=${DATABASE_URL}
+      - USER_DIRECT_URL=${DIRECT_URL}
       - REDIS_URL=${REDIS_URL}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
@@ -88,6 +92,8 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=${DATABASE_URL}
       - DIRECT_URL=${DIRECT_URL}
+      - CLIENT_DATABASE_URL=${DATABASE_URL}
+      - CLIENT_DIRECT_URL=${DIRECT_URL}
       - REDIS_URL=${REDIS_URL}
       - MEILISEARCH_URL=${MEILISEARCH_URL}
       - MEILISEARCH_KEY=${MEILISEARCH_KEY}
@@ -186,6 +192,8 @@ services:
     environment:
       - PORT=3007
       - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - DIRECT_URL=${DIRECT_URL}
       - MEDIA_DATABASE_URL=${DATABASE_URL}
       - MEDIA_DIRECT_URL=${DIRECT_URL}
       - REDIS_URL=${REDIS_URL}
@@ -211,6 +219,44 @@ services:
     depends_on:
       auth-service:
         condition: service_healthy
+
+  slack-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: slack-service
+        ENTRY_FILE: server.js
+    container_name: grahvani-slack
+    restart: unless-stopped
+    ports:
+      - "3016:3016"
+    environment:
+      - PORT=3016
+      - NODE_ENV=production
+      - REDIS_URL=${REDIS_URL}
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      - SLACK_ENABLED=${SLACK_ENABLED:-true}
+      - SLACK_DEFAULT_CHANNEL=${SLACK_DEFAULT_CHANNEL:-general}
+      - SLACK_CHANNEL_AUTH=${SLACK_CHANNEL_AUTH:-}
+      - SLACK_CHANNEL_CLIENTS=${SLACK_CHANNEL_CLIENTS:-}
+      - SLACK_CHANNEL_PAYMENTS=${SLACK_CHANNEL_PAYMENTS:-}
+      - SLACK_CHANNEL_BOOKINGS=${SLACK_CHANNEL_BOOKINGS:-}
+      - SLACK_CHANNEL_MEDIA=${SLACK_CHANNEL_MEDIA:-}
+      - SLACK_CHANNEL_REPORTS=${SLACK_CHANNEL_REPORTS:-}
+      - SLACK_CHANNEL_ALERTS=${SLACK_CHANNEL_ALERTS:-}
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3016/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    networks:
+      - grahvani
 
 networks:
   grahvani:

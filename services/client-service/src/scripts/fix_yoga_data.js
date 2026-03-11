@@ -8,9 +8,7 @@ function extractPresence(data, type) {
 
   // Unwrap Astro Engine response wrapper: {data: actualData, cached: bool}
   const unwrapped =
-    data.data && typeof data.data === "object" && "cached" in data
-      ? data.data
-      : data;
+    data.data && typeof data.data === "object" && "cached" in data ? data.data : data;
 
   // 1. Try Specific Known Patterns (Based on analysis)
   // Handle "overall_yoga_present" (e.g. guru_mangal)
@@ -42,8 +40,7 @@ function extractPresence(data, type) {
     for (const key of specificKeys) {
       if (key in unwrapped) {
         const val = unwrapped[key];
-        if (val === true || val === 1 || val === "true" || val === "yes")
-          return true;
+        if (val === true || val === 1 || val === "true" || val === "yes") return true;
       }
     }
   }
@@ -68,8 +65,7 @@ function extractPresence(data, type) {
         lowerKey === "status";
 
       if (isPresenceKey) {
-        if (val === true || val === 1 || val === "true" || val === "yes")
-          return true;
+        if (val === true || val === 1 || val === "true" || val === "yes") return true;
       }
     }
 
@@ -100,10 +96,8 @@ function extractPresence(data, type) {
         lowerKey === "is_present" ||
         lowerKey === "status"
       ) {
-        if (val === true || val === 1 || val === "true" || val === "yes")
-          return true;
-        if (val === false || val === 0 || val === "false" || val === "no")
-          return false;
+        if (val === true || val === 1 || val === "true" || val === "yes") return true;
+        if (val === false || val === 0 || val === "false" || val === "no") return false;
       }
     }
 
@@ -123,9 +117,7 @@ function extractPresence(data, type) {
 }
 
 async function main() {
-  console.log(
-    "Starting JS [Self-Contained] re-analysis of all ClientYogaDosha records...",
-  );
+  console.log("Starting JS [Self-Contained] re-analysis of all ClientYogaDosha records...");
 
   // We expect the script to handle disconnection properly
   try {

@@ -189,6 +189,38 @@ export type ReportGeneratedEvent = BaseEvent<
   }
 >;
 
+// ============ CLIENT EVENTS ============
+
+export type ClientCreatedEvent = BaseEvent<
+  "client.created",
+  {
+    clientId: string;
+    tenantId: string;
+    name: string;
+    astrologerId: string;
+  }
+>;
+
+export type ClientUpdatedEvent = BaseEvent<
+  "client.updated",
+  {
+    clientId: string;
+    tenantId: string;
+    name: string;
+    changes: string[];
+  }
+>;
+
+export type ClientDeletedEvent = BaseEvent<
+  "client.deleted",
+  {
+    clientId: string;
+    tenantId: string;
+    name: string;
+    deletedBy: string;
+  }
+>;
+
 // ============ MEDIA EVENTS ============
 
 export type MediaUploadedEvent = BaseEvent<
@@ -230,6 +262,10 @@ export type GrahvaniEvent =
   | PasswordResetRequestedEvent
   | PasswordChangedEvent
   | EmailVerifiedEvent
+  // Client
+  | ClientCreatedEvent
+  | ClientUpdatedEvent
+  | ClientDeletedEvent
   // Booking
   | BookingCreatedEvent
   | BookingConfirmedEvent
@@ -253,6 +289,7 @@ export type GrahvaniEvent =
 
 export const EVENT_CHANNELS = {
   AUTH: "grahvani:events:auth",
+  CLIENT: "grahvani:events:client",
   BOOKING: "grahvani:events:booking",
   PAYMENT: "grahvani:events:payment",
   NOTIFICATION: "grahvani:events:notification",

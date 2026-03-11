@@ -6,10 +6,10 @@ Grahvani uses GitHub Actions for CI/CD across two repositories:
 
 | Repository | Workflow | Purpose |
 |-----------|---------|---------|
-| `Project-Corp-Astro/grahvani-backend` | `ci.yml` | Lint, test, build → GHCR push → deploy 5 services + smoke test |
-| `Project-Corp-Astro/grahvani-backend` | `monitor.yml` | Health check all endpoints every 15 min |
-| `Project-Corp-Astro/grahvani-backend` | `rollback.yml` | Manual rollback to a specific GHCR image tag |
-| `Project-Corp-Astro/frontend-grahvani-software` | `ci.yml` | Lint, type-check, build, deploy frontend |
+| `GrahVani/backend` | `ci.yml` | Lint, test, build → GHCR push → deploy 5 services + smoke test |
+| `GrahVani/backend` | `monitor.yml` | Health check all endpoints every 15 min |
+| `GrahVani/backend` | `rollback.yml` | Manual rollback to a specific GHCR image tag |
+| `GrahVani/frontend` | `ci.yml` | Lint, type-check, build, deploy frontend |
 
 **Key Design Decision**: Coolify's auto-deploy webhooks are **disabled** on all 6 apps. Only GitHub Actions triggers deploys via Coolify API calls after CI passes. This prevents untested code from reaching production.
 
@@ -244,14 +244,14 @@ jobs:
 - Each check uses `curl --max-time 10` to timeout after 10 seconds
 - Hits endpoints through Cloudflare (tests the full DNS → CDN → Traefik → Container path)
 - If any check fails, the workflow fails — visible in GitHub Actions as a red badge
-- Manual trigger: `gh workflow run monitor.yml -R Project-Corp-Astro/grahvani-backend`
-- View results: `gh run list -R Project-Corp-Astro/grahvani-backend -w monitor.yml -L 10`
+- Manual trigger: `gh workflow run monitor.yml -R GrahVani/backend`
+- View results: `gh run list -R GrahVani/backend -w monitor.yml -L 10`
 
 ---
 
 ## GitHub Secrets
 
-### Backend Repo (`Project-Corp-Astro/grahvani-backend`)
+### Backend Repo (`GrahVani/backend`)
 
 | Secret Name | Description | Where to find value |
 |------------|-------------|---------------------|
@@ -262,7 +262,7 @@ jobs:
 | `COOLIFY_ASTRO_UUID` | Astro Engine Coolify app UUID | See 02-infrastructure.md resource inventory |
 | `COOLIFY_GATEWAY_UUID` | API Gateway Coolify app UUID | See 02-infrastructure.md resource inventory |
 
-### Frontend Repo (`Project-Corp-Astro/frontend-grahvani-software`)
+### Frontend Repo (`GrahVani/frontend`)
 
 | Secret Name | Description | Where to find value |
 |------------|-------------|---------------------|
@@ -275,15 +275,15 @@ jobs:
 
 ```bash
 # Backend
-gh secret set COOLIFY_API_TOKEN -R Project-Corp-Astro/grahvani-backend -b "$COOLIFY_TOKEN"
-gh secret set COOLIFY_AUTH_UUID -R Project-Corp-Astro/grahvani-backend -b "$AUTH_UUID"
-gh secret set COOLIFY_USER_UUID -R Project-Corp-Astro/grahvani-backend -b "$USER_UUID"
-gh secret set COOLIFY_CLIENT_UUID -R Project-Corp-Astro/grahvani-backend -b "$CLIENT_UUID"
-gh secret set COOLIFY_ASTRO_UUID -R Project-Corp-Astro/grahvani-backend -b "$ASTRO_UUID"
+gh secret set COOLIFY_API_TOKEN -R GrahVani/backend -b "$COOLIFY_TOKEN"
+gh secret set COOLIFY_AUTH_UUID -R GrahVani/backend -b "$AUTH_UUID"
+gh secret set COOLIFY_USER_UUID -R GrahVani/backend -b "$USER_UUID"
+gh secret set COOLIFY_CLIENT_UUID -R GrahVani/backend -b "$CLIENT_UUID"
+gh secret set COOLIFY_ASTRO_UUID -R GrahVani/backend -b "$ASTRO_UUID"
 
 # Frontend
-gh secret set COOLIFY_API_TOKEN -R Project-Corp-Astro/frontend-grahvani-software -b "$COOLIFY_TOKEN"
-gh secret set COOLIFY_FRONTEND_UUID -R Project-Corp-Astro/frontend-grahvani-software -b "$FRONTEND_UUID"
+gh secret set COOLIFY_API_TOKEN -R GrahVani/frontend -b "$COOLIFY_TOKEN"
+gh secret set COOLIFY_FRONTEND_UUID -R GrahVani/frontend -b "$FRONTEND_UUID"
 ```
 
 ---
@@ -298,7 +298,7 @@ gh secret set COOLIFY_FRONTEND_UUID -R Project-Corp-Astro/frontend-grahvani-soft
 ```bash
 # Rollback auth-service to a specific commit
 gh workflow run rollback.yml \
-  -R Project-Corp-Astro/grahvani-backend \
+  -R GrahVani/backend \
   -f service=auth \
   -f sha=abc1234
 
@@ -316,7 +316,7 @@ gh workflow run rollback.yml \
 
 ```bash
 # List recent GHCR image tags for a service
-gh api /orgs/Project-Corp-Astro/packages/container/grahvani-auth-service/versions \
+gh api /orgs/GrahVani/packages/container/grahvani-auth-service/versions \
   --jq '.[].metadata.container.tags[]' | head -20
 ```
 

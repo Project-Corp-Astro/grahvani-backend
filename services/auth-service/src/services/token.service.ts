@@ -113,14 +113,19 @@ export class TokenService {
     },
     sessionId: string,
     rememberMe: boolean = false,
+    options?: { bumpVersion?: boolean },
   ): Promise<TokenPair> {
     const now = Math.floor(Date.now() / 1000);
 
     // Get permissions for role
     const permissions = ROLE_PERMISSIONS[user.role] || ROLE_PERMISSIONS.user;
 
-    // Get token version (for invalidation)
-    const tokenVersion = await this.getTokenVersion(user.id);
+    // Get token version — atomically INCR on login (bumpVersion=true) to guarantee
+    // the JWT version always matches Redis. Plain GET on refresh to avoid invalidating
+    // other sessions unnecessarily.
+    const tokenVersion = options?.bumpVersion
+      ? await this.bumpAndGetTokenVersion(user.id)
+      : await this.getTokenVersion(user.id);
 
     // ===== ACCESS TOKEN (15 min) =====
     const accessTokenExp = now + 15 * 60;
@@ -335,11 +340,23 @@ export class TokenService {
   }
 
   /**
-   * Get current token version for user
+   * Get current token version for user (read-only, used during token refresh)
    */
   private async getTokenVersion(userId: string): Promise<number> {
     const version = await this.redis.get(`token_version:${userId}`);
     return version ? parseInt(version, 10) : 0;
+  }
+
+  /**
+   * Atomically increment and return the new token version.
+   * Used during login to guarantee the JWT version always matches Redis —
+   * eliminates the race condition where concurrent logins could INCR the version
+   * between revokeAllSessions (old INCR) and generateTokenPair (old GET).
+   */
+  private async bumpAndGetTokenVersion(userId: string): Promise<number> {
+    const key = `token_version:${userId}`;
+    const newVersion = await this.redis.incr(key);
+    return newVersion;
   }
 
   /**

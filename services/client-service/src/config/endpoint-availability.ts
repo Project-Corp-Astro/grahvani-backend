@@ -7,7 +7,14 @@
  * @version 2.0.0 - Updated 2026-01-21 based on actual API testing
  */
 
-export type AyanamsaSystem = "lahiri" | "raman" | "kp" | "yukteswar" | "western" | "universal";
+export type AyanamsaSystem =
+  | "lahiri"
+  | "raman"
+  | "kp"
+  | "yukteswar"
+  | "bhasin"
+  | "western"
+  | "universal";
 
 export interface SystemCapabilities {
   charts: string[];
@@ -99,8 +106,8 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
     ],
     // Special Charts - verified endpoints
     specialCharts: [
-      "moon",
-      "sun",
+      "moon_chart",
+      "sun_chart",
       "sudarshana",
       "transit",
       "daily_transit",
@@ -183,6 +190,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
     // Dashas - verified endpoints
     dashas: [
       "vimshottari",
+      "chara",
       "tribhagi",
       "tribhagi-40",
       "ashtottari",
@@ -223,8 +231,8 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
     features: ["natal", "transit", "dasha", "ashtakavarga"],
     // Special Charts - verified from ApiEndPoints.txt lines 6-36
     specialCharts: [
-      "moon",
-      "sun",
+      "moon_chart",
+      "sun_chart",
       "sripathi_bhava",
       "sudarshana",
       "transit",
@@ -270,7 +278,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "avakhada_chakra",
     ],
     // Dashas listed in KP section lines 188-192
-    dashas: ["vimshottari", "chara"],
+    dashas: ["vimshottari"],
     hasDivisional: false,
     hasAshtakavarga: false,
     hasNumerology: false,
@@ -295,7 +303,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "D45",
       "D60",
     ],
-    features: ["natal", "dasha", "ashtakavarga"],
+    features: ["natal", "transit", "dasha", "ashtakavarga"],
     specialCharts: [
       "sun_chart",
       "moon_chart",
@@ -303,17 +311,18 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "sripathi_bhava",
       "kp_bhava",
       "arudha_lagna",
-      "karakamsha_birth",
+      "karkamsha_d1",
       "karkamsha_d9",
       "bhava_lagna",
       "hora_lagna",
       "gl_chart",
+      "equal_bhava",
       "ashtakavarga_sarva",
       "ashtakavarga_bhinna",
       "sudarshana",
       "shodasha_varga_signs",
       // NEW: Integrated routes
-      "yukteswar_transit",
+      "transit",
     ],
     dashas: [
       "vimshottari",
@@ -321,8 +330,79 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "pratyantar",
       "sookshma",
       "prana",
+      "ashtottari",
       "ashtottari_antar",
       "ashtottari_pratyantardashas",
+      "tribhagi",
+      "tribhagi-40",
+      "shodashottari",
+      "dwadashottari",
+      "dwisaptatisama",
+      "shastihayani",
+      "shattrimshatsama",
+      "panchottari",
+      "satabdika",
+      "chaturshitisama",
+    ],
+    hasDivisional: true,
+    hasAshtakavarga: true,
+    hasNumerology: false,
+    hasHorary: false,
+  },
+  bhasin: {
+    charts: [
+      "D1",
+      "D2",
+      "D3",
+      "D4",
+      "D7",
+      "D9",
+      "D10",
+      "D12",
+      "D16",
+      "D20",
+      "D24",
+      "D27",
+      "D30",
+      "D40",
+      "D45",
+      "D60",
+    ],
+    features: ["natal", "transit", "dasha", "ashtakavarga"],
+    specialCharts: [
+      "sun_chart",
+      "moon_chart",
+      "sripathi_bhava",
+      "kp_bhava",
+      "arudha_lagna",
+      "karkamsha_d1",
+      "karkamsha_d9",
+      "bhava_lagna",
+      "hora_lagna",
+      "gl_chart",
+      "equal_bhava",
+      "ashtakavarga_sarva",
+      "ashtakavarga_bhinna",
+      "sudarshana",
+      "shodasha_varga_signs",
+      "transit",
+      "dasha_vimshottari",
+      "dasha_tribhagi",
+      "dasha_shodashottari",
+      "dasha_dwadashottari",
+      "dasha_panchottari",
+      "dasha_chaturshitisama",
+      "dasha_satabdika",
+      "dasha_dwisaptati",
+      "dasha_shastihayani",
+      "dasha_shattrimshatsama",
+      "dasha_summary",
+    ],
+    dashas: [
+      "vimshottari",
+      "ashtottari",
+      "ashtottari_antar",
+      "ashtottari_pd",
       "tribhagi",
       "tribhagi_40",
       "shodashottari",

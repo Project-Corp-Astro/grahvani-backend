@@ -88,10 +88,6 @@ export class KpClient extends BaseAstroClient {
     return this.post(KP_ENDPOINTS.PRANA_DASHA, data);
   }
 
-  async getCharaDasha(data: BirthData) {
-    return this.post(KP_ENDPOINTS.CHARA_DASHA, data);
-  }
-
   // =========================================================================
   // HORARY (Prashna)
   // =========================================================================

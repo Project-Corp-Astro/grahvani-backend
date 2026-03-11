@@ -4,8 +4,10 @@ import kpRoutes from "./kp.routes";
 import dashaRoutes from "./dasha.routes";
 import ashtakavargaRoutes from "./ashtakavarga.routes";
 import ramanRoutes from "./raman.routes";
+import bhasinRoutes from "./bhasin.routes";
 import compatibilityRoutes from "./compatibility.routes";
 import numerologyRoutes from "./numerology.routes";
+import chaldeanNumerologyRoutes from "./chaldean-numerology.routes";
 import analysisRoutes from "./analysis.routes";
 import panchangaRoutes from "./panchanga.routes";
 import { panchangaController } from "../controllers/panchanga/panchanga.controller";
@@ -32,10 +34,16 @@ router.use("/ashtakavarga", ashtakavargaRoutes);
 // Raman Ayanamsa System: /api/raman/*
 router.use("/raman", ramanRoutes);
 
+// Bhasin Ayanamsa System: /api/bhasin/*
+router.use("/bhasin", bhasinRoutes);
+
 // Compatibility & Relationship: /api/compatibility/*
 router.use("/compatibility", compatibilityRoutes);
 
-// Numerology: /api/numerology/*
+// Chaldean Numerology: /api/numerology/chaldean/* (more specific prefix first)
+router.use("/numerology/chaldean", chaldeanNumerologyRoutes);
+
+// Numerology (Lo Shu, etc.): /api/numerology/*
 router.use("/numerology", numerologyRoutes);
 
 // Analysis (Yogas, Doshas, Remedies): /api/analysis/*
@@ -59,7 +67,6 @@ router.post(
   panchangaController.getTatkalikMaitriChakra.bind(panchangaController),
 );
 router.post("/gl_chart", panchangaController.getGlChart.bind(panchangaController));
-router.post("/karaka_strength", panchangaController.getKarakaStrength.bind(panchangaController));
 router.post(
   "/pushkara-navamsha",
   panchangaController.getPushkaraNavamsha.bind(panchangaController),
