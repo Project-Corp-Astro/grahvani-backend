@@ -13,4 +13,4 @@ export const config = {
     ttlSeconds: parseInt(process.env.CACHE_TTL_SECONDS || "86400", 10),
   },
   logLevel: process.env.LOG_LEVEL || "info",
-};
+};``

@@ -10,6 +10,7 @@ import numerologyRoutes from "./numerology.routes";
 import chaldeanNumerologyRoutes from "./chaldean-numerology.routes";
 import analysisRoutes from "./analysis.routes";
 import panchangaRoutes from "./panchanga.routes";
+import festivalRoutes from "./festival.routes";
 import { panchangaController } from "../controllers/panchanga/panchanga.controller";
 
 const router = Router();
@@ -51,6 +52,9 @@ router.use("/analysis", analysisRoutes);
 
 // Panchanga: /api/panchanga/*
 router.use("/panchanga", panchangaRoutes);
+
+// Festival Calendar: /api/festival/*
+router.use("/festival", festivalRoutes);
 
 // =============================================================================
 // UNIVERSAL PANCHANGA ROUTES (root-level, matching Python engine endpoints)
