@@ -438,7 +438,10 @@ export class AstroEngineClient {
     const cached = await cacheService.get<any>(`chara_karakas:${system}`, data);
     if (cached) return { data: cached, cached: true };
 
-    const response = await this.client.post(LAHIRI_ENDPOINTS.CHARA_KARAKAS, this.buildPayload(data));
+    const response = await this.client.post(
+      LAHIRI_ENDPOINTS.CHARA_KARAKAS,
+      this.buildPayload(data),
+    );
     await cacheService.set(`chara_karakas:${system}`, data, response.data);
 
     return { data: response.data, cached: false };
