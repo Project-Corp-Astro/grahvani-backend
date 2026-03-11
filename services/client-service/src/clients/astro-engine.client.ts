@@ -249,6 +249,13 @@ class AstroEngineClient {
     return (await this.internalClient.post("/sudarshan-chakra", payload)).data;
   }
 
+  /**
+   * Get Chara Karakas (Lahiri only)
+   */
+  async getCharaKarakas(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.internalClient.post("/chara-karakas", birthData)).data;
+  }
+
   // =========================================================================
   // DASHA ENDPOINTS (Ayanamsa-aware)
   // =========================================================================
@@ -824,19 +831,6 @@ class AstroEngineClient {
     }
     const payload = { ...birthData, ayanamsa: ayanamsa };
     return (await this.apiClient.post("/gl_chart", payload)).data;
-  }
-
-  /**
-   * Karaka Strength Analysis - Specialist analysis for Lahiri system
-   */
-  async getKarakaStrength(
-    birthData: BirthData,
-    ayanamsa: Ayanamsa = "lahiri",
-  ): Promise<AstroResponse> {
-    if (ayanamsa !== "lahiri") {
-      throw new Error("Karaka Strength is currently only available for Lahiri system");
-    }
-    return (await this.apiClient.post("/karaka_strength", birthData)).data;
   }
 
   /**

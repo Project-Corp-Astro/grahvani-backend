@@ -430,6 +430,10 @@ export class LahiriClient extends BaseAstroClient {
   async getPushkaraNavamsha(data: BirthData) {
     return this.post(LAHIRI_ENDPOINTS.PUSHKARA_NAVAMSHA, data);
   }
+
+  async getCharaKarakas(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.CHARA_KARAKAS, data);
+  }
   // NOTE: birth_panchanga uses getPanchanga() method (same /panchanga endpoint)
 }
 

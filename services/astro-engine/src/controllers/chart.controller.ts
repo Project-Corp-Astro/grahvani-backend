@@ -443,6 +443,41 @@ export class ChartController {
   }
 
   /**
+   * POST /internal/chara-karakas
+   */
+  async getCharaKarakas(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const cacheKey = { ...birthData, type: "chara_karakas" };
+      const cached = await cacheService.get<any>("chara_karakas", cacheKey);
+      if (cached) {
+        res.json({
+          success: true,
+          data: cached,
+          cached: true,
+          calculatedAt: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const { data, cached: isCached } = await astroEngineClient.getCharaKarakas(birthData);
+      await cacheService.set("chara_karakas", cacheKey, data);
+
+      res.json({
+        success: true,
+        data,
+        cached: isCached,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "Chara Karakas generation failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
    * POST /internal/shadbala
    */
   async getShadbala(req: Request, res: Response): Promise<void> {

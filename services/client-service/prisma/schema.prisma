@@ -450,11 +450,11 @@ enum ChartType {
   gulika
   birth_panchanga
   gl_chart
-  karaka_strength
   yukteswar_transit
   tatkalik_maitri_chakra
   yoga_guru_mangal_only
   pushkara_navamsha
+  chara_karakas
 
   @@schema("app_clients")
 }

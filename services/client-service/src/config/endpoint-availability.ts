@@ -146,7 +146,6 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "dasha_summary",
       // NEW: Integrated routes
       "gl_chart",
-      "karaka_strength",
       "birth_panchanga",
       "choghadiya",
       "hora_times",
@@ -154,6 +153,7 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "muhurat",
       "tatkalik_maitri_chakra",
       "pushkara_navamsha",
+      "chara_karakas",
     ],
     // Yogas - verified endpoints from ApiEndPoints.txt lines 134-150
     yogas: [

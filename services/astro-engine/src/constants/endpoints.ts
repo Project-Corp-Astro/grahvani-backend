@@ -144,6 +144,7 @@ export const LAHIRI_ENDPOINTS = {
   AVAKHADA_CHAKRA: "/lahiri/avakhada_chakra",
   TATKALIK_MAITRI_CHAKRA: "/lahiri/calculate_Tatkalik_maitri_Chakra",
   PUSHKARA_NAVAMSHA: "/lahiri/pushkara-navamsha",
+  CHARA_KARAKAS: "/lahiri/chara_karakas",
   // NOTE: birth_panchanga uses PANCHANGA endpoint (same /panchanga path)
 } as const;
 
