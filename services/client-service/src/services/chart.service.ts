@@ -223,6 +223,18 @@ export class ChartService {
     } else if (normalizedType === "bhava" || normalizedType === "bhava_lagna") {
       chartData = await astroEngineClient.getBhavaLagna(birthData, system);
       dbChartType = "bhava_lagna";
+    } else if (normalizedType === "upapada" || normalizedType === "upapada_lagna") {
+      chartData = await astroEngineClient.getUpapadaLagna(birthData, system);
+      dbChartType = "upapada_lagna";
+    } else if (normalizedType === "swamsha") {
+      chartData = await astroEngineClient.getSwamsha(birthData, system);
+      dbChartType = "swamsha";
+    } else if (normalizedType === "panchadha_maitri") {
+      chartData = await astroEngineClient.getPanchadhaMaitri(birthData, system);
+      dbChartType = "panchadha_maitri";
+    } else if (normalizedType === "pada_chart") {
+      chartData = await astroEngineClient.getPadaChart(birthData, system);
+      dbChartType = "pada_chart";
     } else if (normalizedType === "hora" || normalizedType === "hora_lagna") {
       chartData = await astroEngineClient.getHoraLagna(birthData, system);
       dbChartType = "hora_lagna";

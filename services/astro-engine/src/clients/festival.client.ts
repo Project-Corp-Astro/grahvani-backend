@@ -143,6 +143,81 @@ export class FestivalClient extends BaseAstroClient {
     const response = await this.client.get("/festival/categories");
     return response.data;
   }
+
+  // 13. Vrat Calendar - Consolidated fasting calendar
+  async getVratCalendar(params: FestivalParams) {
+    const response = await this.client.post(
+      "/festival/vrat-calendar",
+      this.buildFestivalPayload(params),
+    );
+    return response.data;
+  }
+
+  // 14. Eclipses - Solar & lunar eclipse dates (Grahan)
+  async getEclipses(params: FestivalParams) {
+    const response = await this.client.post(
+      "/festival/eclipses",
+      this.buildFestivalPayload(params),
+    );
+    return response.data;
+  }
+
+  // 15. Month View - Calendar grid with daily Panchang
+  async getMonthView(params: FestivalParams) {
+    const response = await this.client.post(
+      "/festival/month-view",
+      this.buildFestivalPayload(params),
+    );
+    return response.data;
+  }
+
+  // 16. Today - Home screen combined data
+  async getTodayData(params: FestivalParams) {
+    const response = await this.client.post("/festival/today", this.buildFestivalPayload(params));
+    return response.data;
+  }
+
+  // 17. Samvatsara - 60-year Jovian cycle metadata
+  async getSamvatsara(params: FestivalParams) {
+    const response = await this.client.post(
+      "/festival/samvatsara",
+      this.buildFestivalPayload(params),
+    );
+    return response.data;
+  }
+
+  // 18. Ritu - 6 Hindu seasons with date ranges
+  async getRitu(params: FestivalParams) {
+    const response = await this.client.post("/festival/ritu", this.buildFestivalPayload(params));
+    return response.data;
+  }
+
+  // 19. Amrit Siddhi Yoga - Universally auspicious dates
+  async getAmritSiddhiYoga(params: FestivalParams) {
+    const response = await this.client.post(
+      "/festival/amrit-siddhi-yoga",
+      this.buildFestivalPayload(params),
+    );
+    return response.data;
+  }
+
+  // 20. Nakshatra Transit - Moon's daily nakshatra position
+  async getNakshatraTransit(params: FestivalParams) {
+    const response = await this.client.post(
+      "/festival/nakshatra-transit",
+      this.buildFestivalPayload(params),
+    );
+    return response.data;
+  }
+
+  // 21. Planetary Transit - Planet sign changes (Gochar)
+  async getPlanetaryTransit(params: FestivalParams) {
+    const response = await this.client.post(
+      "/festival/planetary-transit",
+      this.buildFestivalPayload(params),
+    );
+    return response.data;
+  }
 }
 
 export const festivalClient = new FestivalClient();

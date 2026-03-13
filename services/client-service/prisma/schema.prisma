@@ -365,6 +365,9 @@ enum ChartType {
   arudha_lagna
   bhava_lagna
   hora_lagna
+  upapada_lagna
+  swamsha
+  panchadha_maitri
   kp_bhava
   equal_bhava
   sripathi_bhava
@@ -455,6 +458,7 @@ enum ChartType {
   yoga_guru_mangal_only
   pushkara_navamsha
   chara_karakas
+  pada_chart
 
   @@schema("app_clients")
 }

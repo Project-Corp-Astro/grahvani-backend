@@ -220,6 +220,159 @@ export class FestivalController {
       next(error);
     }
   }
+
+  // 13. Vrat Calendar - Consolidated fasting calendar
+  async getVratCalendar(req: Request, res: Response, next: NextFunction) {
+    try {
+      const params = this.extractParams(req);
+      if (!params.year) {
+        return res.status(400).json({ success: false, error: "Year is required" });
+      }
+      const data = await festivalClient.getVratCalendar(params);
+      res.json(data);
+    } catch (error) {
+      if ((error as any).response) {
+        return res.status((error as any).response.status).json((error as any).response.data);
+      }
+      next(error);
+    }
+  }
+
+  // 14. Eclipses - Solar & lunar eclipse dates (Grahan)
+  async getEclipses(req: Request, res: Response, next: NextFunction) {
+    try {
+      const params = this.extractParams(req);
+      if (!params.year) {
+        return res.status(400).json({ success: false, error: "Year is required" });
+      }
+      const data = await festivalClient.getEclipses(params);
+      res.json(data);
+    } catch (error) {
+      if ((error as any).response) {
+        return res.status((error as any).response.status).json((error as any).response.data);
+      }
+      next(error);
+    }
+  }
+
+  // 15. Month View - Calendar grid with daily Panchang
+  async getMonthView(req: Request, res: Response, next: NextFunction) {
+    try {
+      const params = this.extractParams(req);
+      if (!params.year || !params.month) {
+        return res.status(400).json({ success: false, error: "Year and month are required" });
+      }
+      const data = await festivalClient.getMonthView(params);
+      res.json(data);
+    } catch (error) {
+      if ((error as any).response) {
+        return res.status((error as any).response.status).json((error as any).response.data);
+      }
+      next(error);
+    }
+  }
+
+  // 16. Today - Home screen combined data
+  async getTodayData(req: Request, res: Response, next: NextFunction) {
+    try {
+      const params = this.extractParams(req);
+      if (!params.date) {
+        return res.status(400).json({ success: false, error: "Date is required (YYYY-MM-DD)" });
+      }
+      const data = await festivalClient.getTodayData(params);
+      res.json(data);
+    } catch (error) {
+      if ((error as any).response) {
+        return res.status((error as any).response.status).json((error as any).response.data);
+      }
+      next(error);
+    }
+  }
+
+  // 17. Samvatsara - 60-year Jovian cycle metadata
+  async getSamvatsara(req: Request, res: Response, next: NextFunction) {
+    try {
+      const params = this.extractParams(req);
+      if (!params.year) {
+        return res.status(400).json({ success: false, error: "Year is required" });
+      }
+      const data = await festivalClient.getSamvatsara(params);
+      res.json(data);
+    } catch (error) {
+      if ((error as any).response) {
+        return res.status((error as any).response.status).json((error as any).response.data);
+      }
+      next(error);
+    }
+  }
+
+  // 18. Ritu - 6 Hindu seasons with date ranges
+  async getRitu(req: Request, res: Response, next: NextFunction) {
+    try {
+      const params = this.extractParams(req);
+      if (!params.year) {
+        return res.status(400).json({ success: false, error: "Year is required" });
+      }
+      const data = await festivalClient.getRitu(params);
+      res.json(data);
+    } catch (error) {
+      if ((error as any).response) {
+        return res.status((error as any).response.status).json((error as any).response.data);
+      }
+      next(error);
+    }
+  }
+
+  // 19. Amrit Siddhi Yoga - Universally auspicious dates
+  async getAmritSiddhiYoga(req: Request, res: Response, next: NextFunction) {
+    try {
+      const params = this.extractParams(req);
+      if (!params.year) {
+        return res.status(400).json({ success: false, error: "Year is required" });
+      }
+      const data = await festivalClient.getAmritSiddhiYoga(params);
+      res.json(data);
+    } catch (error) {
+      if ((error as any).response) {
+        return res.status((error as any).response.status).json((error as any).response.data);
+      }
+      next(error);
+    }
+  }
+
+  // 20. Nakshatra Transit - Moon's daily nakshatra position
+  async getNakshatraTransit(req: Request, res: Response, next: NextFunction) {
+    try {
+      const params = this.extractParams(req);
+      if (!params.year || !params.month) {
+        return res.status(400).json({ success: false, error: "Year and month are required" });
+      }
+      const data = await festivalClient.getNakshatraTransit(params);
+      res.json(data);
+    } catch (error) {
+      if ((error as any).response) {
+        return res.status((error as any).response.status).json((error as any).response.data);
+      }
+      next(error);
+    }
+  }
+
+  // 21. Planetary Transit - Planet sign changes (Gochar)
+  async getPlanetaryTransit(req: Request, res: Response, next: NextFunction) {
+    try {
+      const params = this.extractParams(req);
+      if (!params.year) {
+        return res.status(400).json({ success: false, error: "Year is required" });
+      }
+      const data = await festivalClient.getPlanetaryTransit(params);
+      res.json(data);
+    } catch (error) {
+      if ((error as any).response) {
+        return res.status((error as any).response.status).json((error as any).response.data);
+      }
+      next(error);
+    }
+  }
 }
 
 export const festivalController = new FestivalController();

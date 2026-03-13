@@ -875,6 +875,32 @@ class AstroEngineClient {
   async getPushkaraNavamsha(birthData: BirthData): Promise<AstroResponse> {
     return (await this.apiClient.post("/pushkara-navamsha", birthData)).data;
   }
+
+  async getUpapadaLagna(
+    birthData: BirthData,
+    ayanamsa: Ayanamsa = "lahiri",
+  ): Promise<AstroResponse> {
+    const payload = { ...birthData, ayanamsa: ayanamsa };
+    return (await this.apiClient.post("/charts/upapada-lagna", payload)).data;
+  }
+
+  async getSwamsha(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
+    const payload = { ...birthData, ayanamsa: ayanamsa };
+    return (await this.apiClient.post("/charts/swamsha", payload)).data;
+  }
+
+  async getPanchadhaMaitri(
+    birthData: BirthData,
+    ayanamsa: Ayanamsa = "lahiri",
+  ): Promise<AstroResponse> {
+    const payload = { ...birthData, ayanamsa: ayanamsa };
+    return (await this.apiClient.post("/charts/panchadha-maitri", payload)).data;
+  }
+
+  async getPadaChart(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
+    const payload = { ...birthData, ayanamsa: ayanamsa };
+    return (await this.apiClient.post("/charts/pada-chart", payload)).data;
+  }
 }
 
 export const astroEngineClient = new AstroEngineClient();

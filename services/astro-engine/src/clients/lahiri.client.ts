@@ -142,6 +142,14 @@ export class LahiriClient extends BaseAstroClient {
     return this.post(LAHIRI_ENDPOINTS.GULIKA, data);
   }
 
+  async getUpapadaLagna(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.UPAPADA_LAGNA, data);
+  }
+
+  async getSwamsha(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.SWAMSHA, data);
+  }
+
   // =========================================================================
   // ASHTAKAVARGA
   // =========================================================================
@@ -433,6 +441,14 @@ export class LahiriClient extends BaseAstroClient {
 
   async getCharaKarakas(data: BirthData) {
     return this.post(LAHIRI_ENDPOINTS.CHARA_KARAKAS, data);
+  }
+
+  async getPanchadhaMaitri(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.PANCHADHA_MAITRI, data);
+  }
+
+  async getPadaChart(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.PADA_CHART, data);
   }
   // NOTE: birth_panchanga uses getPanchanga() method (same /panchanga endpoint)
 }

@@ -253,7 +253,7 @@ export class ChartRepository {
         tenantId_clientId_chartType_system: {
           tenantId,
           clientId,
-          chartType,
+          chartType: chartType as any,
           system: system || "lahiri",
         },
       },
@@ -264,6 +264,7 @@ export class ChartRepository {
       },
       create: {
         ...data,
+        chartType: chartType as any,
         chartData: processedChartData,
         tenantId,
         calculatedAt,

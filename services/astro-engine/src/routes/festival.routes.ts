@@ -44,4 +44,31 @@ router.post("/upcoming", festivalController.getUpcomingFestivals.bind(festivalCo
 // GET /api/festival/categories - List all festival categories
 router.get("/categories", festivalController.getCategories.bind(festivalController));
 
+// 13. Vrat Calendar - Consolidated fasting calendar
+router.post("/vrat-calendar", festivalController.getVratCalendar.bind(festivalController));
+
+// 14. Eclipses - Solar & lunar eclipse dates (Grahan)
+router.post("/eclipses", festivalController.getEclipses.bind(festivalController));
+
+// 15. Month View - Calendar grid with daily Panchang
+router.post("/month-view", festivalController.getMonthView.bind(festivalController));
+
+// 16. Today - Home screen combined data
+router.post("/today", festivalController.getTodayData.bind(festivalController));
+
+// 17. Samvatsara - 60-year Jovian cycle metadata
+router.post("/samvatsara", festivalController.getSamvatsara.bind(festivalController));
+
+// 18. Ritu - 6 Hindu seasons with date ranges
+router.post("/ritu", festivalController.getRitu.bind(festivalController));
+
+// 19. Amrit Siddhi Yoga - Universally auspicious dates
+router.post("/amrit-siddhi-yoga", festivalController.getAmritSiddhiYoga.bind(festivalController));
+
+// 20. Nakshatra Transit - Moon's daily nakshatra position
+router.post("/nakshatra-transit", festivalController.getNakshatraTransit.bind(festivalController));
+
+// 21. Planetary Transit - Planet sign changes (Gochar)
+router.post("/planetary-transit", festivalController.getPlanetaryTransit.bind(festivalController));
+
 export default router;

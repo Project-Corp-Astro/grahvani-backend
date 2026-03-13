@@ -44,6 +44,10 @@ export const LAHIRI_ENDPOINTS = {
   KARKAMSHA_D9: "/lahiri/calculate_karkamsha_d9",
   MANDI: "/lahiri/calculate_mandi", // NEW
   GULIKA: "/lahiri/calculate_gulika", // NEW
+  UPAPADA_LAGNA: "/lahiri/calculate_upapada_lagna", // NEW
+  SWAMSHA: "/lahiri/calculate_swamsha", // NEW
+  PANCHADHA_MAITRI: "/lahiri/calculate_panchadha_maitri", // NEW
+  PADA_CHART: "/lahiri/calculate_pada_chart", // NEW
 
   // Ashtakavarga
   BHINNA_ASHTAKAVARGA: "/lahiri/calculate_binnatakvarga",

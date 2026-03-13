@@ -502,6 +502,126 @@ export class SpecialChartsController {
   }
 
   /**
+   * POST /api/charts/upapada-lagna
+   */
+  async getUpapadaLagna(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      const ayanamsa: AyanamsaType = birthData.ayanamsa || "lahiri";
+      if (!this.validateBirthData(birthData, res)) return;
+
+      if (ayanamsa !== "lahiri") {
+        res.status(400).json({
+          success: false,
+          error: "Upapada Lagna only supported for Lahiri system",
+        });
+        return;
+      }
+
+      const data = await lahiriClient.getUpapadaLagna(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "Upapada Lagna failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/swamsha
+   */
+  async getSwamsha(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      const ayanamsa: AyanamsaType = birthData.ayanamsa || "lahiri";
+      if (!this.validateBirthData(birthData, res)) return;
+
+      if (ayanamsa !== "lahiri") {
+        res.status(400).json({
+          success: false,
+          error: "Swamsha only supported for Lahiri system",
+        });
+        return;
+      }
+
+      const data = await lahiriClient.getSwamsha(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "Swamsha failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/panchadha-maitri
+   */
+  async getPanchadhaMaitri(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      const ayanamsa: AyanamsaType = birthData.ayanamsa || "lahiri";
+      if (!this.validateBirthData(birthData, res)) return;
+
+      if (ayanamsa !== "lahiri") {
+        res.status(400).json({
+          success: false,
+          error: "Panchadha Maitri only supported for Lahiri system",
+        });
+        return;
+      }
+
+      const data = await lahiriClient.getPanchadhaMaitri(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "Panchadha Maitri failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/pada-chart
+   */
+  async getPadaChart(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      const ayanamsa: AyanamsaType = birthData.ayanamsa || "lahiri";
+      if (!this.validateBirthData(birthData, res)) return;
+
+      if (ayanamsa !== "lahiri") {
+        res.status(400).json({
+          success: false,
+          error: "Pada Chart only supported for Lahiri system",
+        });
+        return;
+      }
+
+      const data = await lahiriClient.getPadaChart(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "Pada Chart failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
    * POST /api/charts/shodasha-varga
    */
   async getShodashaVarga(req: Request, res: Response): Promise<void> {
