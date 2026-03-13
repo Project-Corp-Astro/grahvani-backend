@@ -2,6 +2,7 @@
 // Shared event definitions, errors, and utilities
 export * from "./events";
 export * from "./errors";
+export * from "./features";
 export { validateBody } from "./middleware/validate";
 export { requestIdMiddleware } from "./middleware/requestId";
 export {

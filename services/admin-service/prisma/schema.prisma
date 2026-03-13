@@ -1,0 +1,579 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/prisma"
+  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("ADMIN_DATABASE_URL")
+  directUrl = env("ADMIN_DIRECT_URL")
+  schemas   = ["app_admin", "app_users", "app_auth", "app_clients"]
+}
+
+// ============================================================
+// CORE PLATFORM MODELS (READ/WRITE ACCESS FOR ADMIN)
+// ============================================================
+
+model User {
+  id              String            @id @db.Uuid
+  tenantId        String            @map("tenant_id") @db.Uuid
+  email           String            @unique @db.VarChar(255)
+  passwordHash    String?           @map("password_hash") @db.VarChar(255)
+  name            String            @db.VarChar(100)
+  displayName     String?           @map("display_name") @db.VarChar(50)
+  avatarUrl       String?           @map("avatar_url") @db.VarChar(500)
+  coverUrl        String?           @map("cover_url") @db.VarChar(500)
+  bio             String?
+  location        String?           @db.VarChar(100)
+  website         String?           @db.VarChar(255)
+  phone           String?           @db.VarChar(20)
+  birthDate       DateTime?         @map("birth_date") @db.Date
+  gender          GenderPortal?
+  role            UserRolePortal    @default(user)
+  status          UserStatusPortal  @default(pending_verification)
+  isVerified      Boolean           @default(false) @map("is_verified")
+  isPublic        Boolean           @default(true) @map("is_public")
+  socialLinks     Json?             @default("{}") @map("social_links")
+  metadata        Json?             @default("{}")
+  followersCount  Int               @default(0) @map("followers_count")
+  followingCount  Int               @default(0) @map("following_count")
+  lastActiveAt    DateTime?         @map("last_active_at")
+  emailVerified   Boolean           @default(false) @map("email_verified")
+  emailVerifiedAt DateTime?         @map("email_verified_at")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  deletedAt       DateTime?         @map("deleted_at")
+
+  @@map("users")
+  @@schema("app_users")
+}
+
+model UserActivityLog {
+  id        String   @id @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  action    String   @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("user_activity_logs")
+  @@schema("app_users")
+}
+
+enum UserRolePortal {
+  user
+  admin
+  moderator
+
+  @@map("UserRole")
+  @@schema("app_users")
+}
+
+enum UserStatusPortal {
+  active
+  suspended
+  pending_verification
+  deleted
+
+  @@map("UserStatus")
+  @@schema("app_users")
+}
+
+enum GenderPortal {
+  male
+  female
+  other
+  prefer_not_to_say
+
+  @@map("Gender")
+  @@schema("app_users")
+}
+
+model Client {
+  id                    String                @id @db.Uuid
+  tenantId              String                @map("tenant_id") @db.Uuid
+  clientCode            String                @map("client_code") @db.VarChar(20)
+  fullName              String                @map("full_name") @db.VarChar(200)
+  phonePrimary          String?               @map("phone_primary") @db.VarChar(20)
+  phoneSecondary        String?               @map("phone_secondary") @db.VarChar(20)
+  email                 String?               @db.VarChar(255)
+  photoUrl              String?               @map("photo_url") @db.VarChar(500)
+  birthDate             DateTime?             @map("birth_date") @db.Date
+  birthTime             DateTime?             @map("birth_time") @db.Time(6)
+  birthPlace            String?               @map("birth_place") @db.VarChar(300)
+  birthLatitude         Decimal?              @map("birth_latitude") @db.Decimal(10, 7)
+  birthLongitude        Decimal?              @map("birth_longitude") @db.Decimal(10, 7)
+  birthTimezone         String?               @map("birth_timezone") @db.VarChar(50)
+  birthTimeKnown        Boolean               @default(true) @map("birth_time_known")
+  birthTimeAccuracy     BirthTimeAccuracy     @default(exact) @map("birth_time_accuracy")
+  gender                GenderClient?         @map("gender")
+  maritalStatus         MaritalStatus?        @map("marital_status")
+  occupation            String?               @db.VarChar(200)
+  businessDetails       String?               @map("business_details")
+  currentSituation      String?               @map("current_situation")
+  specialConsiderations String?               @map("special_considerations")
+  addressLine1          String?               @map("address_line1") @db.VarChar(300)
+  addressLine2          String?               @map("address_line2") @db.VarChar(300)
+  city                  String?               @db.VarChar(100)
+  state                 String?               @db.VarChar(100)
+  postalCode            String?               @map("postal_code") @db.VarChar(20)
+  country               String?               @db.VarChar(100)
+  tags                  Json?                 @default("[]")
+  metadata              Json?                 @default("{}")
+  generationStatus      ChartGenerationStatus @default(pending) @map("generation_status")
+  chartsVersion         Int                   @default(1) @map("charts_version")
+  source                ClientSource          @default(manual)
+  createdBy             String?               @map("created_by") @db.Uuid
+  createdAt             DateTime              @default(now()) @map("created_at")
+  updatedAt             DateTime?             @updatedAt @map("updated_at")
+  deletedAt             DateTime?             @map("deleted_at")
+
+  @@map("clients")
+  @@schema("app_clients")
+}
+
+model ClientActivityLog {
+  id        String   @id @db.Uuid
+  clientId  String?  @map("client_id") @db.Uuid
+  action    String   @db.VarChar(100)
+  timestamp DateTime @default(now())
+
+  @@map("client_activity_logs")
+  @@schema("app_clients")
+}
+
+model ClientSavedChart {
+  id           String   @id @db.Uuid
+  clientId     String   @map("client_id") @db.Uuid
+  chartType    String   @map("chart_type")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("client_saved_charts")
+  @@schema("app_clients")
+}
+
+model ClientYogaDosha {
+  id           String   @id @db.Uuid
+  clientId     String   @map("client_id") @db.Uuid
+  category     String
+  type         String   @db.VarChar(100)
+
+  @@map("client_yoga_doshas")
+  @@schema("app_clients")
+}
+
+// Stub auth models
+model AuthUserStub {
+  id    String @id @db.Uuid
+  email String @unique
+
+  @@map("auth_users")
+  @@schema("app_auth")
+}
+
+model AuthSessionStub {
+  id     String @id
+  userId String @db.Uuid
+
+  @@map("auth_sessions")
+  @@schema("app_auth")
+}
+
+model AuthEmailVerificationTokenStub {
+  id    String @id @db.Uuid
+  email String
+
+  @@map("auth_email_verification_tokens")
+  @@schema("app_auth")
+}
+
+model AuthLoginAttemptStub {
+  id    String @id @db.Uuid
+  email String
+
+  @@map("auth_login_attempts")
+  @@schema("app_auth")
+}
+
+// ============================================================
+// SUBSCRIPTION PLANS — Tiered feature gating for astrologers
+// ============================================================
+model SubscriptionPlan {
+  id                    String             @id @default(uuid()) @db.Uuid
+  name                  String             @db.VarChar(100)
+  slug                  String             @unique @db.VarChar(50)
+  description           String?
+  tier                  PlanTier
+  monthlyPrice          Decimal            @default(0) @map("monthly_price") @db.Decimal(10, 2)
+  annualPrice           Decimal            @default(0) @map("annual_price") @db.Decimal(10, 2)
+  trialDays             Int                @default(0) @map("trial_days")
+  isActive              Boolean            @default(true) @map("is_active")
+  sortOrder             Int                @default(0) @map("sort_order")
+
+  // Client & Generation Limits
+  maxClients            Int                @default(5) @map("max_clients")
+  maxChartsPerMonth     Int                @default(50) @map("max_charts_per_month")
+  maxReportsPerMonth    Int                @default(5) @map("max_reports_per_month")
+
+  // Feature Allowlists (JSON arrays of strings)
+  allowedAyanamsas      Json               @default("[\"Lahiri\"]") @map("allowed_ayanamsas")
+  allowedChartTypes     Json               @default("[\"D1\",\"D9\"]") @map("allowed_chart_types")
+  allowedDashaSystems   Json               @default("[\"vimshottari\"]") @map("allowed_dasha_systems")
+
+  // Module Toggles
+  hasKPSystem           Boolean            @default(false) @map("has_kp_system")
+  hasMatchmaking        Boolean            @default(false) @map("has_matchmaking")
+  hasMuhurta            Boolean            @default(false) @map("has_muhurta")
+  hasNumerology         Boolean            @default(false) @map("has_numerology")
+  hasReportExport       Boolean            @default(false) @map("has_report_export")
+  hasPDFExport          Boolean            @default(false) @map("has_pdf_export")
+  hasEmailDelivery      Boolean            @default(false) @map("has_email_delivery")
+  hasApiAccess          Boolean            @default(false) @map("has_api_access")
+  hasPrioritySupport    Boolean            @default(false) @map("has_priority_support")
+  hasWhiteLabel         Boolean            @default(false) @map("has_white_label")
+
+  // Extensible feature flags
+  featureFlags          Json?              @default("{}") @map("feature_flags")
+
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  subscriptions         UserSubscription[]
+  features              PlanFeature[]
+
+  @@index([tier])
+  @@index([isActive])
+  @@map("subscription_plans")
+  @@schema("app_admin")
+}
+
+// ============================================================
+// PLATFORM FEATURES — Granular capability definitions
+// ============================================================
+model PlatformFeature {
+  id                    String             @id @default(uuid()) @db.Uuid
+  featureKey            String             @unique @map("feature_key") @db.VarChar(100)
+  name                  String             @db.VarChar(100)
+  description           String?
+  category              String             @db.VarChar(50)
+  isActive              Boolean            @default(true) @map("is_active")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  plans                 PlanFeature[]
+
+  @@map("platform_features")
+  @@schema("app_admin")
+}
+
+model PlanFeature {
+  planId                String             @map("plan_id") @db.Uuid
+  featureId             String             @map("feature_id") @db.Uuid
+  value                 Json?              @default("true")
+
+  plan                  SubscriptionPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  feature               PlatformFeature    @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@id([planId, featureId])
+  @@map("plan_features")
+  @@schema("app_admin")
+}
+
+// ============================================================
+// USER SUBSCRIPTIONS — Links users to plans
+// ============================================================
+model UserSubscription {
+  id                    String             @id @default(uuid()) @db.Uuid
+  userId                String             @map("user_id") @db.Uuid
+  userEmail             String             @map("user_email") @db.VarChar(255)
+  planId                String             @map("plan_id") @db.Uuid
+  status                SubscriptionStatus @default(trialing)
+  currentPeriodStart    DateTime           @map("current_period_start")
+  currentPeriodEnd      DateTime           @map("current_period_end")
+  trialEnd              DateTime?          @map("trial_end")
+  cancelledAt           DateTime?          @map("cancelled_at")
+  cancelReason          String?            @map("cancel_reason")
+  paymentMethod         String?            @map("payment_method") @db.VarChar(50)
+  metadata              Json?              @default("{}")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  plan                  SubscriptionPlan   @relation(fields: [planId], references: [id])
+
+  @@unique([userId])
+  @@index([userId])
+  @@index([planId])
+  @@index([status])
+  @@index([currentPeriodEnd])
+  @@map("user_subscriptions")
+  @@schema("app_admin")
+}
+
+// ============================================================
+// PLATFORM SETTINGS — Key-value configuration
+// ============================================================
+model PlatformSetting {
+  id                    String             @id @default(uuid()) @db.Uuid
+  key                   String             @unique @db.VarChar(100)
+  value                 Json
+  category              SettingCategory    @default(general)
+  description           String?
+  isSecret              Boolean            @default(false) @map("is_secret")
+  updatedBy             String?            @map("updated_by") @db.Uuid
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@map("platform_settings")
+  @@schema("app_admin")
+}
+
+// ============================================================
+// ADMIN AUDIT LOG — Immutable action trail
+// ============================================================
+model AdminAuditLog {
+  id                    String             @id @default(uuid()) @db.Uuid
+  adminId               String             @map("admin_id") @db.Uuid
+  adminEmail            String             @map("admin_email") @db.VarChar(255)
+  action                AuditAction
+  targetType            String?            @map("target_type") @db.VarChar(50)
+  targetId              String?            @map("target_id") @db.Uuid
+  previousValues        Json?              @map("previous_values")
+  newValues             Json?              @map("new_values")
+  ipAddress             String?            @map("ip_address") @db.VarChar(45)
+  userAgent             String?            @map("user_agent") @db.VarChar(500)
+  createdAt             DateTime           @default(now()) @map("created_at")
+
+  @@index([adminId])
+  @@index([action])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+  @@map("admin_audit_logs")
+  @@schema("app_admin")
+}
+
+// ============================================================
+// ANNOUNCEMENTS — Platform-wide notifications
+// ============================================================
+model Announcement {
+  id                    String             @id @default(uuid()) @db.Uuid
+  title                 String             @db.VarChar(200)
+  content               String
+  type                  AnnouncementType   @default(info)
+  targetAudience        TargetAudience     @default(all) @map("target_audience")
+  isActive              Boolean            @default(true) @map("is_active")
+  startDate             DateTime?          @map("start_date")
+  endDate               DateTime?          @map("end_date")
+  isPinned              Boolean            @default(false) @map("is_pinned")
+  dismissible           Boolean            @default(true)
+  createdBy             String             @map("created_by") @db.Uuid
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@index([startDate, endDate])
+  @@map("announcements")
+  @@schema("app_admin")
+}
+
+// ============================================================
+// CONTENT OVERRIDES — Admin-managed astrology content
+// ============================================================
+model ContentOverride {
+  id                    String             @id @default(uuid()) @db.Uuid
+  contentType           ContentType        @map("content_type")
+  contentKey            String             @map("content_key") @db.VarChar(100)
+  title                 String             @db.VarChar(200)
+  description           String?
+  metadata              Json?              @default("{}")
+  isPublished           Boolean            @default(true) @map("is_published")
+  createdBy             String             @map("created_by") @db.Uuid
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  @@unique([contentType, contentKey])
+  @@index([contentType])
+  @@index([isPublished])
+  @@map("content_overrides")
+  @@schema("app_admin")
+}
+
+// ============================================================
+// SUPPORT TICKETS — User support management
+// ============================================================
+model SupportTicket {
+  id                    String             @id @default(uuid()) @db.Uuid
+  userId                String             @map("user_id") @db.Uuid
+  userEmail             String             @map("user_email") @db.VarChar(255)
+  userName              String?            @map("user_name") @db.VarChar(100)
+  subject               String             @db.VarChar(300)
+  description           String
+  category              TicketCategory     @default(general)
+  status                TicketStatus       @default(open)
+  priority              TicketPriority     @default(medium)
+  assignedTo            String?            @map("assigned_to") @db.Uuid
+  resolution            String?
+  resolvedAt            DateTime?          @map("resolved_at")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@index([assignedTo])
+  @@index([createdAt])
+  @@map("support_tickets")
+  @@schema("app_admin")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum PlanTier {
+  free
+  essential
+  professional
+  enterprise
+  @@schema("app_admin")
+}
+
+enum SubscriptionStatus {
+  trialing
+  active
+  past_due
+  cancelled
+  expired
+  @@schema("app_admin")
+}
+
+enum SettingCategory {
+  general
+  features
+  branding
+  notifications
+  limits
+  @@schema("app_admin")
+}
+
+enum AuditAction {
+  USER_ROLE_CHANGE
+  USER_STATUS_CHANGE
+  SUBSCRIPTION_ASSIGN
+  SUBSCRIPTION_CANCEL
+  SUBSCRIPTION_EXTEND
+  PLAN_CREATE
+  PLAN_UPDATE
+  PLAN_DELETE
+  SETTING_UPDATE
+  ANNOUNCEMENT_CREATE
+  ANNOUNCEMENT_UPDATE
+  ANNOUNCEMENT_DELETE
+  CONTENT_CREATE
+  CONTENT_UPDATE
+  CONTENT_DELETE
+  SUPPORT_ASSIGN
+  SUPPORT_RESOLVE
+  SUPPORT_CLOSE
+  @@schema("app_admin")
+}
+
+enum AnnouncementType {
+  info
+  warning
+  maintenance
+  feature
+  @@schema("app_admin")
+}
+
+enum TargetAudience {
+  all
+  free
+  essential
+  professional
+  enterprise
+  @@schema("app_admin")
+}
+
+enum ContentType {
+  remedy
+  yoga
+  dosha
+  chart_description
+  @@schema("app_admin")
+}
+
+enum TicketCategory {
+  billing
+  technical
+  feature_request
+  bug
+  general
+  @@schema("app_admin")
+}
+
+enum TicketStatus {
+  open
+  in_progress
+  resolved
+  closed
+  @@schema("app_admin")
+}
+
+enum TicketPriority {
+  low
+  medium
+  high
+  critical
+  @@schema("app_admin")
+}
+
+// ============================================================
+// APP_CLIENTS ENUMS
+// ============================================================
+
+enum GenderClient {
+  male
+  female
+  other
+  prefer_not_to_say
+
+  @@map("Gender")
+  @@schema("app_clients")
+}
+
+enum MaritalStatus {
+  single
+  married
+  divorced
+  widowed
+
+  @@schema("app_clients")
+}
+
+enum ClientSource {
+  manual
+  website
+  import
+  ocr
+
+  @@schema("app_clients")
+}
+
+enum BirthTimeAccuracy {
+  exact
+  approximate
+  rectified
+  unknown
+
+  @@schema("app_clients")
+}
+
+enum ChartGenerationStatus {
+  pending
+  processing
+  completed
+  failed
+
+  @@schema("app_clients")
+}

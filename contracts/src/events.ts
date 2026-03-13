@@ -252,6 +252,46 @@ export type MediaDeletedEvent = BaseEvent<
   }
 >;
 
+// ============ SUBSCRIPTION EVENTS ============
+
+export type SubscriptionCreatedEvent = BaseEvent<
+  "subscription.created",
+  {
+    userId: string;
+    planId: string;
+    status: string;
+    expiresAt: string;
+  }
+>;
+
+export type SubscriptionUpdatedEvent = BaseEvent<
+  "subscription.updated",
+  {
+    userId: string;
+    planId: string;
+    previousPlanId?: string;
+    status: string;
+    changes: string[];
+  }
+>;
+
+export type SubscriptionCancelledEvent = BaseEvent<
+  "subscription.cancelled",
+  {
+    userId: string;
+    planId: string;
+    reason?: string;
+  }
+>;
+
+export type PlanFeaturesChangedEvent = BaseEvent<
+  "subscription.plan_features_changed",
+  {
+    planId: string;
+    features: Record<string, boolean>;
+  }
+>;
+
 // ============ ALL EVENTS UNION ============
 
 export type GrahvaniEvent =
@@ -283,7 +323,12 @@ export type GrahvaniEvent =
   // Media
   | MediaUploadedEvent
   | MediaProcessedEvent
-  | MediaDeletedEvent;
+  | MediaDeletedEvent
+  // Subscription
+  | SubscriptionCreatedEvent
+  | SubscriptionUpdatedEvent
+  | SubscriptionCancelledEvent
+  | PlanFeaturesChangedEvent;
 
 // ============ EVENT CHANNELS ============
 
@@ -295,5 +340,6 @@ export const EVENT_CHANNELS = {
   NOTIFICATION: "grahvani:events:notification",
   REPORT: "grahvani:events:report",
   MEDIA: "grahvani:events:media",
+  SUBSCRIPTION: "grahvani:events:subscription",
   ALL: "grahvani:events:*",
 } as const;

@@ -1,0 +1,321 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/prisma"
+  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("ADMIN_DATABASE_URL")
+  directUrl = env("ADMIN_DIRECT_URL")
+  schemas   = ["app_admin"]
+}
+
+// ============================================================
+// SUBSCRIPTION PLANS — Tiered feature gating for astrologers
+// ============================================================
+model SubscriptionPlan {
+  id                    String             @id @default(uuid()) @db.Uuid
+  name                  String             @db.VarChar(100)
+  slug                  String             @unique @db.VarChar(50)
+  description           String?
+  tier                  PlanTier
+  monthlyPrice          Decimal            @default(0) @map("monthly_price") @db.Decimal(10, 2)
+  annualPrice           Decimal            @default(0) @map("annual_price") @db.Decimal(10, 2)
+  trialDays             Int                @default(0) @map("trial_days")
+  isActive              Boolean            @default(true) @map("is_active")
+  sortOrder             Int                @default(0) @map("sort_order")
+
+  // Client & Generation Limits
+  maxClients            Int                @default(5) @map("max_clients")
+  maxChartsPerMonth     Int                @default(50) @map("max_charts_per_month")
+  maxReportsPerMonth    Int                @default(5) @map("max_reports_per_month")
+
+  // Feature Allowlists (JSON arrays of strings)
+  allowedAyanamsas      Json               @default("[\"Lahiri\"]") @map("allowed_ayanamsas")
+  allowedChartTypes     Json               @default("[\"D1\",\"D9\"]") @map("allowed_chart_types")
+  allowedDashaSystems   Json               @default("[\"vimshottari\"]") @map("allowed_dasha_systems")
+
+  // Module Toggles
+  hasKPSystem           Boolean            @default(false) @map("has_kp_system")
+  hasMatchmaking        Boolean            @default(false) @map("has_matchmaking")
+  hasMuhurta            Boolean            @default(false) @map("has_muhurta")
+  hasNumerology         Boolean            @default(false) @map("has_numerology")
+  hasReportExport       Boolean            @default(false) @map("has_report_export")
+  hasPDFExport          Boolean            @default(false) @map("has_pdf_export")
+  hasEmailDelivery      Boolean            @default(false) @map("has_email_delivery")
+  hasApiAccess          Boolean            @default(false) @map("has_api_access")
+  hasPrioritySupport    Boolean            @default(false) @map("has_priority_support")
+  hasWhiteLabel         Boolean            @default(false) @map("has_white_label")
+
+  // Extensible feature flags
+  featureFlags          Json?              @default("{}") @map("feature_flags")
+
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  subscriptions         UserSubscription[]
+  features              PlanFeature[]
+
+  @@index([tier])
+  @@index([isActive])
+  @@map("subscription_plans")
+  @@schema("app_admin")
+}
+
+model PlatformFeature {
+  id                    String             @id @default(uuid()) @db.Uuid
+  featureKey            String             @unique @map("feature_key") @db.VarChar(100)
+  name                  String             @db.VarChar(100)
+  description           String?
+  category              String             @db.VarChar(50)
+  isActive              Boolean            @default(true) @map("is_active")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  plans                 PlanFeature[]
+
+  @@map("platform_features")
+  @@schema("app_admin")
+}
+
+model PlanFeature {
+  planId                String             @map("plan_id") @db.Uuid
+  featureId             String             @map("feature_id") @db.Uuid
+  value                 Json?              @default("true")
+
+  plan                  SubscriptionPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  feature               PlatformFeature    @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@id([planId, featureId])
+  @@map("plan_features")
+  @@schema("app_admin")
+}
+
+model UserSubscription {
+  id                    String             @id @default(uuid()) @db.Uuid
+  userId                String             @map("user_id") @db.Uuid
+  userEmail             String             @map("user_email") @db.VarChar(255)
+  planId                String             @map("plan_id") @db.Uuid
+  status                SubscriptionStatus @default(trialing)
+  currentPeriodStart    DateTime           @map("current_period_start")
+  currentPeriodEnd      DateTime           @map("current_period_end")
+  trialEnd              DateTime?          @map("trial_end")
+  cancelledAt           DateTime?          @map("cancelled_at")
+  cancelReason          String?            @map("cancel_reason")
+  paymentMethod         String?            @map("payment_method") @db.VarChar(50)
+  metadata              Json?              @default("{}")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  plan                  SubscriptionPlan   @relation(fields: [planId], references: [id])
+
+  @@unique([userId])
+  @@index([userId])
+  @@index([planId])
+  @@index([status])
+  @@index([currentPeriodEnd])
+  @@map("user_subscriptions")
+  @@schema("app_admin")
+}
+
+model PlatformSetting {
+  id                    String             @id @default(uuid()) @db.Uuid
+  key                   String             @unique @db.VarChar(100)
+  value                 Json
+  category              SettingCategory    @default(general)
+  description           String?
+  isSecret              Boolean            @default(false) @map("is_secret")
+  updatedBy             String?            @map("updated_by") @db.Uuid
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@map("platform_settings")
+  @@schema("app_admin")
+}
+
+model AdminAuditLog {
+  id                    String             @id @default(uuid()) @db.Uuid
+  adminId               String             @map("admin_id") @db.Uuid
+  adminEmail            String             @map("admin_email") @db.VarChar(255)
+  action                AuditAction
+  targetType            String?            @map("target_type") @db.VarChar(50)
+  targetId              String?            @map("target_id") @db.Uuid
+  previousValues        Json?              @map("previous_values")
+  newValues             Json?              @map("new_values")
+  ipAddress             String?            @map("ip_address") @db.VarChar(45)
+  userAgent             String?            @map("user_agent") @db.VarChar(500)
+  createdAt             DateTime           @default(now()) @map("created_at")
+
+  @@index([adminId])
+  @@index([action])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+  @@map("admin_audit_logs")
+  @@schema("app_admin")
+}
+
+model Announcement {
+  id                    String             @id @default(uuid()) @db.Uuid
+  title                 String             @db.VarChar(200)
+  content               String
+  type                  AnnouncementType   @default(info)
+  targetAudience        TargetAudience     @default(all) @map("target_audience")
+  isActive              Boolean            @default(true) @map("is_active")
+  startDate             DateTime?          @map("start_date")
+  endDate               DateTime?          @map("end_date")
+  isPinned              Boolean            @default(false) @map("is_pinned")
+  dismissible           Boolean            @default(true)
+  createdBy             String             @map("created_by") @db.Uuid
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@index([startDate, endDate])
+  @@map("announcements")
+  @@schema("app_admin")
+}
+
+model ContentOverride {
+  id                    String             @id @default(uuid()) @db.Uuid
+  contentType           ContentType        @map("content_type")
+  contentKey            String             @map("content_key") @db.VarChar(100)
+  title                 String             @db.VarChar(200)
+  description           String?
+  metadata              Json?              @default("{}")
+  isPublished           Boolean            @default(true) @map("is_published")
+  createdBy             String             @map("created_by") @db.Uuid
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  @@unique([contentType, contentKey])
+  @@index([contentType])
+  @@index([isPublished])
+  @@map("content_overrides")
+  @@schema("app_admin")
+}
+
+model SupportTicket {
+  id                    String             @id @default(uuid()) @db.Uuid
+  userId                String             @map("user_id") @db.Uuid
+  userEmail             String             @map("user_email") @db.VarChar(255)
+  userName              String?            @map("user_name") @db.VarChar(100)
+  subject               String             @db.VarChar(300)
+  description           String
+  category              TicketCategory     @default(general)
+  status                TicketStatus       @default(open)
+  priority              TicketPriority     @default(medium)
+  assignedTo            String?            @map("assigned_to") @db.Uuid
+  resolution            String?
+  resolvedAt            DateTime?          @map("resolved_at")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@index([assignedTo])
+  @@index([createdAt])
+  @@map("support_tickets")
+  @@schema("app_admin")
+}
+
+enum PlanTier {
+  free
+  essential
+  professional
+  enterprise
+  @@schema("app_admin")
+}
+
+enum SubscriptionStatus {
+  trialing
+  active
+  past_due
+  cancelled
+  expired
+  @@schema("app_admin")
+}
+
+enum SettingCategory {
+  general
+  features
+  branding
+  notifications
+  limits
+  @@schema("app_admin")
+}
+
+enum AuditAction {
+  USER_ROLE_CHANGE
+  USER_STATUS_CHANGE
+  SUBSCRIPTION_ASSIGN
+  SUBSCRIPTION_CANCEL
+  SUBSCRIPTION_EXTEND
+  PLAN_CREATE
+  PLAN_UPDATE
+  PLAN_DELETE
+  SETTING_UPDATE
+  ANNOUNCEMENT_CREATE
+  ANNOUNCEMENT_UPDATE
+  ANNOUNCEMENT_DELETE
+  CONTENT_CREATE
+  CONTENT_UPDATE
+  CONTENT_DELETE
+  SUPPORT_ASSIGN
+  SUPPORT_RESOLVE
+  SUPPORT_CLOSE
+  @@schema("app_admin")
+}
+
+enum AnnouncementType {
+  info
+  warning
+  maintenance
+  feature
+  @@schema("app_admin")
+}
+
+enum TargetAudience {
+  all
+  free
+  essential
+  professional
+  enterprise
+  @@schema("app_admin")
+}
+
+enum ContentType {
+  remedy
+  yoga
+  dosha
+  chart_description
+  @@schema("app_admin")
+}
+
+enum TicketCategory {
+  billing
+  technical
+  feature_request
+  bug
+  general
+  @@schema("app_admin")
+}
+
+enum TicketStatus {
+  open
+  in_progress
+  resolved
+  closed
+  @@schema("app_admin")
+}
+
+enum TicketPriority {
+  low
+  medium
+  high
+  critical
+  @@schema("app_admin")
+}
