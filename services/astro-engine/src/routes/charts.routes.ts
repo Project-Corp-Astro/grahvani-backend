@@ -47,16 +47,16 @@ router.post("/karkamsha-d1", specialChartsController.getKarkamshaD1.bind(special
 router.post("/karkamsha-d9", specialChartsController.getKarkamshaD9.bind(specialChartsController));
 router.post("/mandi", specialChartsController.getMandi.bind(specialChartsController));
 router.post("/gulika", specialChartsController.getGulika.bind(specialChartsController));
-router.post("/upapada-lagna", specialChartsController.getUpapadaLagna.bind(specialChartsController));
+router.post(
+  "/upapada-lagna",
+  specialChartsController.getUpapadaLagna.bind(specialChartsController),
+);
 router.post("/swamsha", specialChartsController.getSwamsha.bind(specialChartsController));
 router.post(
   "/panchadha-maitri",
   specialChartsController.getPanchadhaMaitri.bind(specialChartsController),
 );
-router.post(
-  "/pada-chart",
-  specialChartsController.getPadaChart.bind(specialChartsController),
-);
+router.post("/pada-chart", specialChartsController.getPadaChart.bind(specialChartsController));
 router.post(
   "/shodasha-varga",
   specialChartsController.getShodashaVarga.bind(specialChartsController),

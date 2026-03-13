@@ -173,10 +173,7 @@ export class FestivalClient extends BaseAstroClient {
 
   // 16. Today - Home screen combined data
   async getTodayData(params: FestivalParams) {
-    const response = await this.client.post(
-      "/festival/today",
-      this.buildFestivalPayload(params),
-    );
+    const response = await this.client.post("/festival/today", this.buildFestivalPayload(params));
     return response.data;
   }
 
@@ -191,10 +188,7 @@ export class FestivalClient extends BaseAstroClient {
 
   // 18. Ritu - 6 Hindu seasons with date ranges
   async getRitu(params: FestivalParams) {
-    const response = await this.client.post(
-      "/festival/ritu",
-      this.buildFestivalPayload(params),
-    );
+    const response = await this.client.post("/festival/ritu", this.buildFestivalPayload(params));
     return response.data;
   }
 

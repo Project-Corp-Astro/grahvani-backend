@@ -889,7 +889,10 @@ class AstroEngineClient {
     return (await this.apiClient.post("/charts/swamsha", payload)).data;
   }
 
-  async getPanchadhaMaitri(birthData: BirthData, ayanamsa: Ayanamsa = "lahiri"): Promise<AstroResponse> {
+  async getPanchadhaMaitri(
+    birthData: BirthData,
+    ayanamsa: Ayanamsa = "lahiri",
+  ): Promise<AstroResponse> {
     const payload = { ...birthData, ayanamsa: ayanamsa };
     return (await this.apiClient.post("/charts/panchadha-maitri", payload)).data;
   }
