@@ -1,0 +1,4 @@
+# Gitleaks ignore file - full fingerprints required
+fa53110b96aa25a6047eb6d3c25e87aa0c5f6ae6:services/admin-service/src/__tests__/setup.ts:jwt-secret:4
+becd55ed05f2d98b0c69b21e0c5fc46a2d0357b9:services/admin-service/src/__tests__/setup.ts:jwt-secret:3
+f1e4022eeab4846bf9fe84a8d3850af69bb9fedd:services/admin-service/src/__tests__/setup.ts:jwt-secret:4
