@@ -22,6 +22,7 @@ const CLIENT_SERVICE_URL = process.env.CLIENT_SERVICE_URL || "http://localhost:3
 const MEDIA_SERVICE_URL = process.env.MEDIA_SERVICE_URL || "http://localhost:3007";
 const ADMIN_SERVICE_URL = process.env.ADMIN_SERVICE_URL || "http://localhost:3010";
 const ASTRO_ENGINE_URL = process.env.ASTRO_ENGINE_URL || "http://localhost:3014";
+const KNOWLEDGE_SERVICE_URL = process.env.KNOWLEDGE_SERVICE_URL || "http://localhost:3017";
 
 // Security & Optimization Middleware
 app.use(helmet());
@@ -159,6 +160,25 @@ app.use(
   }),
 );
 
+// 9. Astro Engine — Muhurat Engine (find, evaluate, compatibility, panchang, etc.)
+app.use(
+  createProxyMiddleware({
+    ...proxyOptions,
+    pathFilter: "/api/v1/muhurat",
+    target: ASTRO_ENGINE_URL,
+    pathRewrite: { "^/api/v1/muhurat": "/api/muhurat" },
+  }),
+);
+
+// 10. Knowledge Service — Educational tooltips (public, no auth)
+app.use(
+  createProxyMiddleware({
+    ...proxyOptions,
+    pathFilter: "/api/v1/knowledge",
+    target: KNOWLEDGE_SERVICE_URL,
+  }),
+);
+
 // 404 Handler
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found via Gateway" });
@@ -175,6 +195,7 @@ app.listen(PORT, () => {
         media: MEDIA_SERVICE_URL,
         admin: ADMIN_SERVICE_URL,
         astroEngine: ASTRO_ENGINE_URL,
+        knowledge: KNOWLEDGE_SERVICE_URL,
       },
     },
     "API Gateway started",

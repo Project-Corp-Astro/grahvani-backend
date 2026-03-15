@@ -11,6 +11,7 @@ export { WesternClient, westernClient } from "./western.client";
 export { YukteswarClient, yukteswarClient } from "./yukteswar.client";
 export { BhasinClient, bhasinClient } from "./bhasin.client";
 export { ChaldeanNumerologyClient, chaldeanClient } from "./chaldean-numerology.client";
+export { MuhuratClient, muhuratClient } from "./muhurat.client";
 
 // Re-export types for convenience
 export * from "../types";
