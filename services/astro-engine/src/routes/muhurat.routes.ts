@@ -18,7 +18,10 @@ router.post("/interpret", muhuratController.getInterpretation.bind(muhuratContro
 // Utility endpoints
 router.get("/traditions", muhuratController.getTraditions.bind(muhuratController));
 router.post("/panchang", muhuratController.getPanchang.bind(muhuratController));
-router.post("/inauspicious-windows", muhuratController.getInauspiciousWindows.bind(muhuratController));
+router.post(
+  "/inauspicious-windows",
+  muhuratController.getInauspiciousWindows.bind(muhuratController),
+);
 router.post("/time-quality", muhuratController.getTimeQuality.bind(muhuratController));
 
 export default router;
