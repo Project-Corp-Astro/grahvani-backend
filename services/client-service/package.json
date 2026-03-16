@@ -12,6 +12,7 @@
     "test:watch": "jest --watch",
     "format": "prettier --write .",
     "prisma:generate": "prisma generate",
+    "generate": "prisma generate",
     "prisma:push": "prisma db push"
   },
   "dependencies": {

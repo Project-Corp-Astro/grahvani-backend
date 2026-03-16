@@ -5,17 +5,38 @@ import { z } from "zod";
 // =============================================================================
 
 const EVENT_TYPES = [
-  "VIVAH", "SAGAI", "GRIHA_PRAVESH", "BHOOMI_PUJAN", "VYAPAAR", "VAHAN",
-  "UPANAYANA", "NAAMKARAN", "ANNAPRASHAN", "VIDYAARAMBH", "SURGERY", "YATRA", "PROPERTY",
+  "VIVAH",
+  "SAGAI",
+  "GRIHA_PRAVESH",
+  "BHOOMI_PUJAN",
+  "VYAPAAR",
+  "VAHAN",
+  "UPANAYANA",
+  "NAAMKARAN",
+  "ANNAPRASHAN",
+  "VIDYAARAMBH",
+  "SURGERY",
+  "YATRA",
+  "PROPERTY",
 ] as const;
 
 const TRADITIONS = [
-  "NORTH_INDIAN", "SOUTH_INDIAN_TAMIL", "SOUTH_INDIAN_KERALA",
-  "SOUTH_INDIAN_TELUGU", "SOUTH_INDIAN_KANNADA", "UNIVERSAL",
+  "NORTH_INDIAN",
+  "SOUTH_INDIAN_TAMIL",
+  "SOUTH_INDIAN_KERALA",
+  "SOUTH_INDIAN_TELUGU",
+  "SOUTH_INDIAN_KANNADA",
+  "UNIVERSAL",
 ] as const;
 
 const LANGUAGES = [
-  "english", "hindi", "hinglish", "tamil", "telugu", "kannada", "malayalam",
+  "english",
+  "hindi",
+  "hinglish",
+  "tamil",
+  "telugu",
+  "kannada",
+  "malayalam",
 ] as const;
 
 const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD");

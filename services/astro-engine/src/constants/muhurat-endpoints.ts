@@ -16,13 +16,13 @@ export const MUHURAT_ENDPOINTS = {
 } as const;
 
 export const MUHURAT_CACHE_TTL = {
-  FIND: 3600,              // 1 hour
-  EVALUATE: 3600,          // 1 hour
-  COMPATIBILITY: 86400,    // 24 hours
-  EVENT_TYPES: 86400,      // 24 hours (static)
-  INTERPRET: 3600,         // 1 hour
-  TRADITIONS: 86400,       // 24 hours (static)
-  PANCHANG: 3600,          // 1 hour
+  FIND: 3600, // 1 hour
+  EVALUATE: 3600, // 1 hour
+  COMPATIBILITY: 86400, // 24 hours
+  EVENT_TYPES: 86400, // 24 hours (static)
+  INTERPRET: 3600, // 1 hour
+  TRADITIONS: 86400, // 24 hours (static)
+  PANCHANG: 3600, // 1 hour
   INAUSPICIOUS_WINDOWS: 3600, // 1 hour
-  TIME_QUALITY: 1800,      // 30 minutes
+  TIME_QUALITY: 1800, // 30 minutes
 } as const;

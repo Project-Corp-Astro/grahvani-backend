@@ -26,7 +26,10 @@ export class MuhuratController {
       const validated = muhuratFindSchema.parse(req.body);
       const cacheKey = { ...validated, type: "muhurat:find" };
       const cached = await cacheService.get("muhurat:find", cacheKey);
-      if (cached) { res.json({ success: true, data: cached, cached: true }); return; }
+      if (cached) {
+        res.json({ success: true, data: cached, cached: true });
+        return;
+      }
 
       const result = await muhuratClient.findMuhurats(validated);
       await cacheService.set("muhurat:find", cacheKey, result, MUHURAT_CACHE_TTL.FIND);
@@ -42,7 +45,10 @@ export class MuhuratController {
       const validated = muhuratEvaluateSchema.parse(req.body);
       const cacheKey = { ...validated, type: "muhurat:evaluate" };
       const cached = await cacheService.get("muhurat:evaluate", cacheKey);
-      if (cached) { res.json({ success: true, data: cached, cached: true }); return; }
+      if (cached) {
+        res.json({ success: true, data: cached, cached: true });
+        return;
+      }
 
       const result = await muhuratClient.evaluateDate(validated);
       await cacheService.set("muhurat:evaluate", cacheKey, result, MUHURAT_CACHE_TTL.EVALUATE);
@@ -58,10 +64,18 @@ export class MuhuratController {
       const validated = muhuratCompatibilitySchema.parse(req.body);
       const cacheKey = { ...validated, type: "muhurat:compatibility" };
       const cached = await cacheService.get("muhurat:compatibility", cacheKey);
-      if (cached) { res.json({ success: true, data: cached, cached: true }); return; }
+      if (cached) {
+        res.json({ success: true, data: cached, cached: true });
+        return;
+      }
 
       const result = await muhuratClient.checkCompatibility(validated);
-      await cacheService.set("muhurat:compatibility", cacheKey, result, MUHURAT_CACHE_TTL.COMPATIBILITY);
+      await cacheService.set(
+        "muhurat:compatibility",
+        cacheKey,
+        result,
+        MUHURAT_CACHE_TTL.COMPATIBILITY,
+      );
       res.json({ success: true, data: result, cached: false });
     } catch (error) {
       this.handleError(res, error, "Muhurat Compatibility");
@@ -73,10 +87,18 @@ export class MuhuratController {
     try {
       const cacheKey = { type: "muhurat:event-types" };
       const cached = await cacheService.get("muhurat:event-types", cacheKey);
-      if (cached) { res.json({ success: true, data: cached, cached: true }); return; }
+      if (cached) {
+        res.json({ success: true, data: cached, cached: true });
+        return;
+      }
 
       const result = await muhuratClient.getEventTypes();
-      await cacheService.set("muhurat:event-types", cacheKey, result, MUHURAT_CACHE_TTL.EVENT_TYPES);
+      await cacheService.set(
+        "muhurat:event-types",
+        cacheKey,
+        result,
+        MUHURAT_CACHE_TTL.EVENT_TYPES,
+      );
       res.json({ success: true, data: result, cached: false });
     } catch (error) {
       this.handleError(res, error, "Muhurat Event Types");
@@ -89,7 +111,10 @@ export class MuhuratController {
       const validated = muhuratInterpretSchema.parse(req.body);
       const cacheKey = { ...validated, type: "muhurat:interpret" };
       const cached = await cacheService.get("muhurat:interpret", cacheKey);
-      if (cached) { res.json({ success: true, data: cached, cached: true }); return; }
+      if (cached) {
+        res.json({ success: true, data: cached, cached: true });
+        return;
+      }
 
       const result = await muhuratClient.getInterpretation(validated);
       await cacheService.set("muhurat:interpret", cacheKey, result, MUHURAT_CACHE_TTL.INTERPRET);
@@ -104,7 +129,10 @@ export class MuhuratController {
     try {
       const cacheKey = { type: "muhurat:traditions" };
       const cached = await cacheService.get("muhurat:traditions", cacheKey);
-      if (cached) { res.json({ success: true, data: cached, cached: true }); return; }
+      if (cached) {
+        res.json({ success: true, data: cached, cached: true });
+        return;
+      }
 
       const result = await muhuratClient.getTraditions();
       await cacheService.set("muhurat:traditions", cacheKey, result, MUHURAT_CACHE_TTL.TRADITIONS);
@@ -120,7 +148,10 @@ export class MuhuratController {
       const validated = muhuratPanchangSchema.parse(req.body);
       const cacheKey = { ...validated, type: "muhurat:panchang" };
       const cached = await cacheService.get("muhurat:panchang", cacheKey);
-      if (cached) { res.json({ success: true, data: cached, cached: true }); return; }
+      if (cached) {
+        res.json({ success: true, data: cached, cached: true });
+        return;
+      }
 
       const result = await muhuratClient.getPanchang(validated);
       await cacheService.set("muhurat:panchang", cacheKey, result, MUHURAT_CACHE_TTL.PANCHANG);
@@ -136,10 +167,18 @@ export class MuhuratController {
       const validated = muhuratInauspiciousSchema.parse(req.body);
       const cacheKey = { ...validated, type: "muhurat:inauspicious" };
       const cached = await cacheService.get("muhurat:inauspicious", cacheKey);
-      if (cached) { res.json({ success: true, data: cached, cached: true }); return; }
+      if (cached) {
+        res.json({ success: true, data: cached, cached: true });
+        return;
+      }
 
       const result = await muhuratClient.getInauspiciousWindows(validated);
-      await cacheService.set("muhurat:inauspicious", cacheKey, result, MUHURAT_CACHE_TTL.INAUSPICIOUS_WINDOWS);
+      await cacheService.set(
+        "muhurat:inauspicious",
+        cacheKey,
+        result,
+        MUHURAT_CACHE_TTL.INAUSPICIOUS_WINDOWS,
+      );
       res.json({ success: true, data: result, cached: false });
     } catch (error) {
       this.handleError(res, error, "Muhurat Inauspicious Windows");
@@ -152,10 +191,18 @@ export class MuhuratController {
       const validated = muhuratTimeQualitySchema.parse(req.body);
       const cacheKey = { ...validated, type: "muhurat:time-quality" };
       const cached = await cacheService.get("muhurat:time-quality", cacheKey);
-      if (cached) { res.json({ success: true, data: cached, cached: true }); return; }
+      if (cached) {
+        res.json({ success: true, data: cached, cached: true });
+        return;
+      }
 
       const result = await muhuratClient.getTimeQuality(validated);
-      await cacheService.set("muhurat:time-quality", cacheKey, result, MUHURAT_CACHE_TTL.TIME_QUALITY);
+      await cacheService.set(
+        "muhurat:time-quality",
+        cacheKey,
+        result,
+        MUHURAT_CACHE_TTL.TIME_QUALITY,
+      );
       res.json({ success: true, data: result, cached: false });
     } catch (error) {
       this.handleError(res, error, "Muhurat Time Quality");

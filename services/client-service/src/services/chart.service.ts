@@ -126,9 +126,14 @@ export class ChartService {
     // Exclude massive deep dasha trees from bulk responses to avoid 19MB payloads
     // These can be fetched specifically via generateDasha/generateDeepDasha if needed
     const filteredCharts = charts.filter((c) => {
-      if (c.chartType === ("dasha" as any)) {
+      if (c.chartType?.toString().toLowerCase().startsWith("dasha")) {
         const config = c.chartConfig as any;
-        if (config?.level === "mahadasha_to_prana" || config?.level === "exhaustive_vimshottari") {
+        if (
+          config?.level === "tree" ||
+          config?.level === "prana_raw" ||
+          config?.level === "mahadasha_to_prana" ||
+          config?.level === "exhaustive_vimshottari"
+        ) {
           return false;
         }
       }

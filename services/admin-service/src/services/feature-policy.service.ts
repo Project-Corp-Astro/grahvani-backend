@@ -51,7 +51,7 @@ export class FeaturePolicyService {
 
     // Override with granular dynamic features from new PlatformFeature system
     if (subscription.plan.features) {
-      subscription.plan.features.forEach((pf) => {
+      subscription.plan.features.forEach((pf: any) => {
         const key = pf.feature.featureKey;
         const val = pf.value;
         features[key] = val === true || val === "true" || (typeof val === "object" && val !== null);
@@ -107,7 +107,7 @@ export class FeaturePolicyService {
     const pipeline = redisService.getClient()?.pipeline();
     if (!pipeline) return;
 
-    subs.forEach((sub) => {
+    subs.forEach((sub: any) => {
       pipeline.del(`${this.CACHE_PREFIX}${sub.userId}`);
     });
 

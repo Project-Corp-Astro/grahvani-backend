@@ -236,7 +236,7 @@ curl https://api-media.grahvani.in/health
 
 # Upload a test file
 curl -X POST https://api-media.grahvani.in/api/v1/media/upload \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Authorization: Bearer <JWT_TOKEN>" \
   -F "file=@test-image.jpg" \
   -F "bucket=general"
 ```
@@ -428,7 +428,7 @@ Files are organized into logical buckets:
 
 ```bash
 curl -X POST http://localhost:3007/api/v1/media/upload \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Authorization: Bearer <JWT_TOKEN>" \
   -F "file=@photo.jpg" \
   -F "bucket=avatars" \
   -F "visibility=public"

@@ -2,3 +2,14 @@
 fa53110b96aa25a6047eb6d3c25e87aa0c5f6ae6:services/admin-service/src/__tests__/setup.ts:jwt-secret:4
 becd55ed05f2d98b0c69b21e0c5fc46a2d0357b9:services/admin-service/src/__tests__/setup.ts:jwt-secret:3
 f1e4022eeab4846bf9fe84a8d3850af69bb9fedd:services/admin-service/src/__tests__/setup.ts:jwt-secret:4
+77fb299a015110473b1d8dcba0aea9f87b3388f9:grahvani-platform-docs/11-media-storage.md:curl-auth-header:235
+bb43ccc5a9fe02623dcd4b4fed95b40ec0336f38:grahvani-platform-docs/14-sprint-changelog.md:generic-api-key:66
+fd7ce5b7dacfb01c7cfa933917985f2ee3ff02b3:docker-compose.yml:generic-api-key:10
+0561505bee8e5e5fce7ef8b9a6f1cce2a97f707b:grahvani-platform-docs/07-environment.md:generic-api-key:142
+d7528d0b08037a578394d765f1ada2443e74001d:FIXED_CONNECTION_ISSUE.md:curl-auth-header:215
+959f6568b8e5276559e12db8cc4dbac617e109ad:services/client-service/.env.example:jwt:6
+959f6568b8e5276559e12db8cc4dbac617e109ad:services/client-service/.env.example:jwt:7
+959f6568b8e5276559e12db8cc4dbac617e109ad:services/client-service/.env.example:generic-api-key:11
+959f6568b8e5276559e12db8cc4dbac617e109ad:services/client-service/.env.example:generic-api-key:29
+959f6568b8e5276559e12db8cc4dbac617e109ad:services/client-service/.env.example:generic-api-key:30
+959f6568b8e5276559e12db8cc4dbac617e109ad:services/client-service/.env.example:generic-api-key:34

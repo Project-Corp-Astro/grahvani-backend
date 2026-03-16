@@ -458,6 +458,7 @@ enum ChartType {
   yoga_guru_mangal_only
   pushkara_navamsha
   chara_karakas
+  karaka_strength
   pada_chart
 
   @@schema("app_clients")

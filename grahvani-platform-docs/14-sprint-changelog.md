@@ -63,7 +63,7 @@ The 3 skipped tasks (database backup offsite replication, Grafana alerting rules
 
 | Issue | Location | Severity |
 |-------|----------|----------|
-| Hardcoded `POSTGRES_PASSWORD: grahvani2026prod` | `docker-compose.yml` line 10 | Critical |
+| Hardcoded `POSTGRES_PASSWORD: <PASSWORD>` | `docker-compose.yml` line 10 | Critical |
 | Hardcoded `MEILI_MASTER_KEY` | `docker-compose.yml` line 28 | High |
 | JWT fallback `\|\| "your-default-secret-key"` | `user-service/src/middleware/auth.middleware.ts` line 32 | Critical |
 | JWT fallback `\|\| "your-default-secret-key"` | `client-service/src/middleware/auth.middleware.ts` line 47 | Critical |

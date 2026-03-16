@@ -20,6 +20,7 @@ const COMPRESSIBLE_CHARTS: string[] = [
   "kp_interlinks_sl",
   "sudarshana",
   "shodasha_varga_signs",
+  "karaka_strength",
 ];
 
 export class ChartRepository {
