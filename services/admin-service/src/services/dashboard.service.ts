@@ -178,7 +178,7 @@ export class DashboardService {
     }
 
     // Fill in actual data
-    subscriptions.forEach((sub) => {
+    subscriptions.forEach((sub: any) => {
       const dateKey = sub.createdAt.toISOString().split("T")[0];
       if (dailyData[dateKey]) {
         dailyData[dateKey].newSubscriptions++;

@@ -180,7 +180,7 @@ async function pingService(name: string, url: string, path = "/health"): Promise
     // Parse response
     let version: string | undefined;
     try {
-      const data = await res.json();
+      const data = (await res.json()) as any;
       version = data.version || data.data?.version || data.service?.version;
     } catch {
       // Ignore parsing errors
@@ -196,11 +196,8 @@ async function pingService(name: string, url: string, path = "/health"): Promise
       // Keep only last 100 changes
       if (history.statusChanges.length > 100) history.statusChanges.shift();
       
-      // Add alert on status change to degraded/offline
-      if (status === "offline" && history.lastStatus !== "offline") {
-        addAlert(name, "critical", `Service went offline (${latencyMs}ms timeout)`);
-        history.consecutiveFailures++;
-      } else if (status === "degraded" && history.lastStatus === "online") {
+      // Status change logic
+      if (status === "degraded" && history.lastStatus === "online") {
         addAlert(name, "warning", `Service degraded - high latency (${latencyMs}ms)`);
       } else if (status === "online" && (history.lastStatus === "offline" || history.lastStatus === "degraded")) {
         addAlert(name, "info", `Service recovered (${latencyMs}ms)`);

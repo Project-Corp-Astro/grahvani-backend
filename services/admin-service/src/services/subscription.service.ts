@@ -100,7 +100,7 @@ export class SubscriptionService {
     const prisma = getPrismaClient();
     const { dynamicFeatures, ...rest } = data;
 
-    const plan = await prisma.$transaction(async (tx) => {
+    const plan = await prisma.$transaction(async (tx: any) => {
       const updatedPlan = await tx.subscriptionPlan.update({
         where: { id },
         data: rest,
