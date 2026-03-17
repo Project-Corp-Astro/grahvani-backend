@@ -59,6 +59,24 @@ class AstroEngineClient {
   constructor() {
     this.baseURL = process.env.ASTRO_ENGINE_URL || "http://localhost:3014";
 
+    // Log the configuration at startup for debugging
+    logger.info(
+      {
+        baseURL: this.baseURL,
+        envVar: process.env.ASTRO_ENGINE_URL || "(not set, using default)",
+        nodeEnv: process.env.NODE_ENV,
+      },
+      "🌟 Astro Engine Client initializing",
+    );
+
+    // Validate configuration in production
+    if (process.env.NODE_ENV === "production" && !process.env.ASTRO_ENGINE_URL) {
+      logger.error(
+        "ASTRO_ENGINE_URL environment variable is not set in production! " +
+          "Falling back to localhost which will likely fail in Docker.",
+      );
+    }
+
     // Use persistent connections (Keep-Alive)
     // Optimized for Microservice-to-Microservice communication (high throughput)
     const httpAgent = new http.Agent({

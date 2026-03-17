@@ -1197,12 +1197,30 @@ export class ChartService {
 
     // ENGINE CALL: Fetch raw data from Python engine
     let dashaResponse: any;
-    if (level === "tree" || level === "prana_raw") {
-      logger.info({ clientId, ayanamsa }, "Fetching full Prana Dasha (raw) from engine");
-      dashaResponse = await astroEngineClient.getPranaDasha(birthData, ayanamsa);
-    } else {
-      logger.info({ clientId, ayanamsa, level }, "Fetching level-specific dasha from engine");
-      dashaResponse = await astroEngineClient.getVimshottariDasha(birthData, level, options);
+    try {
+      if (level === "tree" || level === "prana_raw") {
+        logger.info({ clientId, ayanamsa }, "Fetching full Prana Dasha (raw) from engine");
+        dashaResponse = await astroEngineClient.getPranaDasha(birthData, ayanamsa);
+      } else {
+        logger.info({ clientId, ayanamsa, level }, "Fetching level-specific dasha from engine");
+        dashaResponse = await astroEngineClient.getVimshottariDasha(birthData, level, options);
+      }
+    } catch (error: any) {
+      logger.error(
+        {
+          error: error.message,
+          statusCode: error.statusCode || error.response?.status,
+          clientId,
+          ayanamsa,
+          level,
+          astroEngineUrl: process.env.ASTRO_ENGINE_URL,
+        },
+        "❌ Astro Engine call failed for Dasha generation",
+      );
+      throw new Error(
+        `Chart calculation service unavailable. Please try again later. ` +
+          `(Debug: ${error.message || "Unknown error"})`,
+      );
     }
 
     // Use the raw data from response
