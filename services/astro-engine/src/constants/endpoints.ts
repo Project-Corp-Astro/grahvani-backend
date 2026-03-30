@@ -149,6 +149,25 @@ export const LAHIRI_ENDPOINTS = {
   TATKALIK_MAITRI_CHAKRA: "/lahiri/calculate_Tatkalik_maitri_Chakra",
   PUSHKARA_NAVAMSHA: "/lahiri/pushkara-navamsha",
   CHARA_KARAKAS: "/lahiri/chara_karakas",
+
+  // NEW: Specialized Divisional Charts
+  D2_SOMANATHA: "/lahiri/calculate_somanatha_d2",
+  D2_KASHINATHA: "/lahiri/calculate_kashinatha_d2",
+  D4_VEDAMSHA: "/lahiri/calculate_d4_vedamsha",
+  D6_KAULAKA: "/lahiri/calculate_d6_kaulaka",
+  D9_NADHI: "/lahiri/calculate_d9_nadhi",
+  D9_PADA: "/lahiri/calculate_d9_pada",
+  D9_SOMANATHA: "/lahiri/calculate_d9_somanatha",
+  D24_PARASIDAMSHA: "/lahiri/calculate_d24_parasidamsha",
+  D24_SIDDHAMSHA: "/lahiri/calculate_d24_siddhamsha",
+  D30_VENKATESHA: "/lahiri/calculate_d30_venkatesha",
+  D108_ND: "/lahiri/calculate_d108_ND",
+  D108_DN: "/lahiri/calculate_d108_DN",
+  D2_IYER: "/lahiri/calculate_d2_iyer",
+  D5: "/lahiri/calculate_d5",
+  D8_CHART: "/lahiri/calculate_d8_chart",
+  D11: "/lahiri/calculate_d11",
+
   // NOTE: birth_panchanga uses PANCHANGA endpoint (same /panchanga path)
 } as const;
 

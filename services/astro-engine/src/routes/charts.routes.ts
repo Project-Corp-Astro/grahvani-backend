@@ -62,4 +62,22 @@ router.post(
   specialChartsController.getShodashaVarga.bind(specialChartsController),
 );
 
+// Specialized Divisional Charts (Lahiri-only)
+router.post("/d2-somanatha", specialChartsController.getD2Somanatha.bind(specialChartsController));
+router.post("/d2-kashinatha", specialChartsController.getD2Kashinatha.bind(specialChartsController));
+router.post("/d4-vedamsha", specialChartsController.getD4Vedamsha.bind(specialChartsController));
+router.post("/d6-kaulaka", specialChartsController.getD6Kaulaka.bind(specialChartsController));
+router.post("/d9-nadhi", specialChartsController.getD9Nadhi.bind(specialChartsController));
+router.post("/d9-pada", specialChartsController.getD9Pada.bind(specialChartsController));
+router.post("/d9-somanatha", specialChartsController.getD9Somanatha.bind(specialChartsController));
+router.post("/d24-parasidamsha", specialChartsController.getD24Parasidamsha.bind(specialChartsController));
+router.post("/d24-siddhamsha", specialChartsController.getD24Siddhamsha.bind(specialChartsController));
+router.post("/d30-venkatesha", specialChartsController.getD30Venkatesha.bind(specialChartsController));
+router.post("/d108-nd", specialChartsController.getD108ND.bind(specialChartsController));
+router.post("/d108-dn", specialChartsController.getD108DN.bind(specialChartsController));
+router.post("/d2-iyer", specialChartsController.getD2Iyer.bind(specialChartsController));
+router.post("/d5", specialChartsController.getD5.bind(specialChartsController));
+router.post("/d8-chart", specialChartsController.getD8Chart.bind(specialChartsController));
+router.post("/d11", specialChartsController.getD11.bind(specialChartsController));
+
 export default router;

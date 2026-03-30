@@ -370,6 +370,54 @@ export class ChartService {
     } else if (normalizedType === "d150" || normalizedType === "nadiamsha") {
       chartData = await astroEngineClient.getD150(birthData, system);
       dbChartType = "D150";
+    } else if (normalizedType === "d2_somanatha") {
+      chartData = await astroEngineClient.getD2Somanatha(birthData);
+      dbChartType = "d2_somanatha";
+    } else if (normalizedType === "d2_kashinatha") {
+      chartData = await astroEngineClient.getD2Kashinatha(birthData);
+      dbChartType = "d2_kashinatha";
+    } else if (normalizedType === "d4_vedamsha") {
+      chartData = await astroEngineClient.getD4Vedamsha(birthData);
+      dbChartType = "d4_vedamsha";
+    } else if (normalizedType === "d6_kaulaka") {
+      chartData = await astroEngineClient.getD6Kaulaka(birthData);
+      dbChartType = "d6_kaulaka";
+    } else if (normalizedType === "d9_nadhi") {
+      chartData = await astroEngineClient.getD9Nadhi(birthData);
+      dbChartType = "d9_nadhi";
+    } else if (normalizedType === "d9_pada_special") {
+      chartData = await astroEngineClient.getD9PadaSpecial(birthData);
+      dbChartType = "d9_pada_special";
+    } else if (normalizedType === "d9_somanatha") {
+      chartData = await astroEngineClient.getD9Somanatha(birthData);
+      dbChartType = "d9_somanatha";
+    } else if (normalizedType === "d24_parasidamsha") {
+      chartData = await astroEngineClient.getD24Parasidamsha(birthData);
+      dbChartType = "d24_parasidamsha";
+    } else if (normalizedType === "d24_siddhamsha") {
+      chartData = await astroEngineClient.getD24Siddhamsha(birthData);
+      dbChartType = "d24_siddhamsha";
+    } else if (normalizedType === "d30_venkatesha") {
+      chartData = await astroEngineClient.getD30Venkatesha(birthData);
+      dbChartType = "d30_venkatesha";
+    } else if (normalizedType === "d108_nd") {
+      chartData = await astroEngineClient.getD108ND(birthData);
+      dbChartType = "d108_nd";
+    } else if (normalizedType === "d108_dn") {
+      chartData = await astroEngineClient.getD108DN(birthData);
+      dbChartType = "d108_dn";
+    } else if (normalizedType === "d2_iyer") {
+      chartData = await astroEngineClient.getD2Iyer(birthData);
+      dbChartType = "d2_iyer";
+    } else if (normalizedType === "d5") {
+      chartData = await astroEngineClient.getD5(birthData);
+      dbChartType = "d5";
+    } else if (normalizedType === "d8_chart") {
+      chartData = await astroEngineClient.getD8Chart(birthData);
+      dbChartType = "d8_chart";
+    } else if (normalizedType === "d11") {
+      chartData = await astroEngineClient.getD11(birthData);
+      dbChartType = "d11";
     } else if (normalizedType === "kp_planets_cusps") {
       // KP-specific: Planets and Cusps with sub-lords
       chartData = await astroEngineClient.getKpPlanetsCusps(birthData);
@@ -879,9 +927,44 @@ export class ChartService {
         "lagna_times",
         "muhurat",
       ];
+
+      // 1.6. SPECIALIZED DIVISIONAL CHARTS (Lahiri-only)
+      // These are specialized varga variants that should be auto-generated
+      const specializedDivisionalCharts = [
+        "d2_iyer",
+        "d2_somanatha",
+        "d2_kashinatha",
+        "d4_vedamsha",
+        "d5",
+        "d6_kaulaka",
+        "d8_chart",
+        "d9_nadhi",
+        "d9_pada_special",
+        "d9_somanatha",
+        "d11",
+        "d24_parasidamsha",
+        "d24_siddhamsha",
+        "d30_venkatesha",
+        "d108_nd",
+        "d108_dn",
+      ];
       for (const chartType of universalChartTypes) {
         try {
           logger.info({ clientId, chartType }, `📅 Generating ${chartType} (universal)`);
+          await this.generateAndSaveChart(tenantId, clientId, chartType, "lahiri" as any, metadata);
+        } catch (err: any) {
+          // Non-fatal: Log but continue with other charts
+          logger.error(
+            { err: err.message, clientId, chartType },
+            `⚠️ ${chartType} failed (non-fatal)`,
+          );
+        }
+      }
+
+      // Generate specialized divisional charts (Lahiri-only)
+      for (const chartType of specializedDivisionalCharts) {
+        try {
+          logger.info({ clientId, chartType }, `📊 Generating ${chartType} (specialized divisional)`);
           await this.generateAndSaveChart(tenantId, clientId, chartType, "lahiri" as any, metadata);
         } catch (err: any) {
           // Non-fatal: Log but continue with other charts

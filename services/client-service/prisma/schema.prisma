@@ -460,6 +460,23 @@ enum ChartType {
   chara_karakas
   karaka_strength
   pada_chart
+  // Specialized Divisional Charts
+  d2_somanatha
+  d2_kashinatha
+  d4_vedamsha
+  d6_kaulaka
+  d9_nadhi
+  d9_pada_special
+  d9_somanatha
+  d24_parasidamsha
+  d24_siddhamsha
+  d30_venkatesha
+  d108_nd
+  d108_dn
+  d2_iyer
+  d5
+  d8_chart
+  d11
 
   @@schema("app_clients")
 }

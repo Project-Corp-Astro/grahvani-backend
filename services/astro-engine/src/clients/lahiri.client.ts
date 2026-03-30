@@ -106,6 +106,74 @@ export class LahiriClient extends BaseAstroClient {
   }
 
   // =========================================================================
+  // SPECIALIZED DIVISIONAL CHARTS (New)
+  // =========================================================================
+
+  async getD2Somanatha(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.D2_SOMANATHA, data);
+  }
+
+  async getD2Kashinatha(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.D2_KASHINATHA, data);
+  }
+
+  async getD4Vedamsha(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.D4_VEDAMSHA, data);
+  }
+
+  async getD6Kaulaka(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.D6_KAULAKA, data);
+  }
+
+  async getD9Nadhi(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.D9_NADHI, data);
+  }
+
+  async getD9Pada(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.D9_PADA, data);
+  }
+
+  async getD9Somanatha(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.D9_SOMANATHA, data);
+  }
+
+  async getD24Parasidamsha(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.D24_PARASIDAMSHA, data);
+  }
+
+  async getD24Siddhamsha(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.D24_SIDDHAMSHA, data);
+  }
+
+  async getD30Venkatesha(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.D30_VENKATESHA, data);
+  }
+
+  async getD108ND(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.D108_ND, data);
+  }
+
+  async getD108DN(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.D108_DN, data);
+  }
+
+  async getD2Iyer(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.D2_IYER, data);
+  }
+
+  async getD5(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.D5, data);
+  }
+
+  async getD8Chart(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.D8_CHART, data);
+  }
+
+  async getD11(data: BirthData) {
+    return this.post(LAHIRI_ENDPOINTS.D11, data);
+  }
+
+  // =========================================================================
   // LAGNA CHARTS (Special Ascendants)
   // =========================================================================
 

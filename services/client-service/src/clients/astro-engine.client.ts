@@ -928,6 +928,74 @@ class AstroEngineClient {
     const payload = { ...birthData, ayanamsa: ayanamsa };
     return (await this.apiClient.post("/charts/pada-chart", payload)).data;
   }
+
+  // =========================================================================
+  // SPECIALIZED DIVISIONAL CHARTS (Lahiri-only)
+  // =========================================================================
+
+  async getD2Somanatha(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/charts/d2-somanatha", birthData)).data;
+  }
+
+  async getD2Kashinatha(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/charts/d2-kashinatha", birthData)).data;
+  }
+
+  async getD4Vedamsha(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/charts/d4-vedamsha", birthData)).data;
+  }
+
+  async getD6Kaulaka(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/charts/d6-kaulaka", birthData)).data;
+  }
+
+  async getD9Nadhi(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/charts/d9-nadhi", birthData)).data;
+  }
+
+  async getD9PadaSpecial(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/charts/d9-pada", birthData)).data;
+  }
+
+  async getD9Somanatha(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/charts/d9-somanatha", birthData)).data;
+  }
+
+  async getD24Parasidamsha(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/charts/d24-parasidamsha", birthData)).data;
+  }
+
+  async getD24Siddhamsha(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/charts/d24-siddhamsha", birthData)).data;
+  }
+
+  async getD30Venkatesha(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/charts/d30-venkatesha", birthData)).data;
+  }
+
+  async getD108ND(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/charts/d108-nd", birthData)).data;
+  }
+
+  async getD108DN(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/charts/d108-dn", birthData)).data;
+  }
+
+  async getD2Iyer(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/charts/d2-iyer", birthData)).data;
+  }
+
+  async getD5(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/charts/d5", birthData)).data;
+  }
+
+  async getD8Chart(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/charts/d8-chart", birthData)).data;
+  }
+
+  async getD11(birthData: BirthData): Promise<AstroResponse> {
+    return (await this.apiClient.post("/charts/d11", birthData)).data;
+  }
 }
 
 export const astroEngineClient = new AstroEngineClient();

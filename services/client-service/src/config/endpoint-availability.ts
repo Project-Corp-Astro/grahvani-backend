@@ -158,6 +158,23 @@ export const SYSTEM_CAPABILITIES: Record<AyanamsaSystem, SystemCapabilities> = {
       "tatkalik_maitri_chakra",
       "pushkara_navamsha",
       "chara_karakas",
+      // Specialized Divisional Charts
+      "d2_iyer",
+      "d2_somanatha",
+      "d2_kashinatha",
+      "d4_vedamsha",
+      "d5",
+      "d6_kaulaka",
+      "d8_chart",
+      "d9_nadhi",
+      "d9_pada_special",
+      "d9_somanatha",
+      "d11",
+      "d24_parasidamsha",
+      "d24_siddhamsha",
+      "d30_venkatesha",
+      "d108_nd",
+      "d108_dn",
     ],
     // Yogas - verified endpoints from ApiEndPoints.txt lines 134-150
     yogas: [

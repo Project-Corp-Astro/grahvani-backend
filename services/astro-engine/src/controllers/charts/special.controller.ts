@@ -657,6 +657,346 @@ export class SpecialChartsController {
     }
   }
 
+  // =========================================================================
+  // SPECIALIZED DIVISIONAL CHARTS (Lahiri-only)
+  // =========================================================================
+
+  /**
+   * POST /api/charts/d2-somanatha
+   */
+  async getD2Somanatha(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const data = await lahiriClient.getD2Somanatha(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "D2 Somanatha failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/d2-kashinatha
+   */
+  async getD2Kashinatha(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const data = await lahiriClient.getD2Kashinatha(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "D2 Kashinatha failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/d4-vedamsha
+   */
+  async getD4Vedamsha(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const data = await lahiriClient.getD4Vedamsha(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "D4 Vedamsha failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/d6-kaulaka
+   */
+  async getD6Kaulaka(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const data = await lahiriClient.getD6Kaulaka(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "D6 Kaulaka failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/d9-nadhi
+   */
+  async getD9Nadhi(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const data = await lahiriClient.getD9Nadhi(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "D9 Nadhi failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/d9-pada
+   */
+  async getD9Pada(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const data = await lahiriClient.getD9Pada(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "D9 Pada failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/d9-somanatha
+   */
+  async getD9Somanatha(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const data = await lahiriClient.getD9Somanatha(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "D9 Somanatha failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/d24-parasidamsha
+   */
+  async getD24Parasidamsha(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const data = await lahiriClient.getD24Parasidamsha(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "D24 Parasidamsha failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/d24-siddhamsha
+   */
+  async getD24Siddhamsha(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const data = await lahiriClient.getD24Siddhamsha(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "D24 Siddhamsha failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/d30-venkatesha
+   */
+  async getD30Venkatesha(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const data = await lahiriClient.getD30Venkatesha(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "D30 Venkatesha failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/d108-nd
+   */
+  async getD108ND(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const data = await lahiriClient.getD108ND(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "D108 ND failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/d108-dn
+   */
+  async getD108DN(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const data = await lahiriClient.getD108DN(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "D108 DN failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/d2-iyer
+   */
+  async getD2Iyer(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const data = await lahiriClient.getD2Iyer(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "D2 Iyer failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/d5
+   */
+  async getD5(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const data = await lahiriClient.getD5(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "D5 failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/d8-chart
+   */
+  async getD8Chart(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const data = await lahiriClient.getD8Chart(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "D8 Chart failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/charts/d11
+   */
+  async getD11(req: Request, res: Response): Promise<void> {
+    try {
+      const birthData: BirthData = req.body;
+      if (!this.validateBirthData(birthData, res)) return;
+
+      const data = await lahiriClient.getD11(birthData);
+      res.json({
+        success: true,
+        data,
+        cached: false,
+        calculatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message }, "D11 failed");
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
   private getClient(ayanamsa: AyanamsaType) {
     if (ayanamsa === "raman") return ramanClient;
     if (ayanamsa === "yukteswar") return yukteswarClient;
